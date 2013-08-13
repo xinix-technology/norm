@@ -22,6 +22,7 @@ class Collection {
         $results = array();
 
         foreach ($cursor as $doc) {
+            $doc = $this->connection->prepare($doc);
             // $doc['_id'] = (string) $doc['_id'];
             $results[] = new Model($doc, array(
                 'collection' => $this,

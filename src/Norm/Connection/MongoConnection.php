@@ -66,6 +66,12 @@ class MongoConnection extends Connection {
         ));
     }
 
+    public function prepare($object) {
+        var_dump($object);
+        exit;
+        return $object;
+    }
+
     public function query(Collection $collection) {
         $collectionName = $collection->name;
 
