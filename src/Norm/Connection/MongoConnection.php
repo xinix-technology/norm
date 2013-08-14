@@ -67,36 +67,68 @@ class MongoConnection extends Connection {
     }
 
     public function prepare($object) {
-        var_dump($object);
-        exit;
-        return $object;
+        $newObject = array();
+        $newObject['$id'] = (string) $object['_id'];
+        foreach ($object as $key => $value) {
+            if ($key[0] !== '_') {
+                $newObject[$key] = $value;
+            }
+        }
+        return $newObject;
     }
 
     public function query(Collection $collection) {
         $collectionName = $collection->name;
 
         if ($collection->filter) {
-            if (isset($collection->filter['_id']) AND !is_object($collection->filter['_id'])) {
-                $collection->filter['_id'] = new \MongoId($collection->filter['_id']);
+            if (isset($collection->filter['$id'])) {
+                $collection->filter['_id'] = new \MongoId($collection->filter['$id']);
+                unset($collection->filter['$id']);
             }
             $cursor = $this->db->$collectionName->find($collection->filter);
         } else {
             $cursor = $this->db->$collectionName->find();
         }
 
+        $collection->filter = null;
+
         return $cursor;
     }
 
     public function save(Collection $collection, Model $model) {
         $collectionName = $collection->name;
-        $modified = $model->toArray();
-        unset($modified['_id']);
-        $this->db->$collectionName->update(array('_id' => $model->get('_id')), array('$set' => $modified));
+        $modified = $model->toArray(Model::FETCH_PUBLISHED);
+
+        if ($model->getId()) {
+            $criteria = array(
+                '_id' => new \MongoId($model->getId()),
+            );
+            $result = $this->db->$collectionName->update($criteria, array('$set' => $modified));
+        } else {
+            $result = $this->db->$collectionName->insert($modified);
+        }
+
+        $modified = $this->prepare($modified);
+
+        $model->sync($modified);
+
+        $collection->filter = null;
+
+        $result = $result['ok'];
+        return $result;
     }
 
     public function remove(Collection $collection, Model $model) {
         $collectionName = $collection->name;
-        $this->db->$collectionName->remove(array('_id' => $model->get('_id')));
+
+        $criteria = array(
+            '_id' => new \MongoId($model->getId()),
+        );
+        $result = $this->db->$collectionName->remove($criteria);
+
+        $collection->filter = null;
+
+        return $result;
     }
 
 }

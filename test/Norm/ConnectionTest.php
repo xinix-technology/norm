@@ -45,10 +45,4 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $collections = $this->connection->listCollections();
         $this->assertEquals($collections[0], 'user');
     }
-
-    // FIXME do we need this?
-    // public function testGetCollection() {
-    //     $collection = $this->connection->getCollection('User');
-    //     $this->assertTrue($collection instanceof Collection, "Is Connection::getCollection() return Collection object");
-    // }
 }

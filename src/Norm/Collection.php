@@ -28,7 +28,6 @@ class Collection {
                 'collection' => $this,
             ));
         }
-
         return $results;
     }
 
@@ -58,11 +57,11 @@ class Collection {
     }
 
     public function save(Model $model) {
-        $this->connection->save($this, $model);
+        return $this->connection->save($this, $model);
     }
 
     public function remove(Model $model) {
-        $this->connection->remove($this, $model);
+        return $this->connection->remove($this, $model);
     }
 
 }
