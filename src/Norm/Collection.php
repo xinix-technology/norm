@@ -5,17 +5,27 @@ namespace Norm;
 use Doctrine\Common\Inflector\Inflector;
 use Norm\Model;
 
-class Collection {
+class Collection implements \JsonSerializable {
     public $clazz;
     public $name;
     public $connection;
 
     public $filter;
 
+    protected $schema;
+
     public function __construct(array $options = array()) {
-        $this->clazz = $options['name'];
+        $this->clazz = Inflector::classify($options['name']);
         $this->name = Inflector::tableize($this->clazz);
         $this->connection = $options['connection'];
+    }
+
+    public function schema($schema = NULL) {
+        if (is_null($schema)) {
+            return $this->schema;
+        } else {
+            $this->schema = $schema;
+        }
     }
 
     public function hydrate($cursor) {
@@ -23,7 +33,7 @@ class Collection {
 
         foreach ($cursor as $doc) {
             $doc = $this->connection->prepare($doc);
-            // $doc['_id'] = (string) $doc['_id'];
+
             $results[] = new Model($doc, array(
                 'collection' => $this,
             ));
@@ -31,18 +41,24 @@ class Collection {
         return $results;
     }
 
-    public function find(array $filter = null) {
+    public function filter(array $filter = null) {
         if (isset($filter)) {
-            $this->filter = $filter;
+            if (!isset($this->filter)) {
+                $this->filter = array();
+            }
+
+            $this->filter = $this->filter + $filter;
         }
+    }
+
+    public function find(array $filter = null) {
+        $this->filter($filter);
 
         return $this->hydrate($this->connection->query($this));
     }
 
     public function findOne(array $filter = null) {
-        if (isset($filter)) {
-            $this->filter = $filter;
-        }
+        $this->filter($filter);
 
         $cursor = $this->connection->query($this);
 
@@ -62,6 +78,10 @@ class Collection {
 
     public function remove(Model $model) {
         return $this->connection->remove($this, $model);
+    }
+
+    public function jsonSerialize() {
+        return $this->clazz;
     }
 
 }

@@ -54,18 +54,6 @@ class MongoConnection extends Connection {
         return $retval;
     }
 
-    public function getCollection($name) {
-        new Collection($name, $this);
-        return $this->db->$name;
-    }
-
-    public function factory($collectionName) {
-        return new Collection(array(
-            'name' => $collectionName,
-            'connection' => $this,
-        ));
-    }
-
     public function prepare($object) {
         $newObject = array();
         $newObject['$id'] = (string) $object['_id'];
@@ -103,7 +91,8 @@ class MongoConnection extends Connection {
             $criteria = array(
                 '_id' => new \MongoId($model->getId()),
             );
-            $result = $this->db->$collectionName->update($criteria, array('$set' => $modified));
+            $modified = $this->db->$collectionName->findAndModify($criteria, $modified, null, array('new' => true));
+            $result['ok'] = 1;
         } else {
             $result = $this->db->$collectionName->insert($modified);
         }

@@ -114,7 +114,11 @@ class Model implements \JsonSerializable {
                 $this->set($k, $v);
             }
         } else {
-            $this->attributes[$key] = $value;
+            if (is_null($value)) {
+                unset($this->attributes[$key]);
+            } else {
+                $this->attributes[$key] = $value;
+            }
         }
     }
 
