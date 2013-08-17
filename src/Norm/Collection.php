@@ -68,8 +68,11 @@ class Collection implements \JsonSerializable {
         }
     }
 
-    public function newInstance() {
-        return new Model(array(), array('collection' => $this));
+    public function newInstance($cloned = array()) {
+        if ($cloned instanceof Model) {
+            $cloned = $cloned->toArray(Model::FETCH_PUBLISHED);
+        }
+        return new Model($cloned, array('collection' => $this));
     }
 
     public function save(Model $model) {
