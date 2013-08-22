@@ -79,7 +79,7 @@ class Collection implements \JsonSerializable {
         return $this->connection->save($this, $model);
     }
 
-    public function remove(Model $model) {
+    public function remove($model) {
         return $this->connection->remove($this, $model);
     }
 

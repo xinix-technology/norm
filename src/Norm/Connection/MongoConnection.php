@@ -107,12 +107,16 @@ class MongoConnection extends Connection {
         return $result;
     }
 
-    public function remove(Collection $collection, Model $model) {
+    public function remove(Collection $collection, $model) {
         $collectionName = $collection->name;
 
-        $criteria = array(
-            '_id' => new \MongoId($model->getId()),
-        );
+        if ($model instanceof Model) {
+            $criteria = array(
+                '_id' => new \MongoId($model->getId()),
+            );
+        } else {
+            $criteria = (array) $model;
+        }
         $result = $this->db->$collectionName->remove($criteria);
 
         $collection->filter = null;
