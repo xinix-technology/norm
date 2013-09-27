@@ -91,7 +91,7 @@ class MongoConnection extends Connection {
             $criteria = array(
                 '_id' => new \MongoId($model->getId()),
             );
-            $modified = $this->db->$collectionName->findAndModify($criteria, $modified, null, array('new' => true));
+            $modified = $this->db->$collectionName->findAndModify($criteria, array('$set' => $modified), null, array('new' => true));
             $result['ok'] = 1;
         } else {
             $result = $this->db->$collectionName->insert($modified);
