@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit colors="true">
+    <testsuites>
+        <testsuite name="mongodbadapter">
+            <directory>./test/Norm/mongodb</directory>
+        </testsuite>
+        <testsuite name="mysqladapter">
+            <directory>./test/Norm/mysql</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

@@ -3,7 +3,8 @@
     "require": {
     },
     "require-dev": {
-        "phpunit/phpunit": "3.7.22"
+        "phpunit/phpunit": "3.7.22",
+        "doctrine/inflector": "1.*"
     },
      "autoload": {
         "psr-0": {
