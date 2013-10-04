@@ -45,7 +45,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase {
     public function testQuery() {
         $this->assertTrue(self::$collection instanceof Collection, 'is Norm::factory() returns Collection instance');
         $a = self::$connection->listCollections();
-        $this->assertTrue(is_array(array()));
+        $this->assertTrue(is_array($a));
     }
 
     public function testInsert() {
@@ -57,6 +57,8 @@ class ModelTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testUpdate() {
+        $this->assertEquals(self::$model->get('hobby'), 'hiking', 'is able to get array of Model instances');
+
         self::$model->set('hobby', 'jogging');
         self::$model->save();
 
