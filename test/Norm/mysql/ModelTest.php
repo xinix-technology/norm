@@ -13,16 +13,11 @@ class ModelTest extends \PHPUnit_Framework_TestCase {
     private static $db;
     private static $model;
 
-    // public static function setUpBeforeClass() {
-
-    // }
-
     public static function setUpBeforeClass() {
         if (self::$collection) {
             return;
         }
 
-        var_dump("Initializing environment...");
         $config = array(
             'mysql' => array(
                 'driver' => '\\Norm\\Connection\\MysqlConnection',
@@ -71,7 +66,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase {
     public function testRemove() {
         $model = self::$collection->findOne(array('name' => 'adoel'));
 
-        $this->assertNotNull($model, 'is null after deleted');
+        $this->assertNotNull($model, 'is not null before deleted');
 
         $model->remove();
 
