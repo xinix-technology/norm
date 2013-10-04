@@ -91,6 +91,17 @@ class Model implements \JsonSerializable {
     }
 
     /**
+     * Set id of model.
+     *
+     * @return int|string
+     */
+    public function setId($givenId) {
+        if (!isset($this->id)) {
+            $this->id = $givenId;
+        }
+    }
+
+    /**
      * Get the attribute.
      *
      * @param  string $key
@@ -100,6 +111,10 @@ class Model implements \JsonSerializable {
         if (isset($this->attributes[$key])) {
             return $this->attributes[$key];
         }
+    }
+
+    public function dump() {
+        return $this->attributes;
     }
 
     /**

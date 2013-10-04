@@ -22,6 +22,10 @@ abstract class Connection {
         return $this->options;
     }
 
+    public function getName() {
+        return $this->options['name'];
+    }
+
     public function factory($collectionName) {
         if (!isset($this->collections[$collectionName])) {
             $collection = new Collection(array(
