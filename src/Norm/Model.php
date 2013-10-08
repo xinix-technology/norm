@@ -7,7 +7,7 @@ namespace Norm;
  *
  * Default model implementation.
  */
-class Model implements \Putra\JsonSerializer {
+class Model implements \JsonSerializable {
 
     /**
      * Constants for fetching toArray method.
