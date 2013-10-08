@@ -82,4 +82,14 @@ class Norm {
         }
     }
 
+    public static function phpVersion() {
+        $ver = phpversion();
+        $verArr = explode('.', $ver);
+        return array(
+            'version' => $ver,
+            'major' => $verArr[0],
+            'minor' => $verArr[1],
+        );
+    }
+
 }

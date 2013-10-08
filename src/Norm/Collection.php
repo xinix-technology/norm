@@ -5,7 +5,7 @@ namespace Norm;
 use Doctrine\Common\Inflector\Inflector;
 use Norm\Model;
 
-class Collection implements \JsonSerializable {
+class Collection {
     public $clazz;
     public $name;
     public $connection;
@@ -64,7 +64,8 @@ class Collection implements \JsonSerializable {
 
         if ($cursor->hasNext()) {
             $o = $cursor->getNext();
-            return $this->hydrate([$o])[0];
+            $hydrate = $this->hydrate(array($o));
+            return $hydrate[0];
         }
     }
 

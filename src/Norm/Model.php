@@ -166,7 +166,10 @@ class Model implements \JsonSerializable {
      * @return array
      */
     public function toArray($fetchType = Model::FETCH_ALL) {
-        $attributes = (new \ArrayObject($this->attributes))->getArrayCopy();
+        $arrObj = new \ArrayObject($this->attributes);
+        var_dump($arrObj);
+        exit;
+        $attributes = $arrObj->getArrayCopy();
         if ($fetchType == Model::FETCH_ALL) {
             $attributes = array(
                 '$type' => $this->clazz,
