@@ -2,7 +2,7 @@
 
 namespace Norm;
 
-use Doctrine\Common\Inflector\Inflector;
+use Reekoheek\Util\Inflector;
 use Norm\Model;
 
 class Collection implements \JsonSerializable {
