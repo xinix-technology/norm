@@ -2,6 +2,6 @@
 
 namespace Putra;
 
-class JsonSerializer implements \JsonSerializable {
-
+interface JsonSerializer {
+	public function encode($data);
 }
