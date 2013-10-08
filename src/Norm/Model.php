@@ -10,8 +10,8 @@ namespace Norm;
 
 class Model implements \Putra\JsonSerializer {
 
-    public function encode($data){
-        
+    public static function encode($data){
+        return json_encode($data);
     }
 
     /**

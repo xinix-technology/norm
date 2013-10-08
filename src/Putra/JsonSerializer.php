@@ -3,5 +3,6 @@
 namespace Putra;
 
 interface JsonSerializer {
-	public function encode($data);
+	public static function encode($data);
 }
+
