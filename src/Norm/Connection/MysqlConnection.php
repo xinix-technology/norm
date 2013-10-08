@@ -6,7 +6,7 @@ use Norm\Connection;
 use Norm\Collection;
 use Norm\Model;
 use Norm\Norm;
-use Norm\Helpers\Generator;
+use Alfa\Helpers\Generator;
 
 class MysqlConnection extends Connection {
     protected $client;
@@ -38,6 +38,17 @@ class MysqlConnection extends Connection {
 
     public function getDB() {
         return $this->db;
+    }
+
+    public function prepare($object) {
+        $newObject = array();
+        $newObject['$id'] = (string) $object['$id'];
+        foreach ($object as $key => $value) {
+            if ($key[0] !== '_') {
+                $newObject[$key] = $value;
+            }
+        }
+        return $newObject;
     }
 
     public function getOne(Collection $collection, $cursor) {

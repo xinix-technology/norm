@@ -31,7 +31,7 @@ class Collection implements \JsonSerializable {
     public function hydrate($cursor) {
         $results = array();
 
-        foreach ($cursor as $doc) {
+        foreach ($cursor as $key => $doc) {
             $doc = $this->connection->prepare($doc);
 
             $results[] = new Model($doc, array(
@@ -53,7 +53,6 @@ class Collection implements \JsonSerializable {
 
     public function find(array $filter = null) {
         $this->filter($filter);
-
         return $this->hydrate($this->connection->query($this));
     }
 

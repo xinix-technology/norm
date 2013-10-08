@@ -1,6 +1,6 @@
 <?php
 
-namespace Norm\Helpers;
+namespace Alfa\Helpers;
 
 class Generator {
 
