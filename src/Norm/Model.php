@@ -8,10 +8,25 @@ namespace Norm;
  * Default model implementation.
  */
 
-class Model implements \Putra\JsonSerializer {
+class Model implements \JsonKit\JsonSerializer {
+
+    public static function replaceObject($data, &$kobe = array()) {
+        if (is_array($data) || is_object($data)) {
+            if ($data instanceof \JsonKit\JsonSerializer) {
+                $opo = $data->toArray();
+                $kobe[] = $opo;
+            } else {
+                foreach ($data['entries'] as $key => $value) {
+                    $data[$key] = self::replaceObject($value,$kobe);
+                }
+            }
+        }
+        return $kobe;
+    }
 
     public static function encode($data){
-        return json_encode($data);
+        $JsonData = self::replaceObject($data);
+        return json_encode($JsonData);
     }
 
     /**
@@ -172,8 +187,7 @@ class Model implements \Putra\JsonSerializer {
      */
     public function toArray($fetchType = Model::FETCH_ALL) {
         $arrObj = new \ArrayObject($this->attributes);
-        var_dump($arrObj);
-        exit;
+        
         $attributes = $arrObj->getArrayCopy();
         if ($fetchType == Model::FETCH_ALL) {
             $attributes = array(
