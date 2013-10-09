@@ -3,10 +3,6 @@
 namespace Norm;
 
 class Schema {
-    const TYPE_STRING   = 'string';
-    const TYPE_INT      = 'int';
-    const TYPE_DOUBLE   = 'double';
-
     protected $schemes;
 
     public function __construct($schemes = array()) {

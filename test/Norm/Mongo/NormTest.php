@@ -1,19 +1,17 @@
 <?php
 
+namespace Norm\Mongo;
+
 use Norm\Norm;
 use Norm\Connection;
 use Norm\Connection\MongoConnection;
 
+require_once('Fixture.php');
+
 class NormTest extends \PHPUnit_Framework_TestCase {
 
     public function setUp() {
-        $config = array(
-            'mongo' => array(
-                'driver' => '\\Norm\\Connection\\MongoConnection',
-                'database' => 'think',
-            ),
-        );
-        Norm::init($config);
+        Norm::init(Fixture::config('norm.databases'));
     }
 
     public function testGetConnection() {
