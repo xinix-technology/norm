@@ -1,24 +1,20 @@
 <?php
 
+namespace Norm\Mysql;
+
 use Norm\Norm;
 use Norm\Connection;
 use Norm\Connection\MysqlConnection;
+
+require_once('Fixture.php');
 
 class NormTest extends \PHPUnit_Framework_TestCase {
 
     private $connection;
 
     public function setUp() {
-        $config = array(
-            'mysql' => array(
-                'driver' => '\\Norm\\Connection\\MysqlConnection',
-                'database' => 'test',
-                'username' => 'root',
-                'password' => 'password',
-            ),
-        );
+        Norm::init(Fixture::config('norm.databases'));
 
-        Norm::init($config);
         $this->db = Norm::getDB();
     }
 

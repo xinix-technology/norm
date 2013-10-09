@@ -1,10 +1,14 @@
 <?php
 
+namespace Norm\Mysql;
+
 use Norm\Norm;
 use Norm\Connection;
 use Norm\Connection\MysqlConnection;
 use Norm\Model;
 use Norm\Collection;
+
+require_once('Fixture.php');
 
 class ModelTest extends \PHPUnit_Framework_TestCase {
 
@@ -18,16 +22,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase {
             return;
         }
 
-        $config = array(
-            'mysql' => array(
-                'driver' => '\\Norm\\Connection\\MysqlConnection',
-                'database' => 'test',
-                'username' => 'root',
-                'password' => 'password',
-            ),
-        );
-
-        Norm::init($config);
+        Norm::init(Fixture::config('norm.databases'));
 
         self::$connection = Norm::getConnection();
 
