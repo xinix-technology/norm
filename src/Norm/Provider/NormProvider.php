@@ -26,6 +26,6 @@ class NormProvider {
         $dbConfig = $this->app->config('norm.databases');
         $schemaConfig = $this->app->config('norm.schemas');
 
-        Norm::init($dbConfig, $schemaConfig);
+        \Norm\Norm::init($dbConfig, $schemaConfig);
     }
 }
