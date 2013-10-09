@@ -23,11 +23,11 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
-  `$id` varchar(255) NOT NULL DEFAULT '',
+  `id` varchar(255) NOT NULL DEFAULT '',
   `name` varchar(255) DEFAULT NULL,
   `hobby` varchar(255) DEFAULT NULL,
   `age` varchar(10) DEFAULT NULL,
-  PRIMARY KEY (`$id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -49,4 +49,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-10-04 19:59:25
+-- Dump completed on 2013-10-09 17:42:18
