@@ -77,6 +77,7 @@ class MysqlConnection extends Connection {
         $collectionName = $collection->name;
         $statement = $this->db->query("SELECT * FROM $collectionName");
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $retVal = $this->prepare($result);
         return $results;
     }
 
