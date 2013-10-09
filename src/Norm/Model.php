@@ -82,26 +82,6 @@ class Model implements \JsonSerializable {
     }
 
     /**
-     * Get id of model.
-     *
-     * @return int|string
-     */
-    public function getId() {
-        return $this->id;
-    }
-
-    /**
-     * Set id of model.
-     *
-     * @return int|string
-     */
-    public function setId($givenId) {
-        if (!isset($this->id)) {
-            $this->id = $givenId;
-        }
-    }
-
-    /**
      * Get the attribute.
      *
      * @param  string $key
