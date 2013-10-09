@@ -5,7 +5,7 @@ namespace Norm;
 use Doctrine\Common\Inflector\Inflector;
 use Norm\Model;
 
-class Collection {
+class Collection implements \JsonKit\JsonSerializer {
     public $clazz;
     public $name;
     public $connection;

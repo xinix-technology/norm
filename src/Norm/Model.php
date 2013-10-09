@@ -10,25 +10,6 @@ namespace Norm;
 
 class Model implements \JsonKit\JsonSerializer {
 
-    public static function replaceObject($data, &$kobe = array()) {
-        if (is_array($data) || is_object($data)) {
-            if ($data instanceof \JsonKit\JsonSerializer) {
-                $opo = $data->toArray();
-                $kobe[] = $opo;
-            } else {
-                foreach ($data['entries'] as $key => $value) {
-                    $data[$key] = self::replaceObject($value,$kobe);
-                }
-            }
-        }
-        return $kobe;
-    }
-
-    public static function encode($data){
-        $JsonData = self::replaceObject($data);
-        return json_encode($JsonData);
-    }
-
     /**
      * Constants for fetching toArray method.
      * FETCH_ALL       will fetch all attributes of model
