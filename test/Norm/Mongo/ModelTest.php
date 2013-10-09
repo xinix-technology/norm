@@ -1,10 +1,14 @@
 <?php
 
+namespace Norm\Mongo;
+
 use Norm\Norm;
 use Norm\Connection;
 use Norm\Connection\MongoConnection;
 use Norm\Model;
 use Norm\Collection;
+
+require_once('Fixture.php');
 
 class ModelTest extends \PHPUnit_Framework_TestCase {
 
@@ -12,18 +16,13 @@ class ModelTest extends \PHPUnit_Framework_TestCase {
     private $collection;
 
     public function setUp() {
-        $config = array(
-            'mongo' => array(
-                'driver' => '\\Norm\\Connection\\MongoConnection',
-                'database' => 'test',
-            ),
-        );
-        Norm::init($config);
+        Norm::init(Fixture::config('norm.databases'));
+
         $this->connection = Norm::getConnection();
 
         $db = $this->connection->getDB();
         $db->drop();
-        $db->createCollection("user",false);
+        $db->createCollection("user", false);
 
         $db->user->insert(array(
             "firstName" => "anu",
@@ -49,8 +48,6 @@ class ModelTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testQuery() {
-
-
         $this->assertTrue($this->collection instanceof Collection, 'is Norm::factory() returns Collection instance');
 
         $a = $this->collection->find();
