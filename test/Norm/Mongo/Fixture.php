@@ -11,6 +11,12 @@ class Fixture {
                     'database' => 'test',
                 ),
             ),
+            'norm.schemas' => array(
+                'User' => array(
+                    'username' => new \Norm\Schema\String(),
+                    'password' => new \Norm\Schema\String(),
+                ),
+            ),
         );
 
         if (empty($key)) {

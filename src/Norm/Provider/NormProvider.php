@@ -1,6 +1,6 @@
 <?php
 
-namespace Norm;
+namespace Norm\Provider;
 
 /**
  * Norm\NormProvider
@@ -23,8 +23,9 @@ class NormProvider {
     public function initialize($app) {
         $this->app = $app;
 
-        $config = $this->app->config('norm.databases');
+        $dbConfig = $this->app->config('norm.databases');
+        $schemaConfig = $this->app->config('norm.schemas');
 
-        Norm::init($config);
+        Norm::init($dbConfig, $schemaConfig);
     }
 }

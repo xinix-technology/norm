@@ -31,7 +31,7 @@ class Norm {
      *
      * @param  array  $config [description]
      */
-    public static function init($config) {
+    public static function init($config, $schemaConfig = NULL) {
         $first = NULL;
 
         foreach ($config as $key => $value) {
@@ -48,6 +48,14 @@ class Norm {
 
         if (!static::$defaultConnection) {
             static::$defaultConnection = $first;
+        }
+
+        if (!empty($schemaConfig)) {
+            Norm::hook('norm.after.factory', function($collection) use ($schemaConfig) {
+                if (isset($schemaConfig[$collection->clazz])) {
+                    $collection->schema(new Schema($schemaConfig[$collection->clazz]));
+                }
+            });
         }
     }
 
