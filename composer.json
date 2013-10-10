@@ -9,8 +9,7 @@
     },
      "autoload": {
         "psr-0": {
-            "Norm": "src/",
-            "Alfa": "src/"
+            "Norm": "src/"
         }
     }
 }
