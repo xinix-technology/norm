@@ -40,22 +40,44 @@ class MysqlConnection extends Connection {
         return $this->db;
     }
 
+    public function prepare($object) {
+        if (!is_array($object)) { return null; }
+        foreach ($object as $key => $value) {
+            if (isset($value['id'])) {
+                $object[$key]['$id'] = $value['id'];
+                unset($object[$key]['id']);
+            }
+        }
+        return $object;
+    }
+
+    public function prepareBeforeQuery($object) {
+        $newObject = array();
+        $newObject['id'] = (string) $object['$id'];
+        foreach ($object as $key => $value) {
+            if ($key[0] !== '$') $newObject[$key] = $value;
+        }
+        return $newObject;
+    }
+
     public function getOne(Collection $collection, $cursor) {
         $collectionName = $collection->name;
         if (count($cursor) > 0) {
-            $id = $cursor[0]["\$id"];
-            $statement = $this->db->query("SELECT * FROM $collectionName WHERE \$id = '$id'");
+            $id = $cursor[0]["id"];
+            $statement = $this->db->query("SELECT * FROM $collectionName WHERE id = '$id'");
             $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
         } else {
             $result = null;
         }
-        return $result;
+        $retVal = $this->prepare($result);
+        return $retVal;
     }
 
     public function dumpAll(Collection $collection) {
         $collectionName = $collection->name;
         $statement = $this->db->query("SELECT * FROM $collectionName");
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $retVal = $this->prepare($result);
         return $results;
     }
 
@@ -90,9 +112,9 @@ class MysqlConnection extends Connection {
         if ($model->get('$id') == '') {
             $model->set('$id', Generator::genId());
             $id = $model->get('$id');
-            $model->setId($id);
 
             $lists = $model->dump();
+            $lists = $this->prepareBeforeQuery($lists);
 
             $colName = '';
             $values = '';
@@ -112,6 +134,7 @@ class MysqlConnection extends Connection {
             $id = $model->get('$id');
 
             $lists = $model->dump();
+            $lists = $this->prepareBeforeQuery($lists);
 
             $updated = '';
 
@@ -121,7 +144,7 @@ class MysqlConnection extends Connection {
 
             $updated = preg_replace('/, $/i', '', $updated);
 
-            $query = "UPDATE $collectionName SET $updated WHERE \$id='$id'";
+            $query = "UPDATE $collectionName SET $updated WHERE id='$id'";
 
             $affected_rows = $this->db->exec($query);
         }
@@ -133,9 +156,11 @@ class MysqlConnection extends Connection {
     public function remove(Collection $collection, $model) {
         $collectionName = $collection->name;
 
-        $id = $model->getId();
+        $id = $model->get('$id');
 
-        $query = "DELETE FROM $collectionName WHERE \$id='$id'";
+        // print_r($model->get('id'));
+
+        $query = "DELETE FROM $collectionName WHERE id='$id'";
 
         $affected_rows = $this->db->exec($query);
 
