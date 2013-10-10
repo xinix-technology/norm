@@ -7,7 +7,8 @@ namespace Norm;
  *
  * Default model implementation.
  */
-class Model implements \JsonSerializable {
+
+class Model implements \JsonKit\JsonSerializer {
 
     /**
      * Constants for fetching toArray method.
@@ -161,7 +162,9 @@ class Model implements \JsonSerializable {
      * @return array
      */
     public function toArray($fetchType = Model::FETCH_ALL) {
-        $attributes = (new \ArrayObject($this->attributes))->getArrayCopy();
+        $arrObj = new \ArrayObject($this->attributes);
+        
+        $attributes = $arrObj->getArrayCopy();
         if ($fetchType == Model::FETCH_ALL) {
             $attributes = array(
                 '$type' => $this->clazz,
