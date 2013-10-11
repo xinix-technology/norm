@@ -6,7 +6,6 @@ use Norm\Connection;
 use Norm\Collection;
 use Norm\Model;
 use Norm\Norm;
-use Norm\Helpers\Generator;
 
 class MysqlConnection extends Connection {
     protected $client;
@@ -110,7 +109,7 @@ class MysqlConnection extends Connection {
         $collectionName = $collection->name;
 
         if ($model->get('$id') == '') {
-            $model->set('$id', Generator::genId());
+            $model->set('$id', md5(uniqid(time(), true)));
             $id = $model->get('$id');
 
             $lists = $model->dump();
