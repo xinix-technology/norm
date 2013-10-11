@@ -83,6 +83,26 @@ class Model implements \JsonKit\JsonSerializer {
     }
 
     /**
+     * Get id of model.
+     *
+     * @return int|string
+     */
+    public function getId() {
+        return $this->id;
+    }
+
+    /**
+     * Set id of model.
+     *
+     * @return int|string
+     */
+    public function setId($givenId) {
+        if (!isset($this->id)) {
+            $this->id = $givenId;
+        }
+    }
+
+    /**
      * Get the attribute.
      *
      * @param  string $key
@@ -163,7 +183,7 @@ class Model implements \JsonKit\JsonSerializer {
      */
     public function toArray($fetchType = Model::FETCH_ALL) {
         $arrObj = new \ArrayObject($this->attributes);
-        
+
         $attributes = $arrObj->getArrayCopy();
         if ($fetchType == Model::FETCH_ALL) {
             $attributes = array(
