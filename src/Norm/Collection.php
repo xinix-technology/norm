@@ -5,7 +5,7 @@ namespace Norm;
 use Reekoheek\Util\Inflector;
 use Norm\Model;
 
-class Collection implements \JsonKit\JsonSerializer {
+class Collection implements \JsonSerializable {
     public $clazz;
     public $name;
     public $connection;
@@ -61,10 +61,22 @@ class Collection implements \JsonKit\JsonSerializer {
 
         $cursor = $this->connection->query($this);
 
-        if ($cursor->hasNext()) {
-            $o = $cursor->getNext();
-            $hydrate = $this->hydrate(array($o));
-            return $hydrate[0];
+        // FIXME it should't be hardcoded
+        if ($this->connection->getName() == 'mysql') {
+            $docs = $this->connection->getOne($this, $cursor);
+            if (is_null($docs)) return null;
+            $results = array();
+            foreach ($docs as $doc) {
+                $results[] = new Model($doc, array(
+                    'collection' => $this,
+                ));
+            }
+            return $results[0];
+        } else {
+            if ($cursor->hasNext()) {
+                $o = $cursor->getNext();
+                return $this->hydrate([$o])[0];
+            }
         }
     }
 
