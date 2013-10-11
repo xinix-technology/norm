@@ -11,6 +11,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
 
     public function setUp() {
         Norm::init(Fixture::config('norm.databases'));
+        Fixture::init();
     }
 
     public function testConnection() {
