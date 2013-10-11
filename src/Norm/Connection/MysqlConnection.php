@@ -57,7 +57,7 @@ class MysqlConnection extends Connection {
         $query = QueryBuilder::select($collectionName, array());
         $statement = $this->db->query($query);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
-        $retVal = $this->prepare($result);
+        $retVal = $this->prepare($results);
         return $retVal;
     }
 
@@ -70,7 +70,7 @@ class MysqlConnection extends Connection {
             $result = $this->prepare($statement->fetchAll(\PDO::FETCH_ASSOC));
             $cursor = new Cursor($result);
         } else {
-            $cursor = $this->dumpAll($collection);
+            $cursor = new Cursor($this->dumpAll($collection));
         }
 
         $collection->filter = null;
@@ -93,7 +93,6 @@ class MysqlConnection extends Connection {
             $query = QueryBuilder::update($collection, $model);
             $affectedRows = $this->db->exec($query);
         }
-
 
         return $affectedRows;
     }
@@ -119,4 +118,4 @@ class MysqlConnection extends Connection {
     }
 
 }
-//
+

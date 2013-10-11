@@ -7,6 +7,9 @@ use Norm\Model;
 use Norm\Mysql\Cursor;
 
 /**
+* Norm\Mysql\QueryBuilder
+*
+* @author   Krisan Alfa Timur <krisan47@gmail.com>
 *
 */
 class QueryBuilder extends Cursor {
@@ -15,6 +18,12 @@ class QueryBuilder extends Cursor {
 
     }
 
+    /**
+    * Change from $id to id before we process them to our query builder
+    * @access public
+    * @param   array
+    * @return  array
+    */
     public static function prepareBeforeQuery($object) {
         $newObject = array();
         $newObject['id'] = (string) $object['$id'];
@@ -24,6 +33,13 @@ class QueryBuilder extends Cursor {
         return $newObject;
     }
 
+    /**
+    * Build a basic INSERT INTO SQL
+    * @access public
+    * @param  object    instance of Norm\Collection
+    * @param  object    an instance of Norm\Model
+    * @return string
+    */
     public static function insertInto(Collection $collection, Model $model) {
         $collectionName = $collection->name;
 
@@ -46,7 +62,16 @@ class QueryBuilder extends Cursor {
         return $query;
     }
 
-    public static function select($collectionName, $filter = array(), $arguments = '') {
+    /**
+    * Build a basic SELECT [collumn] FROM [table]
+    * @access public
+    * @param  object    an instance of Norm\Collection
+    * @param  array     array you want to filter, it should be something like this
+    *                       array( collname => value, collname2 => value );
+    * @param  string    additional option if you want to LIMIT or something like that
+    * @return string
+    */
+    public static function select($collectionName, $filter = NULL, $options = '') {
         if (count($filter) > 0) {
             $cursor = new Cursor($filter);
             $whereAs = '';
@@ -65,11 +90,20 @@ class QueryBuilder extends Cursor {
             $query = "SELECT * FROM $collectionName";
         }
 
-        $query = $query . $arguments;
+        if ($options != '') {
+            $query = $query . ' ' .$options;
+        }
 
         return $query;
     }
 
+    /**
+    * Build a basic UPDATE FROM [colname] SQL
+    * @access public
+    * @param  object    an instance of Norm\Collection
+    * @param  object    an instance of Norm\Model
+    * @return string
+    */
     public static function update(Collection $collection, Model $model) {
         $collectionName = $collection->name;
         $id = $model->get('$id');
@@ -88,6 +122,14 @@ class QueryBuilder extends Cursor {
         return $query;
     }
 
+    /**
+    * Build a basic UPDATE FROM [colname] SQL
+    * @access public
+    * @param  object    an instance of Norm\Collection
+    * @param  array     array you want to filter, it should be something like this
+    *                       array(collname => value, collname2 => value)
+    * @return string
+    */
     public static function deleteFrom(Collection $collection, $criteria) {
         $collectionName = $collection->name;
         $cursor = new Cursor($criteria);

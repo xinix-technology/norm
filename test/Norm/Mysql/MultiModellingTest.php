@@ -56,6 +56,9 @@ class MultiModellingTest extends \PHPUnit_Framework_TestCase {
         $this->model2->set('age', '21');
 
         $this->assertEquals(count($this->model2->save()), 1, 'is able to insert Model attributes to database');
+
+        $a = $this->collection->findOne()->dump();
+        $this->assertEquals(count($a), 2, 'is able to get all Model attributes from database');
     }
 
     public function testUpdate() {
@@ -110,7 +113,7 @@ class MultiModellingTest extends \PHPUnit_Framework_TestCase {
         ));
 
         $this->assertNull($model, 'is null after deleted');
-        $this->assertNotNull($model2, 'is null after deleted');
+        $this->assertNotNull($model2, 'is not null because is not deleted');
     }
 
 }
