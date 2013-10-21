@@ -20,15 +20,17 @@ class NormTest extends \PHPUnit_Framework_TestCase {
 
     public function testGetConnection() {
         $connection = Norm::getConnection();
-        $this->assertTrue($connection instanceof Connection);
+        $this->assertTrue($connection instanceof Connection,
+            'connection is instance of Connection class');
 
         $connection = Norm::getConnection('mysql');
-        $this->assertTrue($connection instanceof MysqlConnection);
+        $this->assertTrue($connection instanceof MysqlConnection,
+            'our connection (based) on configuration is instance of MysqlConnection');
     }
 
     public function testAsConnectionProxy() {
         $options = Norm::getConnection()->getOptions();
-        $this->assertEquals($options['name'], 'mysql');
+        $this->assertEquals($options['name'], 'mysql', 'our connection is mysql as it is in our configuration');
     }
 
 }

@@ -6,7 +6,8 @@ use Norm\Connection;
 use Norm\Collection;
 use Norm\Model;
 use Norm\Norm;
-use Norm\Helpers\Generator;
+use Norm\Mysql\Cursor;
+use Norm\Mysql\QueryBuilder;
 
 class MysqlConnection extends Connection {
     protected $client;
@@ -51,49 +52,25 @@ class MysqlConnection extends Connection {
         return $object;
     }
 
-    public function prepareBeforeQuery($object) {
-        $newObject = array();
-        $newObject['id'] = (string) $object['$id'];
-        foreach ($object as $key => $value) {
-            if ($key[0] !== '$') $newObject[$key] = $value;
-        }
-        return $newObject;
-    }
-
-    public function getOne(Collection $collection, $cursor) {
-        $collectionName = $collection->name;
-        if (count($cursor) > 0) {
-            $id = $cursor[0]["id"];
-            $statement = $this->db->query("SELECT * FROM $collectionName WHERE id = '$id'");
-            $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
-        } else {
-            $result = null;
-        }
-        $retVal = $this->prepare($result);
-        return $retVal;
-    }
-
     public function dumpAll(Collection $collection) {
         $collectionName = $collection->name;
-        $statement = $this->db->query("SELECT * FROM $collectionName");
+        $query = QueryBuilder::select($collectionName, array());
+        $statement = $this->db->query($query);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
-        $retVal = $this->prepare($result);
-        return $results;
+        $retVal = $this->prepare($results);
+        return $retVal;
     }
 
     public function query(Collection $collection) {
         $collectionName = $collection->name;
+        $cursor = null;
         if ($collection->filter) {
-            $colname = '';
-            $val = '';
-            foreach ($collection->filter as $key => $value) {
-                $colname = $key;
-                $val = $value;
-            }
-            $statement = $this->db->query("SELECT * FROM $collectionName WHERE $colname='$val'");
-            $cursor = $statement->fetchAll(\PDO::FETCH_ASSOC);
+            $query = QueryBuilder::select($collectionName, $collection->filter, 'LIMIT 1');
+            $statement = $this->db->query($query);
+            $result = $this->prepare($statement->fetchAll(\PDO::FETCH_ASSOC));
+            $cursor = new Cursor($result);
         } else {
-            $cursor = $this->dumpAll($collection);
+            $cursor = new Cursor($this->dumpAll($collection));
         }
 
         $collection->filter = null;
@@ -107,66 +84,38 @@ class MysqlConnection extends Connection {
     }
 
     public function save(Collection $collection, Model $model) {
-        $collectionName = $collection->name;
-
         if ($model->get('$id') == '') {
-            $model->set('$id', Generator::genId());
-            $id = $model->get('$id');
-
-            $lists = $model->dump();
-            $lists = $this->prepareBeforeQuery($lists);
-
-            $colName = '';
-            $values = '';
-
-            foreach ($lists as $key => $value) {
-                $colName .= $key . ', ';
-                $values .= "'$value'" . ', ';
-            }
-
-            $colName = preg_replace('/, $/i', '', $colName);
-            $values = preg_replace('/, $/i', '', $values);
-
-            $query = "INSERT INTO $collectionName ($colName) VALUES ($values)";
-
-            $affected_rows = $this->db->exec($query);
+            $model->set('$id', md5(uniqid(time(), true)));
+            $model->setId($model->get('$id'));
+            $query = QueryBuilder::insertInto($collection, $model);
+            $affectedRows = $this->db->exec($query);
         } else {
-            $id = $model->get('$id');
-
-            $lists = $model->dump();
-            $lists = $this->prepareBeforeQuery($lists);
-
-            $updated = '';
-
-            foreach ($lists as $key => $value) {
-                $updated .= "$key='$value', ";
-            }
-
-            $updated = preg_replace('/, $/i', '', $updated);
-
-            $query = "UPDATE $collectionName SET $updated WHERE id='$id'";
-
-            $affected_rows = $this->db->exec($query);
+            $query = QueryBuilder::update($collection, $model);
+            $affectedRows = $this->db->exec($query);
         }
 
-
-        return $affected_rows;
+        return $affectedRows;
     }
 
-    public function remove(Collection $collection, $model) {
+    public function remove(Collection $collection, Model $model) {
         $collectionName = $collection->name;
+        $id = null;
 
-        $id = $model->get('$id');
+        if (count($model->dump()) > 0) {
+            $list = $model->get(0);
+            $id = $list['$id'];
+        }
 
-        // print_r($model->get('id'));
+        $filter = array('id' => $id);
 
-        $query = "DELETE FROM $collectionName WHERE id='$id'";
+        $query = QueryBuilder::deleteFrom($collection, $filter);
 
-        $affected_rows = $this->db->exec($query);
+        $affectedRows = $this->db->exec($query);
 
         $collection->filter = null;
 
-        return $affected_rows;
+        return $affectedRows;
     }
 
 }
+

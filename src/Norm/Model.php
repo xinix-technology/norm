@@ -100,6 +100,7 @@ class Model implements \JsonKit\JsonSerializer {
         if (!isset($this->id)) {
             $this->id = $givenId;
         }
+        return $this->id;
     }
 
     /**

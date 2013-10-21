@@ -48,16 +48,16 @@ class ModelTest extends \PHPUnit_Framework_TestCase {
         self::$model->set('hobby', 'hiking');
         self::$model->set('age', '22');
 
-        $this->assertEquals(count(self::$model->save()), 1, 'is able to get array of Model instances');
+        $this->assertEquals(count(self::$model->save()), 1, 'is able to save array of Model instances to database');
     }
 
     public function testUpdate() {
-        $this->assertEquals(self::$model->get('hobby'), 'hiking', 'is able to get array of Model instances');
+        $this->assertEquals(self::$model->get('hobby'), 'hiking', 'index of attributes has not changed yet');
 
         self::$model->set('hobby', 'jogging');
         self::$model->save();
 
-        $this->assertEquals(self::$model->get('hobby'), 'jogging', 'is able to get array of Model instances');
+        $this->assertEquals(self::$model->get('hobby'), 'jogging', 'index of attributes has changed');
     }
 
     public function testRemove() {
