@@ -82,6 +82,11 @@ class Model implements \JsonKit\JsonSerializer {
         $this->attributes = $attributes;
     }
 
+    public function reset() {
+        $this->id = NULL;
+        $this->attributes = array();
+    }
+
     /**
      * Get id of model.
      *
@@ -99,6 +104,7 @@ class Model implements \JsonKit\JsonSerializer {
     public function setId($givenId) {
         if (!isset($this->id)) {
             $this->id = $givenId;
+            $this->set('$id', $givenId);
         }
         return $this->id;
     }
