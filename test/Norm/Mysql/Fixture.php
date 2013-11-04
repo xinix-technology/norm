@@ -10,7 +10,7 @@ class Fixture {
             'mysql' => array(
                 'driver' => '\\Norm\\Connection\\PDOConnection',
                 'prefix' => 'mysql',
-                'database' => 'test',
+                'dbname' => 'test',
                 'username' => 'root',
                 'password' => 'password',
             ),
@@ -26,6 +26,7 @@ class Fixture {
     }
 
     public static function init() {
+        Norm::reset();
         Norm::init(Fixture::config('norm.databases'));
 
         $connection = Norm::getConnection();
@@ -35,10 +36,12 @@ class Fixture {
         $raw->exec("DROP TABLE IF EXISTS user");
         $raw->exec("
             CREATE TABLE IF NOT EXISTS user (
-              id INTEGER PRIMARY KEY,
-              firstName TEXT,
-              lastName TEXT
-            )");
+                id int(11) NOT NULL AUTO_INCREMENT,
+                firstName varchar(255),
+                lastName varchar(255),
+                PRIMARY KEY (id)
+            ) ENGINE=InnoDB
+        ");
 
         $raw->exec("INSERT INTO user(firstName, lastName) VALUES('putra', 'pramana')");
 

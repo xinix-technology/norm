@@ -76,6 +76,13 @@ class Norm {
     }
 
     /**
+     * Reset connection registry
+     */
+    public static function reset() {
+        static::$defaultConnection = NULL;
+    }
+
+    /**
      * All static call of method will be straight through to the default
      * connection method call with the same method name.
      *
