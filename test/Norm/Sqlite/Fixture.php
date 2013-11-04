@@ -1,16 +1,16 @@
 <?php
 
-namespace Norm\Mongo;
+namespace Norm\Sqlite;
 
 use Norm\Norm;
 
 class Fixture {
-
     protected static $config = array(
         'norm.databases' => array(
-            'mongo' => array(
-                'driver' => '\\Norm\\Connection\\MongoConnection',
-                'database' => 'test',
+            'sqlite' => array(
+                'driver' => '\\Norm\\Connection\\PDOConnection',
+                'prefix' => 'sqlite',
+                'database' => 'tmp/test.sqlite3',
             ),
         ),
     );
@@ -29,13 +29,16 @@ class Fixture {
         $connection = Norm::getConnection();
 
         $raw = $connection->getRaw();
-        $raw->drop();
-        $raw->createCollection("user", false);
 
-        $raw->user->insert(array(
-            "firstName" => "putra",
-            "lastName" => "pramana",
-        ));
+        $raw->exec("DROP TABLE IF EXISTS user");
+        $raw->exec("
+            CREATE TABLE IF NOT EXISTS user (
+              id INTEGER PRIMARY KEY,
+              firstName TEXT,
+              lastName TEXT
+            )");
+
+        $raw->exec("INSERT INTO user(firstName, lastName) VALUES('putra', 'pramana')");
 
         return $connection;
     }

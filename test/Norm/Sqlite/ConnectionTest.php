@@ -1,6 +1,6 @@
 <?php
 
-namespace Norm\Mysql;
+namespace Norm\Sqlite;
 
 use Norm\Norm;
 use Norm\Collection;

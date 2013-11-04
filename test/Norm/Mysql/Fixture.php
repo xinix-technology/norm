@@ -2,11 +2,14 @@
 
 namespace Norm\Mysql;
 
+use Norm\Norm;
+
 class Fixture {
     protected static $config = array(
         'norm.databases' => array(
             'mysql' => array(
-                'driver' => '\\Norm\\Connection\\MysqlConnection',
+                'driver' => '\\Norm\\Connection\\PDOConnection',
+                'prefix' => 'mysql',
                 'database' => 'test',
                 'username' => 'root',
                 'password' => 'password',
@@ -23,12 +26,22 @@ class Fixture {
     }
 
     public static function init() {
-        $username = Fixture::$config['norm.databases']['mysql']['username'];
-        $password = Fixture::$config['norm.databases']['mysql']['password'];
-        $database = Fixture::$config['norm.databases']['mysql']['database'];
-        $sqlFile ='./test/Norm/Mysql/Test.sql';
+        Norm::init(Fixture::config('norm.databases'));
 
-        $command='mysql -u' .$username .' -p' .$password .' ' .$database .' < ' .$sqlFile;
-        echo (exec($command));
+        $connection = Norm::getConnection();
+
+        $raw = $connection->getRaw();
+
+        $raw->exec("DROP TABLE IF EXISTS user");
+        $raw->exec("
+            CREATE TABLE IF NOT EXISTS user (
+              id INTEGER PRIMARY KEY,
+              firstName TEXT,
+              lastName TEXT
+            )");
+
+        $raw->exec("INSERT INTO user(firstName, lastName) VALUES('putra', 'pramana')");
+
+        return $connection;
     }
 }

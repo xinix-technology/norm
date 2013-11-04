@@ -10,5 +10,8 @@
         <testsuite name="Adapter mysql">
             <directory>./test/Norm/Mysql</directory>
         </testsuite>
+        <testsuite name="Adapter sqlite">
+            <directory>./test/Norm/Sqlite</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
