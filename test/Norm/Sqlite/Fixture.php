@@ -10,7 +10,7 @@ class Fixture {
             'sqlite' => array(
                 'driver' => '\\Norm\\Connection\\PDOConnection',
                 'prefix' => 'sqlite',
-                'database' => 'tmp/test.sqlite3',
+                'database' => 'test.sqlite3',
             ),
         ),
     );
@@ -24,6 +24,7 @@ class Fixture {
     }
 
     public static function init() {
+        Norm::reset();
         Norm::init(Fixture::config('norm.databases'));
 
         $connection = Norm::getConnection();

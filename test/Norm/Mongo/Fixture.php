@@ -24,8 +24,8 @@ class Fixture {
     }
 
     public static function init() {
+        Norm::reset();
         Norm::init(Fixture::config('norm.databases'));
-
         $connection = Norm::getConnection();
 
         $raw = $connection->getRaw();

@@ -75,7 +75,7 @@ class PDOConnection extends \Norm\Connection {
 
             $sets = array();
             foreach ($record as $key => $value) {
-                if ($key !== '$id') {
+                if ($key !== 'id') {
                     $sets[] = $key.' = :'.$key;
                 }
             }
@@ -83,6 +83,7 @@ class PDOConnection extends \Norm\Connection {
             $sql = 'UPDATE '.$collectionName.' SET '.implode(', ', $sets) . ' WHERE id = :id';
 
             $statement = $this->getRaw()->prepare($sql);
+
             $result = $statement->execute($record);
         }
 
