@@ -7,8 +7,7 @@ use Norm\Collection;
 use Norm\Model;
 
 class MongoConnection extends Connection {
-    protected $client;
-    protected $db;
+    // protected $client;
 
     public function initialize($options) {
         $defaultOptions = array(
@@ -17,13 +16,13 @@ class MongoConnection extends Connection {
         );
         $this->options = $options + $defaultOptions;
 
-        $hostname = $this->options['hostname'];
-        $port = $this->options['port'];
-        $database = $this->options['database'];
-
         if (isset($this->options['connectionString'])) {
             $connectionString = $this->options['connectionString'];
         } else {
+            $hostname = $this->options['hostname'];
+            $port = $this->options['port'];
+            $database = $this->options['database'];
+
             $prefix = '';
             if (isset($this->options['username'])) {
                 $prefix = $this->options['username'].':'.$this->options['password'].'@';
@@ -31,22 +30,18 @@ class MongoConnection extends Connection {
             $connectionString = "mongodb://$prefix$hostname:$port/$database";
         }
 
-        $this->client = new \MongoClient($connectionString);
-        $this->db = $this->client->$database;
+        $client = new \MongoClient($connectionString);
+        $this->raw = $client->$database;
     }
 
-    public function getClient() {
-        return $this->client;
-    }
-
-    public function getDB() {
-        return $this->db;
-    }
+    // public function getClient() {
+    //     return $this->client;
+    // }
 
     public function listCollections() {
         $retval = array();
 
-        $collections = $this->db->listCollections();
+        $collections = $this->raw->listCollections();
         foreach ($collections as $collection) {
             $retval[] = $collection->getName();
         }
@@ -73,12 +68,10 @@ class MongoConnection extends Connection {
                 $collection->filter['_id'] = new \MongoId($collection->filter['$id']);
                 unset($collection->filter['$id']);
             }
-            $cursor = $this->db->$collectionName->find($collection->filter);
+            $cursor = $this->raw->$collectionName->find($collection->filter);
         } else {
-            $cursor = $this->db->$collectionName->find();
+            $cursor = $this->raw->$collectionName->find();
         }
-
-        $collection->filter = null;
 
         return $cursor;
     }
@@ -91,20 +84,17 @@ class MongoConnection extends Connection {
             $criteria = array(
                 '_id' => new \MongoId($model->getId()),
             );
-            $modified = $this->db->$collectionName->findAndModify($criteria, array('$set' => $modified), null, array('new' => true));
+            $modified = $this->raw->$collectionName->findAndModify($criteria, array('$set' => $modified), null, array('new' => true));
             $result['ok'] = 1;
         } else {
-            $result = $this->db->$collectionName->insert($modified);
+            $result = $this->raw->$collectionName->insert($modified);
         }
 
         $modified = $this->prepare($modified);
 
         $model->sync($modified);
 
-        $collection->filter = null;
-
-        $result = $result['ok'];
-        return $result;
+        return $result['ok'];
     }
 
     public function remove(Collection $collection, $model) {
@@ -117,11 +107,8 @@ class MongoConnection extends Connection {
         } else {
             $criteria = (array) $model;
         }
-        $result = $this->db->$collectionName->remove($criteria);
 
-        $collection->filter = null;
-
-        return $result;
+        return $this->raw->$collectionName->remove($criteria);
     }
 
 }

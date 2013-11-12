@@ -1,6 +1,6 @@
 <?php
 
-namespace Norm\Mysql;
+namespace Norm\Sqlite;
 
 use Norm\Norm;
 use Norm\Collection;
@@ -79,5 +79,11 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue(is_array($a));
         $this->assertEquals(count($a), 1);
         $this->assertTrue($a[0] instanceof Model, 'is able to get array of Model instances');
+    }
+
+    public function tearDown() {
+        $config = Fixture::config('norm.databases');
+        exec('rm -fr '.$config['sqlite']['database']);
+
     }
 }

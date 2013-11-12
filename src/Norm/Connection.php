@@ -5,6 +5,8 @@ namespace Norm;
 abstract class Connection {
     protected $options;
 
+    protected $raw;
+
     protected $collections = array();
 
     /**
@@ -24,6 +26,10 @@ abstract class Connection {
 
     public function getName() {
         return $this->options['name'];
+    }
+
+    public function getRaw() {
+        return $this->raw;
     }
 
     public function factory($collectionName) {
@@ -127,4 +133,8 @@ abstract class Connection {
 
     abstract public function initialize($options);
     abstract public function listCollections();
+    abstract public function prepare($object);
+    abstract public function query(Collection $collection);
+    abstract public function save(Collection $collection, Model $model);
+    abstract public function remove(Collection $collection, $model);
 }

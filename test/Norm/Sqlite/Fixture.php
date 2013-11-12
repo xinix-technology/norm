@@ -1,18 +1,16 @@
 <?php
 
-namespace Norm\Mysql;
+namespace Norm\Sqlite;
 
 use Norm\Norm;
 
 class Fixture {
     protected static $config = array(
         'norm.databases' => array(
-            'mysql' => array(
+            'sqlite' => array(
                 'driver' => '\\Norm\\Connection\\PDOConnection',
-                'prefix' => 'mysql',
-                'dbname' => 'test',
-                'username' => 'root',
-                'password' => 'password',
+                'prefix' => 'sqlite',
+                'database' => 'test.sqlite3',
             ),
         ),
     );
@@ -36,12 +34,10 @@ class Fixture {
         $raw->exec("DROP TABLE IF EXISTS user");
         $raw->exec("
             CREATE TABLE IF NOT EXISTS user (
-                id int(11) NOT NULL AUTO_INCREMENT,
-                firstName varchar(255),
-                lastName varchar(255),
-                PRIMARY KEY (id)
-            ) ENGINE=InnoDB
-        ");
+              id INTEGER PRIMARY KEY,
+              firstName TEXT,
+              lastName TEXT
+            )");
 
         $raw->exec("INSERT INTO user(firstName, lastName) VALUES('putra', 'pramana')");
 

@@ -30,7 +30,6 @@ class Collection implements \JsonKit\JsonSerializer {
 
     public function hydrate($cursor) {
         $results = array();
-
         foreach ($cursor as $key => $doc) {
             $doc = $this->connection->prepare($doc);
 
@@ -41,31 +40,43 @@ class Collection implements \JsonKit\JsonSerializer {
         return $results;
     }
 
-    public function filter(array $filter = null) {
+    public function filter($filter = null) {
         if (isset($filter)) {
             if (!isset($this->filter)) {
                 $this->filter = array();
             }
 
-            $this->filter = $this->filter + $filter;
+            if (is_array($filter)) {
+
+                $this->filter = $this->filter + $filter;
+            } else {
+                $this->filter = array('$id' => $filter);
+            }
         }
     }
 
     public function find(array $filter = null) {
         $this->filter($filter);
-        return $this->hydrate($this->connection->query($this));
+        $result = $this->hydrate($this->connection->query($this));
+        $this->filter = null;
+        return $result;
     }
 
-    public function findOne(array $filter = null) {
+    public function findOne($filter = null) {
         $this->filter($filter);
 
         $cursor = $this->connection->query($this);
 
-        if ($cursor->hasNext()) {
-            $o = $cursor->getNext();
+        $result = null;
+
+        if ($o = $cursor->getNext()) {
             $hydrate = $this->hydrate(array($o));
-            return $hydrate[0];
+            $result = $hydrate[0];
         }
+
+        $this->filter = null;
+
+        return $result;
     }
 
     public function newInstance($cloned = array()) {
@@ -76,11 +87,18 @@ class Collection implements \JsonKit\JsonSerializer {
     }
 
     public function save(Model $model) {
-        return $this->connection->save($this, $model);
+        $result = $this->connection->save($this, $model);
+        $this->filter = null;
+        return $result;
     }
 
     public function remove($model) {
-        return $this->connection->remove($this, $model);
+        $result = $this->connection->remove($this, $model);
+        if ($result) {
+            $model->reset();
+        }
+        $this->filter = NULL;
+        return $result;
     }
 
     public function jsonSerialize() {

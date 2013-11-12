@@ -2,27 +2,41 @@
 
 namespace Norm\Mongo;
 
-class Fixture {
-    public static function config($key = '') {
-        $config = array(
-            'norm.databases' => array(
-                'mongo' => array(
-                    'driver' => '\\Norm\\Connection\\MongoConnection',
-                    'database' => 'test',
-                ),
-            ),
-            'norm.schemas' => array(
-                'User' => array(
-                    'username' => new \Norm\Schema\String(),
-                    'password' => new \Norm\Schema\String(),
-                ),
-            ),
-        );
+use Norm\Norm;
 
+class Fixture {
+
+    protected static $config = array(
+        'norm.databases' => array(
+            'mongo' => array(
+                'driver' => '\\Norm\\Connection\\MongoConnection',
+                'database' => 'test',
+            ),
+        ),
+    );
+
+    public static function config($key = '') {
         if (empty($key)) {
-            return $config;
+            return Fixture::$config;
         } else {
-            return $config[$key];
+            return Fixture::$config[$key];
         }
+    }
+
+    public static function init() {
+        Norm::reset();
+        Norm::init(Fixture::config('norm.databases'));
+        $connection = Norm::getConnection();
+
+        $raw = $connection->getRaw();
+        $raw->drop();
+        $raw->createCollection("user", false);
+
+        $raw->user->insert(array(
+            "firstName" => "putra",
+            "lastName" => "pramana",
+        ));
+
+        return $connection;
     }
 }
