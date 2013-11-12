@@ -12,7 +12,7 @@ class Collection implements \JsonKit\JsonSerializer {
 
     public $filter;
 
-    // protected $schema;
+    protected $schema;
 
     public function __construct(array $options = array()) {
         $this->clazz = Inflector::classify($options['name']);
@@ -20,13 +20,13 @@ class Collection implements \JsonKit\JsonSerializer {
         $this->connection = $options['connection'];
     }
 
-    // public function schema($schema = NULL) {
-    //     if (is_null($schema)) {
-    //         return $this->schema;
-    //     } else {
-    //         $this->schema = $schema;
-    //     }
-    // }
+    public function schema($schema = NULL) {
+        if (is_null($schema)) {
+            return $this->schema;
+        } else {
+            $this->schema = $schema;
+        }
+    }
 
     public function hydrate($cursor) {
         $results = array();
@@ -40,13 +40,18 @@ class Collection implements \JsonKit\JsonSerializer {
         return $results;
     }
 
-    public function filter(array $filter = null) {
+    public function filter($filter = null) {
         if (isset($filter)) {
             if (!isset($this->filter)) {
                 $this->filter = array();
             }
 
-            $this->filter = $this->filter + $filter;
+            if (is_array($filter)) {
+
+                $this->filter = $this->filter + $filter;
+            } else {
+                $this->filter = array('$id' => $filter);
+            }
         }
     }
 
@@ -57,7 +62,7 @@ class Collection implements \JsonKit\JsonSerializer {
         return $result;
     }
 
-    public function findOne(array $filter = null) {
+    public function findOne($filter = null) {
         $this->filter($filter);
 
         $cursor = $this->connection->query($this);
