@@ -8,7 +8,7 @@ namespace Norm;
  * Default model implementation.
  */
 
-class Model implements \JsonKit\JsonSerializer {
+class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
 
     /**
      * Constants for fetching toArray method.
@@ -143,6 +143,7 @@ class Model implements \JsonKit\JsonSerializer {
                 $this->attributes[$key] = $value;
             }
         }
+        return $this;
     }
 
     /**
@@ -209,6 +210,23 @@ class Model implements \JsonKit\JsonSerializer {
         }
         return $attributes;
     }
+
+    public function offsetExists ($offset) {
+        return array_key_exists($offset, $this->attributes);
+    }
+
+    public function offsetGet ($offset) {
+        return $this->attributes[$offset];
+    }
+
+    public function offsetSet ($offset , $value) {
+        $this->attributes[$offset] = $value;
+    }
+
+    public function offsetUnset ($offset) {
+        unset($this->attributes[$offset]);
+    }
+
 
     /**
      * Implement the json serializer normalizing the data structures.

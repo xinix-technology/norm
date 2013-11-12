@@ -8,21 +8,11 @@ namespace Norm\Provider;
  * Norm provider for Bono web application framework
  *
  */
-class NormProvider {
-
-    /**
-     * Bono application context
-     * @var Bono\App
-     */
-    protected $app;
-
+class NormProvider extends \Bono\Provider\Provider {
     /**
      * Initialize the provider
-     * @param  Bono\App    $app Bono application context
      */
-    public function initialize($app) {
-        $this->app = $app;
-
+    public function initialize() {
         $dbConfig = $this->app->config('norm.databases');
         $schemaConfig = $this->app->config('norm.schemas');
 
