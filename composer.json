@@ -8,7 +8,7 @@
             "homepage": "http://xinix.co.id",
             "role": "Developer"
         }
-    ]
+    ],
     "require": {
         "reekoheek/jsonkit": "~0.0.1"
     },
