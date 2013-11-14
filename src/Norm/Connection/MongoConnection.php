@@ -49,6 +49,10 @@ class MongoConnection extends Connection {
         return $retval;
     }
 
+    public function migrate(Collection $collection) {
+        // noop
+    }
+
     public function prepare($object) {
         $newObject = array();
         $newObject['$id'] = (string) $object['_id'];

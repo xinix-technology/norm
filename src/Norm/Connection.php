@@ -131,7 +131,18 @@ abstract class Connection {
         }
     }
 
+    public function hasCollection($name) {
+        $collections = $this->listCollections();
+        foreach ($collections as $key => $collection) {
+            if ($collection === $name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     abstract public function initialize($options);
+    abstract public function migrate(Collection $collection);
     abstract public function listCollections();
     abstract public function prepare($object);
     abstract public function query(Collection $collection);
