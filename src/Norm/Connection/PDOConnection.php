@@ -8,10 +8,11 @@ use Norm\PDO\Cursor;
 
 class PDOConnection extends \Norm\Connection {
 
+    protected $dialect;
+
     public function initialize($options) {
 
         $this->options = $options;
-
         if (isset($options['dsn'])) {
             $dsn = $options['dsn'];
         } elseif ($options['prefix'] == 'sqlite') {
@@ -19,7 +20,7 @@ class PDOConnection extends \Norm\Connection {
         } else {
             $dsnArray = array();
             foreach ($options as $key => $value) {
-                if ($key == 'driver' || $key == 'prefix' || $key == 'username' || $key == 'password' || $key == 'name') {
+                if ($key == 'driver' || $key == 'prefix' || $key == 'username' || $key == 'password' || $key == 'name' || $key == 'dialect') {
                     continue;
                 }
                 $dsnArray[] = "$key=$value";
@@ -27,8 +28,8 @@ class PDOConnection extends \Norm\Connection {
             $dsn = $options['prefix'].':'.implode(';', $dsnArray);
         }
 
-        if (isset($config['username'])) {
-            $this->raw = new \PDO($dsn, $config['username'], $config['password']);
+        if (isset($options['username'])) {
+            $this->raw = new \PDO($dsn, $options['username'], $options['password']);
         } else {
             $this->raw = new \PDO($dsn);
         }
@@ -36,12 +37,25 @@ class PDOConnection extends \Norm\Connection {
         $this->raw->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $this->raw->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
+        if (isset($options['dialect'])) {
+            $Dialect = $options['dialect'];
+        } else {
+            $Dialect = '\\Norm\\Dialect\\SQLDialect';
+        }
+        $this->dialect = new $Dialect($this);
+
     }
 
     public function listCollections() {
-        $statement = $this->raw->query("SHOW TABLES");
-        $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
-        return $results;
+        return $this->dialect->listCollections();
+    }
+
+    public function migrate(Collection $collection) {
+        if (!$this->hasCollection($collection->name)) {
+            $grammarCreate = $this->dialect->grammarCreate($collection->name, $collection->schema);
+
+            $this->raw->query($grammarCreate);
+        }
     }
 
     public function save(Collection $collection, Model $model) {

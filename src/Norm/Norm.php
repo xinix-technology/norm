@@ -50,10 +50,12 @@ class Norm {
         if (!static::$defaultConnection) {
             static::$defaultConnection = $first;
         }
+
         if (!empty($schemaConfig)) {
             Norm::hook('norm.after.factory', function($collection) use ($schemaConfig) {
                 if (isset($schemaConfig[$collection->clazz])) {
-                    $collection->schema(new Schema($schemaConfig[$collection->clazz]));
+                    $collection->schema = $schemaConfig[$collection->clazz];
+                    $collection->migrate();
                 }
             });
         }

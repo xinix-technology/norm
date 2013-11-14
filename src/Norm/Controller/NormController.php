@@ -15,12 +15,12 @@ class NormController extends RestController {
 
         $this->collection = Norm::factory($this->clazz);
 
-        $this->data['_schema'] = ($schema = $this->collection->schema()) ? $schema->toArray() : array();
+        $this->data['_schema'] = $this->collection->schema;
 
     }
 
     public function search() {
-        $entries = $this->collection->find();
+        $entries = $this->collection->find($this->request->get());
 
         $this->data['_actions'] = array(
             'update' => NULL,

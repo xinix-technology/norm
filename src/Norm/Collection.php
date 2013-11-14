@@ -9,10 +9,10 @@ class Collection implements \JsonKit\JsonSerializer {
     public $clazz;
     public $name;
     public $connection;
+    public $schema;
 
     public $filter;
 
-    protected $schema;
 
     public function __construct(array $options = array()) {
         $this->clazz = Inflector::classify($options['name']);
@@ -99,6 +99,10 @@ class Collection implements \JsonKit\JsonSerializer {
         }
         $this->filter = NULL;
         return $result;
+    }
+
+    public function migrate() {
+        $this->connection->migrate($this);
     }
 
     public function jsonSerialize() {
