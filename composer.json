@@ -1,5 +1,14 @@
 {
     "name": "xinix-technology/norm",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ganesha",
+            "email": "reekoheek@gmail.com",
+            "homepage": "http://xinix.co.id",
+            "role": "Developer"
+        }
+    ]
     "require": {
         "reekoheek/jsonkit": "~0.0.1"
     },
