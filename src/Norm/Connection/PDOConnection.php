@@ -15,12 +15,12 @@ class PDOConnection extends \Norm\Connection {
         $this->options = $options;
         if (isset($options['dsn'])) {
             $dsn = $options['dsn'];
-        } elseif ($options['prefix'] == 'sqlite') {
+        } elseif ($options['prefix'] === 'sqlite') {
             $dsn = 'sqlite:'.$options['database'];
         } else {
             $dsnArray = array();
             foreach ($options as $key => $value) {
-                if ($key == 'driver' || $key == 'prefix' || $key == 'username' || $key == 'password' || $key == 'name' || $key == 'dialect') {
+                if ($key === 'driver' || $key === 'prefix' || $key === 'username' || $key === 'password' || $key === 'name' || $key === 'dialect') {
                     continue;
                 }
                 $dsnArray[] = "$key=$value";
@@ -72,7 +72,6 @@ class PDOConnection extends \Norm\Connection {
             }
 
             $sql = 'INSERT INTO ' . $collectionName . '('.implode(', ', $fields).') VALUES('.implode(', ', $placeholders).')';
-
             $statement = $this->getRaw()->prepare($sql);
 
             $result = $statement->execute($record);
@@ -110,28 +109,31 @@ class PDOConnection extends \Norm\Connection {
         // FIXME reekoheek should we use query builder?
         // $q = new Query($this);
         // $q->from($collectionName);
-        // $q->where($collection->filter);
+        // $q->where($collection->criteria);
         // $result = $q->result();
 
-        $filter = $collection->filter ?: array();
-        if (isset($filter['$id'])) {
-            $filter['id'] = $filter['$id'];
-            unset($filter['$id']);
+        $criteria = $collection->criteria ?: array();
+        if (isset($criteria['$id'])) {
+            $criteria['id'] = $criteria['$id'];
+            unset($criteria['$id']);
         }
 
         $sql = 'SELECT * FROM '. $collectionName;
 
         $wheres = array();
-        foreach ($filter as $key => $value) {
-            $wheres[] = $key . ' = :' . $key;
+        $data = array();
+        foreach ($criteria as $key => $value) {
+            $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
         }
+
+
         if (count($wheres)) {
             $sql .= ' WHERE '.implode(' AND ', $wheres);
         }
 
         $statement = $this->getRaw()->prepare($sql);
 
-        $statement->execute($filter);
+        $statement->execute($data);
 
         return new Cursor($statement);
     }

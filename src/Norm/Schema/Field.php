@@ -2,14 +2,46 @@
 
 namespace Norm\Schema;
 
+use \Reekoheek\Util\Inflector;
+use Norm\Filter\Filter;
+
 abstract class Field implements \ArrayAccess {
     protected $multi = false;
 
     protected $attributes = array();
 
-    public function __construct($name, $label = '') {
+    protected $filter = array();
+
+    public static function getInstance($name, $label = NULL) {
+        $Field = get_called_class();
+        return new $Field($name, $label);
+    }
+
+    public function __construct($name, $label = NULL) {
+        if (is_null($label)) {
+            $label = Inflector::classify($name);
+        }
         $this->set('name', $name);
         $this->set('label', $label);
+    }
+
+    public function filter() {
+        if (func_num_args() == 0) {
+            return $this->filter;
+        }
+        $filters = func_get_args();
+        foreach ($filters as $filter) {
+            if (is_string($filter)) {
+                $filter = explode('|', $filter);
+                foreach ($filter as $f) {
+                    $this->filter[] = $f;
+                }
+            } else {
+                $this->filter[] = $filter;
+            }
+        }
+        return $this;
+
     }
 
     public function has($k) {
@@ -44,8 +76,12 @@ abstract class Field implements \ArrayAccess {
         unset($this->attributes[$offset]);
     }
 
+    public function label() {
+        return '<label>'.$this['label'].($this['required'] ? '*' : '').'</label>';
+    }
+
     public function input($value, $entry = NULL) {
-        if ($this['readOnly']) {
+        if ($this['readonly']) {
             return '<span class="field">'.$value.'</span>';
         }
         if ($format = $this['inputFormat']) {

@@ -77,6 +77,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
 
         if (isset($attributes['$id'])) {
             $this->id = $attributes['$id'];
+            // FIXME reekoheek $attributes['$id'] should be removed
         }
 
         $this->attributes = $attributes;
@@ -109,6 +110,10 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
         return $this->id;
     }
 
+    public function has($offset) {
+        return array_key_exists($offset, $this->attributes);
+    }
+
     /**
      * Get the attribute.
      *
@@ -116,7 +121,10 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      * @return mixed
      */
     public function get($key) {
-        if (isset($this->attributes[$key])) {
+        $getter = 'get_'.$key;
+        if (method_exists($this, $getter)) {
+            return $this->$getter($key);
+        } elseif (isset($this->attributes[$key])) {
             return $this->attributes[$key];
         }
     }
@@ -137,7 +145,10 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
                 $this->set($k, $v);
             }
         } else {
-            if (is_null($value)) {
+            $setter = 'set_'.$key;
+            if (method_exists($this, $setter)) {
+                $this->$setter($key, $value);
+            } elseif (is_null($value)) {
                 unset($this->attributes[$key]);
             } else {
                 $this->attributes[$key] = $value;
@@ -172,8 +183,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      *
      * @return int Status of saving.
      */
-    public function save() {
-        return $this->collection->save($this);
+    public function save($options = array()) {
+        return $this->collection->save($this, $options);
     }
 
     /**
@@ -190,43 +201,42 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      * @return array
      */
     public function toArray($fetchType = Model::FETCH_ALL) {
-        $arrObj = new \ArrayObject($this->attributes);
+        $attributes = array();
 
-        $attributes = $arrObj->getArrayCopy();
-        if ($fetchType == Model::FETCH_ALL) {
-            $attributes = array(
-                '$type' => $this->clazz,
-                ) + $attributes;
-        } elseif ($fetchType == Model::FETCH_HIDDEN) {
-            $newattributes = array(
-                '$type' => $this->clazz,
-            );
-            if (isset($attributes['$id'])) {
-                $newattributes['$id'] = $attributes['$id'];
-            }
-            $attributes = $newattributes;
-        } elseif ($fetchType == Model::FETCH_PUBLISHED) {
-            unset($attributes['$id']);
+        if ($fetchType === Model::FETCH_ALL || $fetchType === Model::FETCH_HIDDEN) {
+            $attributes['$type'] = $this->clazz;
+            $attributes['$id'] = $this->getId();
         }
+
+        if ($fetchType === Model::FETCH_ALL || $fetchType === Model::FETCH_PUBLISHED) {
+            foreach ($this->attributes as $key => $value) {
+                if($key[0] !== '$') {
+                    $attributes[$key] = $this[$key];
+                }
+            }
+        }
+
         return $attributes;
     }
 
     public function offsetExists ($offset) {
-        return array_key_exists($offset, $this->attributes);
+        return $this->has($offset);
     }
 
     public function offsetGet ($offset) {
-        return $this->attributes[$offset];
+        if ($offset === '$id') {
+            return $this->getId();
+        }
+        return $this->get($offset);
     }
 
-    public function offsetSet ($offset , $value) {
-        $this->attributes[$offset] = $value;
+    public function offsetSet ($offset, $value) {
+        return $this->set($offset, $value);
     }
 
     public function offsetUnset ($offset) {
-        unset($this->attributes[$offset]);
+        return $this->set($offset, NULL);
     }
-
 
     /**
      * Implement the json serializer normalizing the data structures.

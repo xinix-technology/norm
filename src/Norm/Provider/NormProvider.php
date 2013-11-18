@@ -14,8 +14,8 @@ class NormProvider extends \Bono\Provider\Provider {
      */
     public function initialize() {
         $dbConfig = $this->app->config('norm.databases');
-        $schemaConfig = $this->app->config('norm.schemas');
+        $collectionConfig = $this->app->config('norm.collections');
 
-        \Norm\Norm::init($dbConfig, $schemaConfig);
+        \Norm\Norm::init($dbConfig, $collectionConfig);
     }
 }

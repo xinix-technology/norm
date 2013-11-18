@@ -34,10 +34,11 @@ abstract class Connection {
 
     public function factory($collectionName) {
         if (!isset($this->collections[$collectionName])) {
-            $collection = new Collection(array(
+            $collection = Norm::createCollection(array(
                 'name' => $collectionName,
                 'connection' => $this,
             ));
+
             $this->applyHook('norm.after.factory', $collection);
 
             $this->collections[$collectionName] = $collection;

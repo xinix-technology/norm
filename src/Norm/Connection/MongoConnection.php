@@ -67,12 +67,12 @@ class MongoConnection extends Connection {
     public function query(Collection $collection) {
         $collectionName = $collection->name;
 
-        if ($collection->filter) {
-            if (isset($collection->filter['$id'])) {
-                $collection->filter['_id'] = new \MongoId($collection->filter['$id']);
-                unset($collection->filter['$id']);
+        if ($collection->criteria) {
+            if (isset($collection->criteria['$id'])) {
+                $collection->criteria['_id'] = new \MongoId($collection->criteria['$id']);
+                unset($collection->criteria['$id']);
             }
-            $cursor = $this->raw->$collectionName->find($collection->filter);
+            $cursor = $this->raw->$collectionName->find($collection->criteria);
         } else {
             $cursor = $this->raw->$collectionName->find();
         }

@@ -25,15 +25,16 @@ class Norm {
      */
     public static $defaultConnection = '';
 
+    protected static $collectionConfig;
+
     /**
      * Initialize framework from configuration. First connection registered from
      * config will be the default connection.
      *
      * @param  array  $config [description]
      */
-    public static function init($config, $schemaConfig = NULL) {
+    public static function init($config, $collectionConfig = array()) {
         $first = NULL;
-
 
         foreach ($config as $key => $value) {
             $value['name'] = $key;
@@ -51,14 +52,29 @@ class Norm {
             static::$defaultConnection = $first;
         }
 
-        if (!empty($schemaConfig)) {
-            Norm::hook('norm.after.factory', function($collection) use ($schemaConfig) {
-                if (isset($schemaConfig[$collection->clazz])) {
-                    $collection->schema = $schemaConfig[$collection->clazz];
+        if (!empty($collectionConfig)) {
+            static::$collectionConfig = $collectionConfig;
+            Norm::hook('norm.after.factory', function($collection) use ($collectionConfig) {
+                if (isset($collectionConfig[$collection->clazz]['schema'])) {
+                    $collection->schema = $collectionConfig[$collection->clazz]['schema'];
                     $collection->migrate();
                 }
             });
         }
+    }
+
+    public static function createCollection($options) {
+        if (isset(static::$collectionConfig[$options['name']])) {
+            $options = array_merge(static::$collectionConfig[$options['name']], $options);
+        }
+        if (isset($options['collection'])) {
+            $Driver = $options['collection'];
+            $collection = new $Driver($options);
+        } else {
+            $collection = new Collection($options);
+        }
+
+        return $collection;
     }
 
     /**

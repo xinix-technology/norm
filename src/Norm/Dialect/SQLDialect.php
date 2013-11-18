@@ -8,6 +8,8 @@ class SQLDialect {
 
     protected $raw;
 
+    protected $expressionCounter = 0;
+
     public function __construct($connection) {
         $this->connection = $connection;
         $this->raw = $connection->getRaw();
@@ -21,9 +23,9 @@ class SQLDialect {
     public function grammarCreate($name, $schema) {
         $fieldDefinitions = array();
         foreach ($schema as $field) {
-            if ($schema instanceof \Norm\Schema\Integer) {
+            if ($field instanceof \Norm\Schema\Integer) {
                 $fieldDefinitions[] = $field['name'].' INTEGER';
-            } elseif ($schema instanceof \Norm\Schema\Text) {
+            } elseif ($field instanceof \Norm\Schema\Text) {
                 $fieldDefinitions[] = $field['name'].' TEXT';
             } else {
                 $fieldDefinitions[] = $field['name'].' VARCHAR(255)';
@@ -31,5 +33,35 @@ class SQLDialect {
         }
         $sql = 'CREATE TABLE '.$name.'(id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL, '.implode(', ', $fieldDefinitions).')';
         return $sql;
+    }
+
+    public function grammarExpression($exp, $value, &$data) {
+        $this->expressionCounter = -1;
+
+        $exp = explode('!', $exp);
+        $key = $exp[0];
+        $op = (isset($exp[1])) ? $exp[1] : '=';
+        switch($op) {
+            case 'ne':
+                $op = '!=';
+                break;
+            case 'gt':
+                $op = '>';
+                break;
+            case 'gte':
+                $op = '>=';
+                break;
+            case 'lt':
+                $op = '<';
+                break;
+            case 'lt':
+                $op = '<=';
+                break;
+        }
+
+        $this->expressionCounter++;
+        $data['f'.$this->expressionCounter] = $value;
+
+        return $key . ' ' . $op . ' :f' . $this->expressionCounter;
     }
 }

@@ -4,6 +4,7 @@ namespace Norm;
 
 use Reekoheek\Util\Inflector;
 use Norm\Model;
+use Norm\Filter\Filter;
 
 class Collection implements \JsonKit\JsonSerializer {
     public $clazz;
@@ -11,10 +12,14 @@ class Collection implements \JsonKit\JsonSerializer {
     public $connection;
     public $schema;
 
-    public $filter;
+    public $criteria;
+
+    protected $options;
+    protected $filter;
 
 
     public function __construct(array $options = array()) {
+        $this->options = $options;
         $this->clazz = Inflector::classify($options['name']);
         $this->name = Inflector::tableize($this->clazz);
         $this->connection = $options['connection'];
@@ -32,38 +37,43 @@ class Collection implements \JsonKit\JsonSerializer {
         $results = array();
         foreach ($cursor as $key => $doc) {
             $doc = $this->connection->prepare($doc);
-
-            $results[] = new Model($doc, array(
-                'collection' => $this,
-            ));
+            if (isset($this->options['model'])) {
+                $Model = $this->options['model'];
+                $results[] = new $Model($doc, array(
+                    'collection' => $this,
+                ));
+            } else {
+                $results[] = new Model($doc, array(
+                    'collection' => $this,
+                ));
+            }
         }
         return $results;
     }
 
-    public function filter($filter = null) {
-        if (isset($filter)) {
-            if (!isset($this->filter)) {
-                $this->filter = array();
+    public function criteria($criteria = null) {
+        if (isset($criteria)) {
+            if (!isset($this->criteria)) {
+                $this->criteria = array();
             }
 
-            if (is_array($filter)) {
-
-                $this->filter = $this->filter + $filter;
+            if (is_array($criteria)) {
+                $this->criteria = $this->criteria + $criteria;
             } else {
-                $this->filter = array('$id' => $filter);
+                $this->criteria = array('$id' => $criteria);
             }
         }
     }
 
-    public function find(array $filter = null) {
-        $this->filter($filter);
+    public function find(array $criteria = null) {
+        $this->criteria($criteria);
         $result = $this->hydrate($this->connection->query($this));
-        $this->filter = null;
+        $this->criteria = null;
         return $result;
     }
 
-    public function findOne($filter = null) {
-        $this->filter($filter);
+    public function findOne($criteria = null) {
+        $this->criteria($criteria);
 
         $cursor = $this->connection->query($this);
 
@@ -74,7 +84,7 @@ class Collection implements \JsonKit\JsonSerializer {
             $result = $hydrate[0];
         }
 
-        $this->filter = null;
+        $this->criteria = null;
 
         return $result;
     }
@@ -83,13 +93,49 @@ class Collection implements \JsonKit\JsonSerializer {
         if ($cloned instanceof Model) {
             $cloned = $cloned->toArray(Model::FETCH_PUBLISHED);
         }
+        if (isset($this->options['model'])) {
+            $Model = $this->options['model'];
+            return new $Model($cloned, array('collection' => $this));
+        }
         return new Model($cloned, array('collection' => $this));
     }
 
-    public function save(Model $model) {
+    public function save(Model $model, $options = array()) {
+        if (!isset($options['filter']) || $options['filter'] === true) {
+            $this->filter($model);
+        }
+
         $result = $this->connection->save($this, $model);
-        $this->filter = null;
+
+        $this->criteria = null;
         return $result;
+    }
+
+    public function filter(Model $model, $key = NULL) {
+        if (is_null($this->filter)) {
+            $rules = array();
+            $schema = $this->schema();
+            foreach ($schema as $k => $field) {
+                $rules[$k] = $field->filter();
+            }
+
+            $this->filter = new Filter($rules);
+        }
+
+
+        if (is_null($key)) {
+            $changes = $this->filter->run($model);
+            $errors = $this->filter->errors();
+            if ($errors) {
+                throw (new \Norm\Filter\FilterException())->sub($errors);
+            }
+        } else {
+            // $backtrace = debug_backtrace();
+            // foreach ($backtrace as $trace) {
+            //     var_dump($trace['file'].':'.$trace['line'].' -> '.$trace['class'].'::'.$trace['function']);
+            // }
+            throw new \Exception(__METHOD__.' unimplemented selective field filter.');
+        }
     }
 
     public function remove($model) {
@@ -97,7 +143,7 @@ class Collection implements \JsonKit\JsonSerializer {
         if ($result) {
             $model->reset();
         }
-        $this->filter = NULL;
+        $this->criteria = NULL;
         return $result;
     }
 
