@@ -26,9 +26,11 @@ abstract class Field implements \ArrayAccess {
     }
 
     public function filter() {
+
         if (func_num_args() == 0) {
             return $this->filter;
         }
+
         $filters = func_get_args();
         foreach ($filters as $filter) {
             if (is_string($filter)) {
@@ -40,6 +42,7 @@ abstract class Field implements \ArrayAccess {
                 $this->filter[] = $filter;
             }
         }
+
         return $this;
 
     }

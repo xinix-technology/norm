@@ -113,19 +113,14 @@ class Collection implements \JsonKit\JsonSerializer {
 
     public function filter(Model $model, $key = NULL) {
         if (is_null($this->filter)) {
-            $rules = array();
-            $schema = $this->schema();
-            foreach ($schema as $k => $field) {
-                $rules[$k] = $field->filter();
-            }
-
-            $this->filter = new Filter($rules);
+            $this->filter = Filter::fromSchema($this->schema());
         }
 
 
         if (is_null($key)) {
-            $changes = $this->filter->run($model);
+            $this->filter->run($model);
             $errors = $this->filter->errors();
+            // var_dump($errors);
             if ($errors) {
                 throw (new \Norm\Filter\FilterException())->sub($errors);
             }

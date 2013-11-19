@@ -10,8 +10,8 @@ class Boolean extends Field {
 
         return '
             <select name="'.$this['name'].'">
-                <option value="0">False</option>
-                <option value="1">True</option>
+                <option value="0" '.(!$value ? 'selected' : '').'>False</option>
+                <option value="1" '.($value ? 'selected' : '').'>True</option>
             </select>
         ';
     }

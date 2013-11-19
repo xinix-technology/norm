@@ -25,7 +25,7 @@ class Reference extends Field {
             $options[] = '<option value="'.$entry->getId().'" '.($entry->getId() === $value ? 'selected' : '').'>'.$entry->get($this->foreignLabel).'</option>';
         }
         return '
-            <select name="'.$this['name'].'"><option>---</option>'.implode('', $options).'</select>
+            <select name="'.$this['name'].'"><option value="">---</option>'.implode('', $options).'</select>
         ';
     }
 }

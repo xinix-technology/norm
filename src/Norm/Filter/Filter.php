@@ -13,6 +13,30 @@ class Filter {
         static::$registries[$key] = $clazz;
     }
 
+    public static function fromSchema($schema, $preFilter = array(), $postFilter = array()) {
+        $rules = array();
+
+        foreach ($preFilter as $key => $filter) {
+            $filter = explode('|', $filter);
+            foreach ($filter as $f) {
+                $rules[$key][] = $f;
+            }
+        }
+
+        foreach ($schema as $k => $field) {
+            $rules[$k] = $field->filter();
+        }
+
+        foreach ($postFilter as $key => $filter) {
+            $filter = explode('|', $filter);
+            foreach ($filter as $f) {
+                $rules[$key][] = $f;
+            }
+        }
+
+        return new static($rules);
+    }
+
     public function __construct($rules) {
         $this->rules = $rules;
     }
@@ -82,6 +106,29 @@ class Filter {
         $model = \Norm\Norm::factory($clazz)->findOne(array($field => $value));
         if(isset($model) && $model['$id'] != $data['$id']) {
             throw FilterException::factory('Field %s must be unique')->name($key);
+        }
+        return $value;
+    }
+
+    public function filter_requiredWith($key, $value, $data, $args = array()) {
+        if (!empty($data[$args[0]]) && (is_null($value) || $value === '')) {
+            throw FilterException::factory('Field %s is required')->name($key);
+        }
+        return $value;
+
+    }
+
+    public function filter_requiredWithout($key, $value, $data, $args = array()) {
+        if (empty($data[$args[0]]) && (is_null($value) || $value === '')) {
+            throw FilterException::factory('Field %s is required')->name($key);
+        }
+        return $value;
+
+    }
+
+    public function filter_ip($key, $value) {
+        if (!empty($value) && !filter_var($value, FILTER_VALIDATE_IP)) {
+            throw FilterException::factory('Field %s is not valid IP Address')->name($key);
         }
         return $value;
     }
