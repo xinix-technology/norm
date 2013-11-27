@@ -6,15 +6,15 @@ use Reekoheek\Util\Inflector;
 use Norm\Model;
 use Norm\Filter\Filter;
 
-class Collection implements \JsonKit\JsonSerializer {
+class Collection extends Hookable implements \JsonKit\JsonSerializer {
     public $clazz;
     public $name;
     public $connection;
-    public $schema;
+    // public $schema;
+    public $options;
 
     public $criteria;
 
-    protected $options;
     protected $filter;
 
 
@@ -23,14 +23,41 @@ class Collection implements \JsonKit\JsonSerializer {
         $this->clazz = Inflector::classify($options['name']);
         $this->name = Inflector::tableize($this->clazz);
         $this->connection = $options['connection'];
+
+        if (isset($options['observers'])) {
+            foreach($options['observers'] as $observer) {
+                if (is_string($observer)) {
+                    $observer = new $observer();
+                }
+                $this->observe($observer);
+            }
+        }
+    }
+
+    public function observe($observer) {
+        if (method_exists($observer, 'saving')) {
+            $this->hook('saving', array($observer, 'saving'));
+        }
     }
 
     public function schema($schema = NULL) {
         if (is_null($schema)) {
-            return $this->schema;
+            return $this->options['schema'];
         } else {
-            $this->schema = $schema;
+            $this->options['schema'] = $schema;
         }
+    }
+
+    public function prepare($key, $value, $schema = NULL) {
+        if (is_null($schema)) {
+            $collectionSchema = $this->schema();
+
+            if (!array_key_exists($key, $collectionSchema)) {
+                throw new \Exception('Cannot prepare data to set. Schema not found.');
+            }
+            $schema = $collectionSchema[$key];
+        }
+        return $schema->prepare($value);
     }
 
     public function hydrate($cursor) {
@@ -105,6 +132,8 @@ class Collection implements \JsonKit\JsonSerializer {
             $this->filter($model);
         }
 
+        $this->applyHook('saving', $model, $options);
+
         $result = $this->connection->save($this, $model);
 
         $this->criteria = null;
@@ -116,11 +145,13 @@ class Collection implements \JsonKit\JsonSerializer {
             $this->filter = Filter::fromSchema($this->schema());
         }
 
+        // var_dump($model->toArray());
+        // exit;
 
         if (is_null($key)) {
             $this->filter->run($model);
             $errors = $this->filter->errors();
-            // var_dump($errors);
+
             if ($errors) {
                 throw (new \Norm\Filter\FilterException())->sub($errors);
             }

@@ -69,6 +69,8 @@ class Filter {
                     } elseif (is_callable($rule)) {
                         $data[$k] = call_user_func($rule, $k, $data[$k], $data, $args);
                     }
+                } catch(SkipException $e) {
+                    break;
                 } catch(FilterException $e) {
                     $this->errors[] = ''.$e;
                     break;
@@ -93,6 +95,11 @@ class Filter {
     }
 
     public function filter_confirmed($key, $value, $data) {
+        if ($value == '') {
+            unset($data[$key]);
+            unset($data[$key.'_confirmation']);
+            throw new SkipException();
+        }
         if ($value !== $data[$key.'_confirmation']) {
             throw FilterException::factory('Field %s must be confirmed')->name($key);
         }

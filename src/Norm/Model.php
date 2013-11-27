@@ -17,6 +17,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      * FETCH_HIDDEN    will fetch hidden attributes of model
      */
     const FETCH_ALL         = 'FETCH_ALL';
+    const FETCH_RAW         = 'FETCH_RAW';
     const FETCH_PUBLISHED   = 'FETCH_PUBLISHED';
     const FETCH_HIDDEN      = 'FETCH_HIDDEN';
 
@@ -145,14 +146,26 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
                 $this->set($k, $v);
             }
         } else {
+            try {
+                $value = $this->prepare($key, $value);
+            } catch(\Exception $e) {}
             $setter = 'set_'.$key;
             if (method_exists($this, $setter)) {
                 $this->$setter($key, $value);
-            } elseif (is_null($value)) {
-                unset($this->attributes[$key]);
             } else {
                 $this->attributes[$key] = $value;
             }
+        }
+        return $this;
+    }
+
+    public function rmset($key) {
+        if (is_array($key)) {
+            foreach ($key as $k => $v) {
+                $this->unset($k, $v);
+            }
+        } else {
+            unset($this->attributes[$key]);
         }
         return $this;
     }
@@ -178,6 +191,10 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
 
     }
 
+    public function prepare($key, $value, $schema = NULL) {
+        return $this->collection->prepare($key, $value, $schema);
+    }
+
     /**
      * Save the model.
      *
@@ -201,18 +218,29 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      * @return array
      */
     public function toArray($fetchType = Model::FETCH_ALL) {
+        if ($fetchType === Model::FETCH_RAW) {
+            return $this->attributes;
+        }
+
         $attributes = array();
 
         if ($fetchType === Model::FETCH_ALL || $fetchType === Model::FETCH_HIDDEN) {
             $attributes['$type'] = $this->clazz;
             $attributes['$id'] = $this->getId();
+
+            foreach ($this->attributes as $key => $value) {
+                if($key[0] === '$') {
+                    $attributes[$key] = $value;
+                }
+            }
         }
 
         if ($fetchType === Model::FETCH_ALL || $fetchType === Model::FETCH_PUBLISHED) {
             foreach ($this->attributes as $key => $value) {
                 if($key[0] !== '$') {
-                    $attributes[$key] = $this[$key];
+                    $attributes[$key] = $value;
                 }
+
             }
         }
 
@@ -235,7 +263,12 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
     }
 
     public function offsetUnset ($offset) {
-        return $this->set($offset, NULL);
+        return $this->rmset($offset);
+    }
+
+    public function children() {
+        $children = $this->collection->find(array('parent' => $this->getId()));
+        return $children;
     }
 
     /**

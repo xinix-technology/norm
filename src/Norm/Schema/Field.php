@@ -12,7 +12,7 @@ abstract class Field implements \ArrayAccess {
 
     protected $filter = array();
 
-    public static function getInstance($name, $label = NULL) {
+    public static function getInstance($name = '', $label = NULL) {
         $Field = get_called_class();
         return new $Field($name, $label);
     }
@@ -23,6 +23,10 @@ abstract class Field implements \ArrayAccess {
         }
         $this->set('name', $name);
         $this->set('label', $label);
+    }
+
+    public function prepare($value) {
+        return $value;
     }
 
     public function filter() {

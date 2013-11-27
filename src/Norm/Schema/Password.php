@@ -22,4 +22,8 @@ class Password extends Field {
         }
         return '*hidden*';
     }
+
+    // public function prepare($value) {
+    //     return $value;
+    // }
 }

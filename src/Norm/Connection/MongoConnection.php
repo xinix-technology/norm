@@ -64,15 +64,34 @@ class MongoConnection extends Connection {
         return $newObject;
     }
 
+    public function prepareCriteria($criteria) {
+        // var_dump($criteria);
+
+        $newCriteria = array();
+        if (!empty($criteria['$id'])) {
+            $newCriteria['_id'] = new \MongoId($criteria['$id']);
+            unset($criteria['$id']);
+        }
+
+        foreach ($criteria as $key => $value) {
+            $splitted = explode('!', $key);
+            // var_dump($splitted);
+            if (count($splitted) > 1) {
+                $newCriteria[$splitted[0]] = array( '$'.$splitted[1] => $value );
+            } else {
+                $newCriteria[$splitted[0]] = $value;
+            }
+        }
+
+        return $newCriteria;
+    }
+
     public function query(Collection $collection) {
         $collectionName = $collection->name;
 
         if ($collection->criteria) {
-            if (isset($collection->criteria['$id'])) {
-                $collection->criteria['_id'] = new \MongoId($collection->criteria['$id']);
-                unset($collection->criteria['$id']);
-            }
-            $cursor = $this->raw->$collectionName->find($collection->criteria);
+            $criteria = $this->prepareCriteria($collection->criteria);
+            $cursor = $this->raw->$collectionName->find($criteria);
         } else {
             $cursor = $this->raw->$collectionName->find();
         }
@@ -82,7 +101,24 @@ class MongoConnection extends Connection {
 
     public function save(Collection $collection, Model $model) {
         $collectionName = $collection->name;
-        $modified = $model->toArray(Model::FETCH_PUBLISHED);
+        $modified = $model->toArray();
+
+        $schema = $collection->schema();
+        foreach($modified as $key => $value) {
+            if (array_key_exists($key, $schema)) {
+                $schema = $schema[$key];
+                if ($schema instanceof \Norm\Schema\DateTime) {
+                    $modified[$key] = new MongoDate(strtotime($value));
+                }
+            }
+
+            if ($key[0] === '$') {
+                if ($key !== '$id' && $key !== '$type') {
+                    $modified['_'.substr($key, 1)] = $modified[$key];
+                }
+                unset($modified[$key]);
+            }
+        }
 
         if ($model->getId()) {
             $criteria = array(

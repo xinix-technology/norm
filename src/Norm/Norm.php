@@ -36,6 +36,8 @@ class Norm {
     public static function init($config, $collectionConfig = array()) {
         $first = NULL;
 
+        static::$collectionConfig = $collectionConfig;
+
         foreach ($config as $key => $value) {
             $value['name'] = $key;
 
@@ -52,21 +54,16 @@ class Norm {
             static::$defaultConnection = $first;
         }
 
-        if (!empty($collectionConfig)) {
-            static::$collectionConfig = $collectionConfig;
-            Norm::hook('norm.after.factory', function($collection) use ($collectionConfig) {
-                if (isset($collectionConfig[$collection->clazz]['schema'])) {
-                    $collection->schema = $collectionConfig[$collection->clazz]['schema'];
-                    $collection->migrate();
-                }
-            });
-        }
     }
 
     public static function createCollection($options) {
-        if (isset(static::$collectionConfig[$options['name']])) {
-            $options = array_merge(static::$collectionConfig[$options['name']], $options);
-        }
+        $defaultConfig = isset(static::$collectionConfig['default']) ? static::$collectionConfig['default'] : array();
+        $config = isset(static::$collectionConfig['mapping'][$options['name']]) ? static::$collectionConfig['mapping'][$options['name']] : array();
+        $config = array_merge($defaultConfig, $config);
+
+        $options = array_merge($config, $options);
+
+
         if (isset($options['collection'])) {
             $Driver = $options['collection'];
             $collection = new $Driver($options);

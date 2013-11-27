@@ -13,6 +13,22 @@ class NormController extends RestController {
         parent::__construct($app, $uri);
 
         $this->collection = Norm::factory($this->clazz);
+
+        $controller = $this;
+
+        $this->app->hook('bono.controller.before', function($options) use ($app, $controller) {
+
+            // move this to restcontroller
+            $entry = $app->request->post();
+            foreach ($app->request->get() as $key => $value) {
+                if ($key[0] != '_' && !isset($entry[$key])) {
+                    $entry[$key] = $value;
+                }
+            }
+            if (!empty($entry)) {
+                $controller->set('entry', $entry);
+            }
+        });
     }
 
     public function search() {
@@ -27,7 +43,7 @@ class NormController extends RestController {
                 $model = $this->collection->newInstance();
                 $result = $model->set($this->data['entry'])->save();
                 $this->flash('info', $this->clazz.' created.');
-                $this->redirect($this->getBaseUri());
+                $this->redirect($this->getRedirectUri());
             } catch(\Exception $e) {
                 $this->flashNow('error', ''.$e);
             }
@@ -50,7 +66,7 @@ class NormController extends RestController {
                 $model = $this->collection->findOne($id);
                 $model->set($this->data['entry'])->save();
                 $this->flash('info', $this->clazz.' updated.');
-                $this->redirect($this->getBaseUri());
+                $this->redirect($this->getRedirectUri());
             } catch(\Exception $e) {
                 $this->flashNow('error', ''.$e);
             }
@@ -67,7 +83,16 @@ class NormController extends RestController {
             $model->remove();
 
             $this->flash('info', $this->clazz.' deleted.');
-            $this->redirect($this->getBaseUri());
+            $this->redirect($this->getRedirectUri());
+        }
+    }
+
+    public function getRedirectUri() {
+        $continue = $this->request->get('_continue');
+        if (empty($continue)) {
+            return $this->getBaseUri();
+        } else {
+            return $continue;
         }
     }
 }
