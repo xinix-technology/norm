@@ -89,17 +89,21 @@ abstract class Field implements \ArrayAccess {
 
     public function input($value, $entry = NULL) {
         if ($this['readonly']) {
-            return '<span class="field">'.$value.'</span>';
+            if ($format = $this['inputFormat']) {
+                return $format($value, $entry, $this);
+            } else {
+                return '<span class="field">'.$value.'</span>';
+            }
         }
         if ($format = $this['inputFormat']) {
-            return $format($value, $entry);
+            return $format($value, $entry, $this);
         }
         return '<input type="text" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].'" autocomplete="off" />';
     }
 
     public function cell($value, $entry = NULL) {
         if ($this->has('cellFormat') && $format = $this['cellFormat']) {
-            return $format($value, $entry);
+            return $format($value, $entry, $this);
         }
         return $value;
     }
