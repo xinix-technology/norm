@@ -6,6 +6,9 @@ use \Reekoheek\Util\Inflector;
 use Norm\Filter\Filter;
 
 abstract class Field implements \ArrayAccess {
+
+    static protected $instances = array();
+
     protected $multi = false;
 
     protected $attributes = array();
@@ -14,6 +17,15 @@ abstract class Field implements \ArrayAccess {
 
     public static function getInstance($name = '', $label = NULL) {
         $Field = get_called_class();
+
+        if (empty($name)) {
+            if (!isset(static::$instances[$Field])) {
+                static::$instances[$Field] = new $Field($name, $label);
+            }
+
+            return static::$instances[$Field];
+        }
+
         return new $Field($name, $label);
     }
 

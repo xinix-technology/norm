@@ -50,4 +50,16 @@ class Reference extends Field {
         }
         return $label;
     }
+
+    public function prepare($value) {
+        if ($value instanceof \Norm\Model) {
+            $value = $value->getId();
+        }
+
+        if (empty($value)) {
+            $value = NULL;
+        }
+
+        return $value;
+    }
 }

@@ -5,6 +5,7 @@ namespace Norm\Connection;
 use Norm\Connection;
 use Norm\Collection;
 use Norm\Model;
+use Norm\Type\DateTime;
 
 class MongoConnection extends Connection {
     // protected $client;
@@ -55,12 +56,18 @@ class MongoConnection extends Connection {
 
     public function prepare($object) {
         $newObject = array();
-        $newObject['$id'] = (string) $object['_id'];
+        // $newObject['$id'] = (string) $object['_id'];
         foreach ($object as $key => $value) {
-            if ($key[0] !== '_') {
-                $newObject[$key] = $value;
+            if ($key === '_id') continue;
+            if ($key[0] === '_') {
+                $key[0] = '$';
             }
+            if ($value instanceof \MongoDate) {
+                $value = new DateTime('@'.$value->sec, new \DateTimeZone(date_default_timezone_get()));
+            }
+            $newObject[$key] = $value;
         }
+
         return $newObject;
     }
 
