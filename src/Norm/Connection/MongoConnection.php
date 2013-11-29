@@ -55,8 +55,9 @@ class MongoConnection extends Connection {
     }
 
     public function prepare($object) {
-        $newObject = array();
-        // $newObject['$id'] = (string) $object['_id'];
+        $newObject = array(
+            '$id' => (string) $object['_id'],
+        );
         foreach ($object as $key => $value) {
             if ($key === '_id') continue;
             if ($key[0] === '_') {

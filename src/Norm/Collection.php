@@ -4,6 +4,7 @@ namespace Norm;
 
 use Reekoheek\Util\Inflector;
 use Norm\Model;
+use Norm\Cursor;
 use Norm\Filter\Filter;
 
 class Collection extends Hookable implements \JsonKit\JsonSerializer {
@@ -63,19 +64,23 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     public function hydrate($cursor) {
         $results = array();
         foreach ($cursor as $key => $doc) {
-            $doc = $this->connection->prepare($doc);
-            if (isset($this->options['model'])) {
-                $Model = $this->options['model'];
-                $results[] = new $Model($doc, array(
-                    'collection' => $this,
-                ));
-            } else {
-                $results[] = new Model($doc, array(
-                    'collection' => $this,
-                ));
-            }
+            $results[] = $this->attach($doc);
         }
         return $results;
+    }
+
+    public function attach($doc) {
+        $doc = $this->connection->prepare($doc);
+        if (isset($this->options['model'])) {
+            $Model = $this->options['model'];
+            return new $Model($doc, array(
+                'collection' => $this,
+            ));
+        } else {
+            return new Model($doc, array(
+                'collection' => $this,
+            ));
+        }
     }
 
     public function criteria($criteria = null) {
@@ -94,9 +99,13 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
 
     public function find(array $criteria = null) {
         $this->criteria($criteria);
-        $result = $this->hydrate($this->connection->query($this));
+
+        $result = $this->connection->query($this);
         $this->criteria = null;
-        return $result;
+
+        $cursor = new Cursor($result, $this);
+
+        return $cursor;
     }
 
     public function findOne($criteria = null) {
