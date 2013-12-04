@@ -31,8 +31,33 @@ class NormController extends RestController {
         });
     }
 
+    public function getCriteria() {
+        $gets = $this->request->get();
+        $criteria = array();
+        foreach ($gets as $key => $value) {
+            if ($key[0] != '@') {
+                $criteria[$key] = $value;
+            }
+        }
+        return $criteria;
+    }
+
+    public function getSort() {
+        $get = $this->request->get('@sort');
+        $get = explode(',', $get);
+        $sorts = array();
+        foreach ($get as $value) {
+            $value = trim($value);
+            $value = explode(':', $value);
+            if (!empty($value[0])) {
+                $sorts[$value[0]] = (isset($value[1])) ? (int) $value[1] : 1;
+            }
+        }
+        return $sorts;
+    }
+
     public function search() {
-        $entries = $this->collection->find($this->request->get());
+        $entries = $this->collection->find($this->getCriteria())->sort($this->getSort());
 
         $this->data['entries'] = $entries;
     }
@@ -88,7 +113,7 @@ class NormController extends RestController {
     }
 
     public function getRedirectUri() {
-        $continue = $this->request->get('_continue');
+        $continue = $this->request->get('@continue');
         if (empty($continue)) {
             return $this->getBaseUri();
         } else {
