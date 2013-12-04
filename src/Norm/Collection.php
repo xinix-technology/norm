@@ -97,7 +97,7 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         }
     }
 
-    public function find(array $criteria = null) {
+    public function find($criteria = null) {
         $this->criteria($criteria);
 
         $result = $this->connection->query($this);
@@ -109,20 +109,83 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     }
 
     public function findOne($criteria = null) {
-        $this->criteria($criteria);
+        $cursor = $this->find($criteria);
+        $this->criteria = null;
+        return $cursor->getNext();
+    }
 
-        $cursor = $this->connection->query($this);
+    public function rebuildTree($parent, $left) {
+        // the right value of this node is the left value + 1
+        $right = $left+1;
 
-        $result = null;
+        // get all children of this node
+        // $result = mysql_query('SELECT title FROM tree '.
+        //                        'WHERE parent="'.$parent.'";');
 
-        if ($o = $cursor->getNext()) {
-            $hydrate = $this->hydrate(array($o));
-            $result = $hydrate[0];
+        $result = $this->find(array('parent' => $parent));
+
+        // while ($row = mysql_fetch_array($result)) {
+
+        foreach ($result as $row) {
+            // recursive execution of this function for each
+            // child of this node
+            // $right is the current right value, which is
+            // incremented by the rebuild_tree function
+            $right = $this->rebuildTree($row['$id'], $right);
         }
 
-        $this->criteria = null;
+        // we've got the left value, and now that we've processed
+        // the children of this node we also know the right value
+        // mysql_query('UPDATE tree SET lft='.$left.', rgt='.
+        //              $right.' WHERE title="'.$parent.'";');
+        if (isset($parent)) {
+            $model = $this->findOne($parent);
+            $model['$lft'] = $left;
+            $model['$rgt'] = $right;
+            $model->save();
+        }
 
-        return $result;
+        // return the right value of this node + 1
+        return $right+1;
+    }
+
+    public function findTree($parent, $criteria = null) {
+        $this->criteria($criteria);
+
+        if (empty($parent)) {
+            $cursor = $this->connection->query($this)->sort(array('_lft' => 1));
+
+            $right = array();
+            $cache = array();
+
+            $result = array();
+            foreach ($cursor as $row) {
+                if (count($right)>0) {
+                    while (!empty($right[count($right)-1]) && $right[count($right)-1] < $row['_rgt']) {
+                        array_pop($right);
+                    }
+                }
+
+                $model = $this->attach($row);
+
+                $cache[$row['_rgt']] = $model;
+
+                if (count($right) > 0) {
+                    $cache[$right[count($right)-1]]->add('children', $model);
+                } else {
+                    $result[$row['_rgt']] = &$cache[$row['_rgt']];
+                }
+
+                $right[] = $row['_rgt'];
+            }
+
+            return $result;
+
+        } else {
+            // FIXME reekoheek: unimplemented yet!
+            // $this->find(array('$id' => $parent))
+
+        }
     }
 
     public function newInstance($cloned = array()) {
