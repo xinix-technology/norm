@@ -13,6 +13,14 @@ class Cursor implements \Iterator,  \JsonKit\JsonSerializer {
         $this->collection = $collection;
     }
 
+    public function getNext() {
+        $next = $this->cursor->getNext();
+        if (isset($next)) {
+            return $this->collection->attach($next);
+        }
+        return NULL;
+    }
+
     public function current() {
         return $this->collection->attach($this->cursor->current());
     }
