@@ -134,6 +134,16 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
         return $this->attributes;
     }
 
+    public function add($key, $value) {
+        if (!isset($this->attributes[$key])) {
+            $this->attributes[$key] = array();
+        }
+
+        $this->attributes[$key][] = $value;
+
+        return $this;
+    }
+
     /**
      * Set attribute(s).
      *
@@ -264,11 +274,6 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
 
     public function offsetUnset ($offset) {
         return $this->rmset($offset);
-    }
-
-    public function children() {
-        $children = $this->collection->find(array('parent' => $this->getId()));
-        return $children;
     }
 
     /**
