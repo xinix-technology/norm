@@ -11,4 +11,14 @@ class DateTime extends Field {
         }
         return date('c', (int) $value);
     }
+
+    public function input($value, $entry = NULL) {
+        if ($this['readonly']) {
+            return '<span class="field">'.$value.'</span>';
+        }
+        if ($format = $this['inputFormat']) {
+            return $format($value, $entry);
+        }
+        return '<input type="date" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].'" autocomplete="off" />';
+    }
 }

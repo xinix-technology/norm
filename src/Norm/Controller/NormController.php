@@ -16,19 +16,19 @@ class NormController extends RestController {
 
         $controller = $this;
 
-        $this->app->hook('bono.controller.before', function($options) use ($app, $controller) {
-
-            // move this to restcontroller
-            $entry = $app->request->post();
-            foreach ($app->request->get() as $key => $value) {
-                if ($key[0] != '_' && !isset($entry[$key])) {
-                    $entry[$key] = $value;
-                }
-            }
-            if (!empty($entry)) {
-                $controller->set('entry', $entry);
-            }
-        });
+        // DEPRECATED: reekoheek, this function poisoning result
+        // $this->app->hook('bono.controller.before', function($options) use ($app, $controller) {
+        //     // move this to restcontroller
+        //     $entry = $app->request->post();
+        //     foreach ($app->request->get() as $key => $value) {
+        //         if ($key[0] != '_' && !isset($entry[$key])) {
+        //             $entry[$key] = $value;
+        //         }
+        //     }
+        //     if (!empty($entry)) {
+        //         $controller->set('entry', $entry);
+        //     }
+        // });
     }
 
     public function getCriteria() {
@@ -63,17 +63,23 @@ class NormController extends RestController {
     }
 
     public function create() {
+        $entry = $this->getCriteria();
+
         if ($this->request->isPost()) {
             try {
+                $entry = array_merge($entry, $this->request->post());
                 $model = $this->collection->newInstance();
-                $result = $model->set($this->data['entry'])->save();
+                $result = $model->set($entry)->save();
                 $this->flash('info', $this->clazz.' created.');
                 $this->redirect($this->getRedirectUri());
             } catch(\Exception $e) {
+                $this->data['entry'] = $entry;
                 $this->flashNow('error', ''.$e);
             }
 
         }
+
+        $this->data['entry'] = $entry;
     }
 
     public function read($id) {
@@ -85,17 +91,21 @@ class NormController extends RestController {
     }
 
     public function update($id) {
+
         if ($this->request->isPost() || $this->request->isPut()) {
+            $entry = $this->getCriteria();
 
             try {
+                $entry = array_merge($entry, $this->request->post());
                 $model = $this->collection->findOne($id);
-                $model->set($this->data['entry'])->save();
+                $model->set($entry)->save();
                 $this->flash('info', $this->clazz.' updated.');
                 $this->redirect($this->getRedirectUri());
             } catch(\Exception $e) {
+                $this->data['entry'] = $entry;
                 $this->flashNow('error', ''.$e);
             }
-
+            $this->data['entry'] = $entry;
         } else {
             $model = $this->collection->findOne($id);
             $this->data['entry'] = $model;

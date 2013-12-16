@@ -39,13 +39,27 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         if (method_exists($observer, 'saving')) {
             $this->hook('saving', array($observer, 'saving'));
         }
+
+        if (method_exists($observer, 'saved')) {
+            $this->hook('saved', array($observer, 'saved'));
+        }
+
+        if (method_exists($observer, 'removing')) {
+            $this->hook('removing', array($observer, 'removing'));
+        }
+
+        if (method_exists($observer, 'removed')) {
+            $this->hook('removed', array($observer, 'removed'));
+        }
     }
 
     public function schema($schema = NULL) {
-        if (is_null($schema)) {
-            return $this->options['schema'];
-        } else {
-            $this->options['schema'] = $schema;
+        if (isset($this->options['schema'])) {
+            if (is_null($schema)) {
+                return $this->options['schema'];
+            } else {
+                $this->options['schema'] = $schema;
+            }
         }
     }
 
@@ -114,40 +128,41 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         return $cursor->getNext();
     }
 
-    public function rebuildTree($parent, $left) {
-        // the right value of this node is the left value + 1
-        $right = $left+1;
+    // DEPRECATED reekoheek: moved to observer
+    // public function rebuildTree($parent, $left) {
+    //     // the right value of this node is the left value + 1
+    //     $right = $left+1;
 
-        // get all children of this node
-        // $result = mysql_query('SELECT title FROM tree '.
-        //                        'WHERE parent="'.$parent.'";');
+    //     // get all children of this node
+    //     // $result = mysql_query('SELECT title FROM tree '.
+    //     //                        'WHERE parent="'.$parent.'";');
 
-        $result = $this->find(array('parent' => $parent));
+    //     $result = $this->find(array('parent' => $parent));
 
-        // while ($row = mysql_fetch_array($result)) {
+    //     // while ($row = mysql_fetch_array($result)) {
 
-        foreach ($result as $row) {
-            // recursive execution of this function for each
-            // child of this node
-            // $right is the current right value, which is
-            // incremented by the rebuild_tree function
-            $right = $this->rebuildTree($row['$id'], $right);
-        }
+    //     foreach ($result as $row) {
+    //         // recursive execution of this function for each
+    //         // child of this node
+    //         // $right is the current right value, which is
+    //         // incremented by the rebuild_tree function
+    //         $right = $this->rebuildTree($row['$id'], $right);
+    //     }
 
-        // we've got the left value, and now that we've processed
-        // the children of this node we also know the right value
-        // mysql_query('UPDATE tree SET lft='.$left.', rgt='.
-        //              $right.' WHERE title="'.$parent.'";');
-        if (isset($parent)) {
-            $model = $this->findOne($parent);
-            $model['$lft'] = $left;
-            $model['$rgt'] = $right;
-            $model->save();
-        }
+    //     // we've got the left value, and now that we've processed
+    //     // the children of this node we also know the right value
+    //     // mysql_query('UPDATE tree SET lft='.$left.', rgt='.
+    //     //              $right.' WHERE title="'.$parent.'";');
+    //     if (isset($parent)) {
+    //         $model = $this->findOne($parent);
+    //         $model['$lft'] = $left;
+    //         $model['$rgt'] = $right;
+    //         $model->save();
+    //     }
 
-        // return the right value of this node + 1
-        return $right+1;
-    }
+    //     // return the right value of this node + 1
+    //     return $right+1;
+    // }
 
     public function findTree($parent, $criteria = null) {
         $this->criteria($criteria);
@@ -208,6 +223,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
 
         $result = $this->connection->save($this, $model);
 
+        $this->applyHook('saved', $model, $options);
+
         $this->criteria = null;
         return $result;
     }
@@ -237,10 +254,16 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     }
 
     public function remove($model) {
+
+        $this->applyHook('removing', $model);
+
         $result = $this->connection->remove($this, $model);
         if ($result) {
             $model->reset();
         }
+
+        $this->applyHook('removed', $model);
+
         $this->criteria = NULL;
         return $result;
     }

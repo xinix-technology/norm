@@ -82,8 +82,13 @@ class MongoConnection extends Connection {
         }
 
         foreach ($criteria as $key => $value) {
+            $value = $value ?: NULL;
             $splitted = explode('!', $key);
-            // var_dump($splitted);
+
+            if ($splitted[0][0] == '$') {
+                $splitted[0] = '_'.substr($splitted[0], 1);
+            }
+
             if (count($splitted) > 1) {
                 $newCriteria[$splitted[0]] = array( '$'.$splitted[1] => $value );
             } else {
