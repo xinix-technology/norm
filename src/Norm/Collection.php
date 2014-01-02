@@ -2,7 +2,7 @@
 
 namespace Norm;
 
-use Reekoheek\Util\Inflector;
+use ROH\Util\Inflector;
 use Norm\Model;
 use Norm\Cursor;
 use Norm\Filter\Filter;
@@ -51,6 +51,14 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         if (method_exists($observer, 'removed')) {
             $this->hook('removed', array($observer, 'removed'));
         }
+
+        if (method_exists($observer, 'searching')) {
+            $this->hook('searching', array($observer, 'searching'));
+        }
+
+        if (method_exists($observer, 'searched')) {
+            $this->hook('searched', array($observer, 'searched'));
+        }
     }
 
     public function schema($schema = NULL) {
@@ -84,7 +92,7 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     }
 
     public function attach($doc) {
-        $doc = $this->connection->prepare($doc);
+        $doc = $this->connection->prepare($this, $doc);
         if (isset($this->options['model'])) {
             $Model = $this->options['model'];
             return new $Model($doc, array(
@@ -114,11 +122,15 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     public function find($criteria = null) {
         $this->criteria($criteria);
 
+        $this->applyHook('searching', $this);
+
         $result = $this->connection->query($this);
+
+        $this->applyHook('searched', $this, $result);
+
         $this->criteria = null;
 
         $cursor = new Cursor($result, $this);
-
         return $cursor;
     }
 
@@ -164,44 +176,45 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     //     return $right+1;
     // }
 
-    public function findTree($parent, $criteria = null) {
-        $this->criteria($criteria);
+    // DEPRECATED reekoheek
+    // public function findTree($parent, $criteria = null) {
+    //     $this->criteria($criteria);
 
-        if (empty($parent)) {
-            $cursor = $this->connection->query($this)->sort(array('_lft' => 1));
+    //     if (empty($parent)) {
+    //         $cursor = $this->connection->query($this)->sort(array('_lft' => 1));
 
-            $right = array();
-            $cache = array();
+    //         $right = array();
+    //         $cache = array();
 
-            $result = array();
-            foreach ($cursor as $row) {
-                if (count($right)>0) {
-                    while (!empty($right[count($right)-1]) && $right[count($right)-1] < $row['_rgt']) {
-                        array_pop($right);
-                    }
-                }
+    //         $result = array();
+    //         foreach ($cursor as $row) {
+    //             if (count($right)>0) {
+    //                 while (!empty($right[count($right)-1]) && $right[count($right)-1] < $row['_rgt']) {
+    //                     array_pop($right);
+    //                 }
+    //             }
 
-                $model = $this->attach($row);
+    //             $model = $this->attach($row);
 
-                $cache[$row['_rgt']] = $model;
+    //             $cache[$row['_rgt']] = $model;
 
-                if (count($right) > 0) {
-                    $cache[$right[count($right)-1]]->add('children', $model);
-                } else {
-                    $result[$row['_rgt']] = &$cache[$row['_rgt']];
-                }
+    //             if (count($right) > 0) {
+    //                 $cache[$right[count($right)-1]]->add('children', $model);
+    //             } else {
+    //                 $result[$row['_rgt']] = &$cache[$row['_rgt']];
+    //             }
 
-                $right[] = $row['_rgt'];
-            }
+    //             $right[] = $row['_rgt'];
+    //         }
 
-            return $result;
+    //         return $result;
 
-        } else {
-            // FIXME reekoheek: unimplemented yet!
-            // $this->find(array('$id' => $parent))
+    //     } else {
+    //         // FIXME reekoheek: unimplemented yet!
+    //         // $this->find(array('$id' => $parent))
 
-        }
-    }
+    //     }
+    // }
 
     public function newInstance($cloned = array()) {
         if ($cloned instanceof Model) {
@@ -233,9 +246,6 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         if (is_null($this->filter)) {
             $this->filter = Filter::fromSchema($this->schema());
         }
-
-        // var_dump($model->toArray());
-        // exit;
 
         if (is_null($key)) {
             $this->filter->run($model);

@@ -35,6 +35,8 @@
  */
 namespace Norm;
 
+use Norm\Connection;
+
 /**
  * Static class to bootstrap Norm framework functionality.
  *
@@ -83,6 +85,9 @@ class Norm {
             $Driver = $value['driver'];
 
             static::$connections[$key] = new $Driver($value);
+            if (!static::$connections[$key] instanceof Connection) {
+                throw new \Exception('Norm connection ['.$key.'] should be instance of Connection');
+            }
 
             if (!$first) {
                 $first = $key;

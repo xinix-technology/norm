@@ -80,7 +80,7 @@ class Filter {
         foreach ($preFilter as $key => $filter) {
             $filter = explode('|', $filter);
             foreach ($filter as $f) {
-                $rules[$key][] = $f;
+                $rules[$key][] = trim($f);
             }
         }
 
@@ -91,7 +91,7 @@ class Filter {
         foreach ($postFilter as $key => $filter) {
             $filter = explode('|', $filter);
             foreach ($filter as $f) {
-                $rules[$key][] = $f;
+                $rules[$key][] = trim($f);
             }
         }
 
@@ -189,6 +189,14 @@ class Filter {
     public function filter_requiredWithout($key, $value, $data, $args = array()) {
         if (empty($data[$args[0]]) && (is_null($value) || $value === '')) {
             throw FilterException::factory('Field %s is required')->name($key);
+        }
+        return $value;
+
+    }
+
+    public function filter_min($key, $value, $data, $args = array()) {
+        if ($value < $args[0]) {
+            throw FilterException::factory('Field %s less than '.$args[0])->name($key);
         }
         return $value;
 

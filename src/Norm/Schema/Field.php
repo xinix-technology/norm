@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-use \Reekoheek\Util\Inflector;
+use \ROH\Util\Inflector;
 use Norm\Filter\Filter;
 
 abstract class Field implements \ArrayAccess {
@@ -52,7 +52,7 @@ abstract class Field implements \ArrayAccess {
                 $filter = explode('|', $filter);
                 foreach ($filter as $f) {
 
-                    $baseF = explode(':', $f);
+                    $baseF = explode(':', trim($f));
                     $baseF = $baseF[0];
                     $this['filter-'.$baseF] = true;
 

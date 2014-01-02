@@ -2,43 +2,46 @@
 
 namespace Norm\Dialect;
 
-class SqliteDialect extends SQLDialect {
+class MySQLDialect extends SQLDialect {
     protected $FIELD_MAP = array(
-        'Norm\Schema\Boolean' => 'BOOL',
+        'Norm\Schema\Boolean' => 'TINYINT',
         'Norm\Schema\DateTime' => 'DATETIME',
-        'Norm\Schema\Integer' => 'INTEGER',
+        'Norm\Schema\Integer' => 'INT',
         'Norm\Schema\Password' => 'VARCHAR',
-        'Norm\Schema\Reference' => 'INTEGER',
+        'Norm\Schema\Reference' => 'INT',
         'Norm\Schema\String' => 'VARCHAR',
         'Norm\Schema\Text' => 'TEXT',
     );
 
     public function listCollections() {
-        $statement = $this->raw->query("SELECT * FROM sqlite_master WHERE type='table'");
-        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $statement = $this->raw->query("SHOW TABLES");
+        $result = $statement->fetchAll();
         $retval = array();
         foreach ($result as $key => $value) {
-            $retval[] = $value['name'];
+            $retval[] = $value[0];
         }
         return $retval;
     }
 
     public function prepareCollection($collection) {
+        throw new \Exception('Not implemented yet! Please recheck the method later!');
         $collectionName = $collection->name;
         $collectionSchema = $collection->schema();
 
-        $sql = 'SELECT * FROM sqlite_master WHERE name="'.$collectionName.'"';
+        $sql = 'SHOW TABLES LIKE "'.$collectionName.'"';
         $statement = $this->raw->query($sql);
         $row = $statement->fetch(\PDO::FETCH_ASSOC);
         $tableExist = (empty($row)) ? false : true;
 
-        // fetch old table info
-        $sql = 'PRAGMA table_info("'.$collectionName.'")';
-        $statement = $this->raw->query($sql);
-        $describe = $statement->fetchAll(\PDO::FETCH_ASSOC);
         $fields = array();
-        foreach ($describe as $key => $value) {
-            $fields[$value['name']] = $value;
+        if ($tableExist) {
+            // fetch old table info
+            $sql = 'DESCRIBE `'.$collectionName.'`';
+            $statement = $this->raw->query($sql);
+            $describe = $statement->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($describe as $key => $value) {
+                $fields[$value['name']] = $value;
+            }
         }
 
         // add new fields to new table
@@ -119,12 +122,14 @@ class SqliteDialect extends SQLDialect {
         $sql = 'CREATE TABLE "'.$tmpTable.'" ('."\n".
                 '    '.implode(",\n    ", $fieldMeta)."\n".
                 ')';
+        var_dump($sql);
+        exit;
         $this->raw->query($sql);
 
         if ($tableExist) {
             $sql = 'INSERT INTO "' . $tmpTable . '" (' . implode(', ', $newFieldNames) . ') SELECT '.implode(', ', $oldFieldNames).' FROM "'.$collectionName.'"';
             $this->raw->query($sql);
-            $sql = 'DROP table "'.$collectionName.'"';
+            $sql = 'DROP TABLE "'.$collectionName.'"';
             $this->raw->query($sql);
             $sql = 'ALTER TABLE "'.$tmpTable.'" RENAME TO "'.$collectionName.'"';
             $this->raw->query($sql);

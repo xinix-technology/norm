@@ -70,6 +70,7 @@ class NormController extends RestController {
                 $entry = array_merge($entry, $this->request->post());
                 $model = $this->collection->newInstance();
                 $result = $model->set($entry)->save();
+
                 $this->flash('info', $this->clazz.' created.');
                 $this->redirect($this->getRedirectUri());
             } catch(\Exception $e) {

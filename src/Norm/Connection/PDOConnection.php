@@ -50,16 +50,22 @@ class PDOConnection extends \Norm\Connection {
         return $this->dialect->listCollections();
     }
 
-    public function migrate(Collection $collection) {
-        if (!$this->hasCollection($collection->name)) {
-            $grammarCreate = $this->dialect->grammarCreate($collection->name, $collection->schema);
+    // public function migrate(Collection $collection) {
+    //     if (!$this->hasCollection($collection->name)) {
+    //         $grammarCreate = $this->dialect->grammarCreate($collection->name, $collection->schema);
 
-            $this->raw->query($grammarCreate);
-        }
-    }
+    //         $this->raw->query($grammarCreate);
+    //     }
+    // }
 
     public function save(Collection $collection, Model $model) {
+        if (!empty($this->options['autocreate'])) {
+            $this->dialect->prepareCollection($collection);
+        }
+
         $collectionName = $collection->name;
+        $schemes = $collection->schema();
+
         $record = $model->dump();
 
         if (is_null($model->getId())) {
@@ -67,11 +73,32 @@ class PDOConnection extends \Norm\Connection {
             $fields = array();
             $placeholders = array();
             foreach ($record as $key => $value) {
-                $fields[] = $key;
-                $placeholders[] = ':'.$key;
+                if ($key === '$id') {
+                    continue;
+                }
+
+                if (array_key_exists($key, $schemes)) {
+                    $schema = $schemes[$key];
+                    if ($schema instanceof \Norm\Schema\DateTime) {
+                        $record[$key] = date('Y-m-d H:i:s', strtotime($value));
+                    }
+                }
+
+                if ($key[0] === '$') {
+                    $k = '_'.substr($key, 1);
+                    $record[$k] = $value;
+                    unset($record[$key]);
+                } else {
+                    $k = $key;
+                    $sets[] = $k.' = :'.$k;
+                }
+
+                $fields[] = $k;
+                $placeholders[] = ':'.$k;
             }
 
             $sql = 'INSERT INTO ' . $collectionName . '('.implode(', ', $fields).') VALUES('.implode(', ', $placeholders).')';
+
             $statement = $this->getRaw()->prepare($sql);
 
             $result = $statement->execute($record);
@@ -82,14 +109,29 @@ class PDOConnection extends \Norm\Connection {
             }
 
         } else {
-
-            unset($record['$id']);
-            $record['id'] = $model->getId();
-
             $sets = array();
             foreach ($record as $key => $value) {
-                if ($key !== 'id') {
-                    $sets[] = $key.' = :'.$key;
+                if ($key === '$id') {
+                    $record['id'] = $value;
+                    unset($record['$id']);
+                    continue;
+                }
+
+                // if (array_key_exists($key, $schemes)) {
+                //     $schema = $schemes[$key];
+                //     if ($schema instanceof \Norm\Schema\DateTime) {
+                //         $record[$key] = $value;
+                //     }
+                // }
+
+                if ($key[0] === '$') {
+                    $k = '_'.substr($key, 1);
+                    $record[$k] = $value;
+                    $sets[] = $k.' = :'.$k;
+                    unset($record[$key]);
+                } else {
+                    $k = $key;
+                    $sets[] = $k.' = :'.$k;
                 }
             }
 
@@ -104,51 +146,33 @@ class PDOConnection extends \Norm\Connection {
     }
 
     public function query(Collection $collection) {
-        $collectionName = $collection->name;
-
-        // FIXME reekoheek should we use query builder?
-        // $q = new Query($this);
-        // $q->from($collectionName);
-        // $q->where($collection->criteria);
-        // $result = $q->result();
-
-        $criteria = $collection->criteria ?: array();
-        if (isset($criteria['$id'])) {
-            $criteria['id'] = $criteria['$id'];
-            unset($criteria['$id']);
+        if (!empty($this->options['autocreate'])) {
+            $this->dialect->prepareCollection($collection);
         }
 
-        $sql = 'SELECT * FROM '. $collectionName;
-
-        $wheres = array();
-        $data = array();
-        foreach ($criteria as $key => $value) {
-            $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
-        }
-
-
-        if (count($wheres)) {
-            $sql .= ' WHERE '.implode(' AND ', $wheres);
-        }
-
-        $statement = $this->getRaw()->prepare($sql);
-
-        $statement->execute($data);
-
-        return new Cursor($statement);
+        return new Cursor($collection);
     }
 
-    public function prepare($object) {
-        if (!is_array($object)) { return null; }
-
-        if (isset($object['id'])) {
-            $object['$id'] = $object['id'];
-            unset($object['id']);
+    public function prepare(Collection $collection, $object) {
+        $newObject = array(
+            '$id' => $object['id'],
+        );
+        foreach ($object as $key => $value) {
+            if ($key === 'id') continue;
+            if ($key[0] === '_') {
+                $key[0] = '$';
+            }
+            $newObject[$key] = $value;
         }
-        return $object;
+
+        return $newObject;
     }
 
     public function remove(Collection $collection, $model) {
+        if (!empty($this->options['autocreate'])) {
+            $this->dialect->prepareCollection($collection);
+        }
+
         $collectionName = $collection->name;
 
         $sql = 'DELETE FROM '.$collectionName.' WHERE id = :id';
@@ -159,5 +183,9 @@ class PDOConnection extends \Norm\Connection {
         ));
 
         return $result;
+    }
+
+    public function getDialect() {
+        return $this->dialect;
     }
 }

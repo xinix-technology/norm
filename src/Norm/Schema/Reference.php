@@ -16,12 +16,20 @@ class Reference extends Field {
     }
 
     public function input($value, $entry = NULL) {
+        $foreign = Norm::factory($this->foreign);
+
         if ($this['readonly']) {
-            return parent::input($value, $entry);
+            $entry = $foreign->findOne($value);
+            if (is_callable($this->foreignLabel)) {
+                $getLabel = $this->foreignLabel;
+                $label = $getLabel($entry);
+            } else {
+                $label = $entry->get($this->foreignLabel);
+            }
+            return '<span class="field">'.$label.'</span>';
         }
 
         $options = array();
-        $foreign = \Norm\Norm::factory($this->foreign);
         $entries = $foreign->find();
         foreach ($entries as $entry) {
             if (is_callable($this->foreignLabel)) {

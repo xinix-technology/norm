@@ -4,6 +4,10 @@ namespace Norm\Schema;
 
 class DateTime extends Field {
     public function prepare($value) {
+        if (empty($value)) {
+            return null;
+        }
+
         if ($value instanceof \DateTime) {
             return $value->format('c');
         } elseif (is_string($value)) {
@@ -19,6 +23,7 @@ class DateTime extends Field {
         if ($format = $this['inputFormat']) {
             return $format($value, $entry);
         }
-        return '<input type="date" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].'" autocomplete="off" />';
+        $value = date('c', strtotime($value));
+        return '<input type="datetime-local" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].'" autocomplete="off" />';
     }
 }

@@ -34,11 +34,17 @@
  */
 namespace Norm\PDO;
 
+use Norm\Collection;
+
 /**
  * Wrapper to PDO statement to produce cursor for Norm
  * @author Ganesha <reekoheek@gmail.com>
  */
 class Cursor implements \Iterator {
+
+    // FIXME reekoheek cursor cannot reset statement result to foreach multiple
+    // times
+    protected $criteria;
 
     /**
      * PDO statement
@@ -56,8 +62,11 @@ class Cursor implements \Iterator {
      * Construct cursor for particular statement
      * @param \PDOStatement $statement PDO statement
      */
-    public function __construct(\PDOStatement $statement) {
-        $this->statement = $statement;
+    public function __construct(Collection $collection) {
+        $this->collection = $collection;
+
+        $this->criteria = $this->prepareCriteria($collection->criteria ?: array());
+
         $this->row = 0;
     }
 
@@ -99,9 +108,46 @@ class Cursor implements \Iterator {
      * @return bool
      */
     public function valid() {
-        $this->current = $this->statement->fetch(\PDO::FETCH_ASSOC);
+        $this->current = $this->getStatement()->fetch(\PDO::FETCH_ASSOC);
         $valid = ($this->current !== false);
         return $valid;
+    }
+
+    public function prepareCriteria($criteria) {
+        if (isset($criteria['$id'])) {
+            $criteria['id'] = $criteria['$id'];
+            unset($criteria['$id']);
+        }
+        return $criteria;
+    }
+
+    public function getStatement() {
+        if (is_null($this->statement)) {
+
+            $sql = 'SELECT * FROM '. $this->collection->name;
+
+            // var_dump('crit');
+
+            $wheres = array();
+            $data = array();
+            foreach ($this->criteria as $key => $value) {
+                // var_dump('crit:'.$key.':'.json_encode($value));
+                $wheres[] = $this->collection->connection->getDialect()->grammarExpression($key, $value, $data);
+            }
+
+
+            if (count($wheres)) {
+                $sql .= ' WHERE '.implode(' AND ', $wheres);
+            }
+
+            // var_dump($this->criteria);
+            // var_dump($sql);
+            $this->statement = $this->collection->connection->getRaw()->prepare($sql);
+
+            $this->statement->execute($data);
+        }
+
+        return $this->statement;
     }
 
     /**
@@ -110,6 +156,40 @@ class Cursor implements \Iterator {
      */
     public function rewind() {
         // noop
+    }
+
+    public function sort(array $fields) {
+        if (!empty($fields)) {
+            throw new \Exception('Not implemented yet!');
+        }
+        return $this;
+    }
+
+    public function count() {
+
+        $sql = 'SELECT COUNT(1) AS c FROM '. $this->collection->name;
+
+        $wheres = array();
+        $data = array();
+        foreach ($this->criteria as $key => $value) {
+            // var_dump('crit:'.$key.':'.json_encode($value));
+            $wheres[] = $this->collection->connection->getDialect()->grammarExpression($key, $value, $data);
+        }
+
+
+        if (count($wheres)) {
+            $sql .= ' WHERE '.implode(' AND ', $wheres);
+        }
+
+        // var_dump('count');
+        // var_dump('countcrit');
+        // var_dump($this->criteria);
+        // var_dump($sql);
+        $statement = $this->collection->connection->getRaw()->prepare($sql);
+
+        $statement->execute($data);
+
+        return $statement->fetch(\PDO::FETCH_OBJ)->c;
     }
 
 }

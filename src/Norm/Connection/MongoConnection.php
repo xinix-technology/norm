@@ -50,11 +50,11 @@ class MongoConnection extends Connection {
         return $retval;
     }
 
-    public function migrate(Collection $collection) {
-        // noop
-    }
+    // public function migrate(Collection $collection) {
+    //     // noop
+    // }
 
-    public function prepare($object) {
+    public function prepare(Collection $collection, $object) {
         $newObject = array(
             '$id' => (string) $object['_id'],
         );
@@ -116,10 +116,11 @@ class MongoConnection extends Connection {
         $collectionName = $collection->name;
         $modified = $model->toArray();
 
-        $schema = $collection->schema();
+        $schemes = $collection->schema();
+        // FIXME reekoheek, this should be prepare to persist method
         foreach($modified as $key => $value) {
-            if (array_key_exists($key, $schema)) {
-                $schema = $schema[$key];
+            if (array_key_exists($key, $schemes)) {
+                $schema = $schemes[$key];
                 if ($schema instanceof \Norm\Schema\DateTime) {
                     $modified[$key] = new MongoDate(strtotime($value));
                 }
@@ -143,7 +144,7 @@ class MongoConnection extends Connection {
             $result = $this->raw->$collectionName->insert($modified);
         }
 
-        $modified = $this->prepare($modified);
+        $modified = $this->prepare($collection, $modified);
 
         $model->sync($modified);
 
