@@ -53,9 +53,9 @@ abstract class Connection extends Hookable {
     }
 
     abstract public function initialize($options);
-    abstract public function migrate(Collection $collection);
+    // abstract public function migrate(Collection $collection);
     abstract public function listCollections();
-    abstract public function prepare($object);
+    abstract public function prepare(Collection $collection, $object);
     abstract public function query(Collection $collection);
     abstract public function save(Collection $collection, Model $model);
     abstract public function remove(Collection $collection, $model);

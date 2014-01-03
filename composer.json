@@ -10,11 +10,12 @@
         }
     ],
     "require": {
-        "reekoheek/jsonkit": "~0.0.1"
+        "reekoheek/jsonkit": "~0.0.1",
+        "reekoheek/util": ">=0.1.2"
     },
     "require-dev": {
         "phpunit/phpunit": "3.7.22",
-        "reekoheek/util": "~0.0.1"
+        "phpdocumentor/phpdocumentor": "2.*"
     },
      "autoload": {
         "psr-0": {

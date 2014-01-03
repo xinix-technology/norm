@@ -2,10 +2,13 @@
 
 namespace Norm\Schema;
 
-use \Reekoheek\Util\Inflector;
+use \ROH\Util\Inflector;
 use Norm\Filter\Filter;
 
 abstract class Field implements \ArrayAccess {
+
+    static protected $instances = array();
+
     protected $multi = false;
 
     protected $attributes = array();
@@ -14,12 +17,21 @@ abstract class Field implements \ArrayAccess {
 
     public static function getInstance($name = '', $label = NULL) {
         $Field = get_called_class();
+
+        if (empty($name)) {
+            if (!isset(static::$instances[$Field])) {
+                static::$instances[$Field] = new $Field($name, $label);
+            }
+
+            return static::$instances[$Field];
+        }
+
         return new $Field($name, $label);
     }
 
     public function __construct($name, $label = NULL) {
         if (is_null($label)) {
-            $label = Inflector::classify($name);
+            $label = Inflector::humanize($name);
         }
         $this->set('name', $name);
         $this->set('label', $label);
@@ -30,7 +42,6 @@ abstract class Field implements \ArrayAccess {
     }
 
     public function filter() {
-
         if (func_num_args() == 0) {
             return $this->filter;
         }
@@ -40,6 +51,11 @@ abstract class Field implements \ArrayAccess {
             if (is_string($filter)) {
                 $filter = explode('|', $filter);
                 foreach ($filter as $f) {
+
+                    $baseF = explode(':', trim($f));
+                    $baseF = $baseF[0];
+                    $this['filter-'.$baseF] = true;
+
                     $this->filter[] = $f;
                 }
             } else {
@@ -84,7 +100,7 @@ abstract class Field implements \ArrayAccess {
     }
 
     public function label() {
-        return '<label>'.$this['label'].($this['required'] ? '*' : '').'</label>';
+        return '<label>'.$this['label'].($this['filter-required'] ? '*' : '').'</label>';
     }
 
     public function input($value, $entry = NULL) {

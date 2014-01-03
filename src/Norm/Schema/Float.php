@@ -2,8 +2,8 @@
 
 namespace Norm\Schema;
 
-class String extends Field {
+class Float extends Field {
     public function prepare($value) {
-        return utf8_encode($value);
+        return (double) $value;
     }
 }

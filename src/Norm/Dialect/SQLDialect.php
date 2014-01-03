@@ -20,6 +20,10 @@ class SQLDialect {
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function prepareCollection($name) {
+        throw new \Exception('Unimplemented yet!');
+    }
+
     public function grammarCreate($name, $schema) {
         $fieldDefinitions = array();
         foreach ($schema as $field) {
@@ -36,6 +40,7 @@ class SQLDialect {
     }
 
     public function grammarExpression($exp, $value, &$data) {
+
         $this->expressionCounter = -1;
 
         $exp = explode('!', $exp);
@@ -59,9 +64,26 @@ class SQLDialect {
                 break;
         }
 
-        $this->expressionCounter++;
-        $data['f'.$this->expressionCounter] = $value;
 
-        return $key . ' ' . $op . ' :f' . $this->expressionCounter;
+        if ($op == 'in') {
+            $fgroup = array();
+            foreach ($value as $k => $v) {
+                $v1 = $v;
+                if ($v instanceof \Norm\Model) {
+                    $v1 = $v['$id'];
+                }
+                $this->expressionCounter++;
+                $data['f'.$this->expressionCounter] = $v1;
+                $fgroup[] = ':f'.$this->expressionCounter;
+            }
+            if (empty($fgroup)) {
+                return '(1)';
+            }
+            return $key . ' ' . $op . ' ('.implode(', ', $fgroup).')';
+        } else {
+            $this->expressionCounter++;
+            $data['f'.$this->expressionCounter] = $value;
+            return $key . ' ' . $op . ' :f' . $this->expressionCounter;
+        }
     }
 }
