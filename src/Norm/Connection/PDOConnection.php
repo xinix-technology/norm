@@ -2,9 +2,11 @@
 
 namespace Norm\Connection;
 
-use Norm\Collection;
-use Norm\Model;
-use Norm\PDO\Cursor;
+use \Norm\Collection;
+use \Norm\Model;
+use \Norm\PDO\Cursor;
+use \Norm\Schema\DateTime;
+use \Norm\Schema\Object;
 
 class PDOConnection extends \Norm\Connection {
 
@@ -77,10 +79,13 @@ class PDOConnection extends \Norm\Connection {
                     continue;
                 }
 
+                // FIXME reekoheek, it should be move from here
                 if (array_key_exists($key, $schemes)) {
                     $schema = $schemes[$key];
-                    if ($schema instanceof \Norm\Schema\DateTime) {
+                    if ($schema instanceof DateTime) {
                         $record[$key] = date('Y-m-d H:i:s', strtotime($value));
+                    } elseif ($schema instanceof Object) {
+                        $record[$key] = json_encode($value);
                     }
                 }
 
@@ -117,12 +122,14 @@ class PDOConnection extends \Norm\Connection {
                     continue;
                 }
 
-                // if (array_key_exists($key, $schemes)) {
-                //     $schema = $schemes[$key];
-                //     if ($schema instanceof \Norm\Schema\DateTime) {
-                //         $record[$key] = $value;
-                //     }
-                // }
+                if (array_key_exists($key, $schemes)) {
+                    $schema = $schemes[$key];
+                    if ($schema instanceof DateTime) {
+                        $record[$key] = date('Y-m-d H:i:s', strtotime($value));
+                    } elseif ($schema instanceof Object) {
+                        $record[$key] = json_encode($value);
+                    }
+                }
 
                 if ($key[0] === '$') {
                     $k = '_'.substr($key, 1);

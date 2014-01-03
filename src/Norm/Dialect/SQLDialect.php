@@ -41,8 +41,6 @@ class SQLDialect {
 
     public function grammarExpression($exp, $value, &$data) {
 
-        $this->expressionCounter = -1;
-
         $exp = explode('!', $exp);
         $key = $exp[0];
         $op = (isset($exp[1])) ? $exp[1] : '=';
