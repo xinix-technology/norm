@@ -85,7 +85,7 @@ class Norm {
 
         foreach ($config as $key => $value) {
             $value['name'] = $key;
-
+            
             $Driver = $value['driver'];
 
             static::$connections[$key] = new $Driver($value);

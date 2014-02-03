@@ -84,4 +84,105 @@ class SQLDialect {
             return $key . ' ' . $op . ' :f' . $this->expressionCounter;
         }
     }
+
+    public function execute($sql, $data){
+        $statement = $this->raw->prepare($sql);
+        $result = $statement->execute($data);
+        return $result;
+    }
+
+    public function grammarInsert($collectionName, $data){
+
+        $fields = array();
+        $placeholders = array();
+
+        foreach ($data as $key => $value) {
+            if ($key === '$id') {
+                continue;
+            }
+
+            if ($key[0] === '$') {
+                $k = '_'.substr($key, 1);
+                $data[$k] = $value;
+                unset($data[$key]);
+            } else {
+                $k = $key;
+                $sets[] = $k.' = :'.$k;
+            }
+
+            $fields[] = $k;
+            $placeholders[] = ':'.$k;
+        }
+
+        $sql = 'INSERT INTO ' . $collectionName . '('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).')';
+        return $sql;
+    }
+
+    public function insert($collectionName, $data){
+        $sql = $this->grammarInsert($collectionName, $data);
+        return $this->execute($sql, $data);
+    }
+
+    public function grammarUpdate($collectionName, $data){
+
+        $sets = array();
+        foreach ($data as $key => $value) {
+            if ($key === '$id') {
+                $data['id'] = $value;
+                unset($data['$id']);
+                continue;
+            }
+
+            if ($key[0] === '$') {
+                $k = '_'.substr($key, 1);
+                $record[$k] = $value;
+                $sets[] = $k.' = :'.$k;
+                unset($record[$key]);
+            } else {
+                $k = $key;
+                $sets[] = $k.' = :'.$k;
+            }
+        }
+
+        $sql = 'UPDATE '.$collectionName.' SET '.implode(', ', $sets) . ' WHERE id = :id';
+        return $sql;
+    }
+
+    public function update($collectionName, $data){
+        $sql = $this->grammarUpdate($collectionName, $data);
+
+        foreach ($data as $key => $value) {
+            if ($key === '$id') {
+                $data['id'] = $value;
+                unset($data['$id']);
+            }
+        }
+        
+        return $this->execute($sql, $data);
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

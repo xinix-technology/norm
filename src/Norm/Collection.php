@@ -252,7 +252,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
             $errors = $this->filter->errors();
 
             if ($errors) {
-                throw (new \Norm\Filter\FilterException())->sub($errors);
+                $err = new \Norm\Filter\FilterException();
+                throw $err->sub($errors);
             }
         } else {
             // $backtrace = debug_backtrace();

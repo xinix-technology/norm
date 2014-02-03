@@ -60,6 +60,12 @@ class PDOConnection extends \Norm\Connection {
     //     }
     // }
 
+    /**
+     * [save description]
+     * @param  Collection $collection [description]
+     * @param  Model      $model      [description]
+     * @return bool        if success return true else return false
+     */
     public function save(Collection $collection, Model $model) {
         if (!empty($this->options['autocreate'])) {
             $this->dialect->prepareCollection($collection);
@@ -67,86 +73,22 @@ class PDOConnection extends \Norm\Connection {
 
         $collectionName = $collection->name;
         $schemes = $collection->schema();
-
-        $record = $model->dump();
+        $data = $model->dump();
+        $result = false;
 
         if (is_null($model->getId())) {
+            $id = $this->dialect->insert($collectionName, $data);
 
-            $fields = array();
-            $placeholders = array();
-            foreach ($record as $key => $value) {
-                if ($key === '$id') {
-                    continue;
-                }
-
-                // FIXME reekoheek, it should be move from here
-                if (array_key_exists($key, $schemes)) {
-                    $schema = $schemes[$key];
-                    if ($schema instanceof DateTime) {
-                        $record[$key] = date('Y-m-d H:i:s', strtotime($value));
-                    } elseif ($schema instanceof Object) {
-                        $record[$key] = json_encode($value);
-                    }
-                }
-
-                if ($key[0] === '$') {
-                    $k = '_'.substr($key, 1);
-                    $record[$k] = $value;
-                    unset($record[$key]);
-                } else {
-                    $k = $key;
-                    $sets[] = $k.' = :'.$k;
-                }
-
-                $fields[] = $k;
-                $placeholders[] = ':'.$k;
+            if ($id) {
+                $model->setId($id);
+                $result = true;
             }
-
-            $sql = 'INSERT INTO ' . $collectionName . '('.implode(', ', $fields).') VALUES('.implode(', ', $placeholders).')';
-
-            $statement = $this->getRaw()->prepare($sql);
-
-            $result = $statement->execute($record);
-
-            if ($result) {
-                $lastInsertId = $this->getRaw()->lastInsertId();
-                $model->setId($lastInsertId);
-            }
-
         } else {
-            $sets = array();
-            foreach ($record as $key => $value) {
-                if ($key === '$id') {
-                    $record['id'] = $value;
-                    unset($record['$id']);
-                    continue;
-                }
-
-                if (array_key_exists($key, $schemes)) {
-                    $schema = $schemes[$key];
-                    if ($schema instanceof DateTime) {
-                        $record[$key] = date('Y-m-d H:i:s', strtotime($value));
-                    } elseif ($schema instanceof Object) {
-                        $record[$key] = json_encode($value);
-                    }
-                }
-
-                if ($key[0] === '$') {
-                    $k = '_'.substr($key, 1);
-                    $record[$k] = $value;
-                    $sets[] = $k.' = :'.$k;
-                    unset($record[$key]);
-                } else {
-                    $k = $key;
-                    $sets[] = $k.' = :'.$k;
-                }
+            $result = $this->dialect->update($collectionName, $data);
+            
+            if ($result) {
+                $result = true;
             }
-
-            $sql = 'UPDATE '.$collectionName.' SET '.implode(', ', $sets) . ' WHERE id = :id';
-
-            $statement = $this->getRaw()->prepare($sql);
-
-            $result = $statement->execute($record);
         }
 
         return $result;
