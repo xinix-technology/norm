@@ -79,9 +79,13 @@ class Norm {
 
         static::$collectionConfig = $collectionConfig;
 
+        if (empty($config)) {
+            return;
+        }
+
         foreach ($config as $key => $value) {
             $value['name'] = $key;
-
+            
             $Driver = $value['driver'];
 
             static::$connections[$key] = new $Driver($value);
