@@ -85,7 +85,10 @@ class Norm {
 
         foreach ($config as $key => $value) {
             $value['name'] = $key;
-            
+
+            if (!isset($value['driver'])) {
+                throw new \Exception('[Norm] Cannot instantiate connection "'.$key.'", Driver "'.@$value['driver'].'" not found!');
+            }
             $Driver = $value['driver'];
 
             static::$connections[$key] = new $Driver($value);
@@ -157,6 +160,8 @@ class Norm {
         $connection = static::getConnection();
         if ($connection) {
             return call_user_func_array(array($connection, $method), $parameters);
+        } else {
+            throw new \Exception("[Norm] No connection exists.");
         }
     }
 
