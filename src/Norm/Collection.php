@@ -26,9 +26,9 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         $this->connection = $options['connection'];
 
         if (isset($options['observers'])) {
-            foreach($options['observers'] as $observer) {
+            foreach($options['observers'] as $observer => $options) {
                 if (is_string($observer)) {
-                    $observer = new $observer();
+                    $observer = new $observer($options);
                 }
                 $this->observe($observer);
             }
