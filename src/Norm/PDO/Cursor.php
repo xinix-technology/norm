@@ -126,13 +126,10 @@ class Cursor implements \Iterator {
 
             $sql = 'SELECT * FROM '. $this->collection->name;
 
-            // var_dump('crit');
-
             $wheres = array();
             $data = array();
             foreach ($this->criteria as $key => $value) {
-                // var_dump('crit:'.$key.':'.json_encode($value));
-                $wheres[] = $this->collection->connection->getDialect()->grammarExpression($key, $value, $data);
+                $wheres[] = $a= $this->collection->connection->getDialect()->grammarExpression($key, $value, $data);
             }
 
 
@@ -140,8 +137,6 @@ class Cursor implements \Iterator {
                 $sql .= ' WHERE '.implode(' AND ', $wheres);
             }
 
-            // var_dump($this->criteria);
-            // var_dump($sql);
             $this->statement = $this->collection->connection->getRaw()->prepare($sql);
 
             $this->statement->execute($data);

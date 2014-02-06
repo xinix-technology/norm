@@ -13,22 +13,6 @@ class NormController extends RestController {
         parent::__construct($app, $uri);
 
         $this->collection = Norm::factory($this->clazz);
-
-        $controller = $this;
-
-        // DEPRECATED: reekoheek, this function poisoning result
-        // $this->app->hook('bono.controller.before', function($options) use ($app, $controller) {
-        //     // move this to restcontroller
-        //     $entry = $app->request->post();
-        //     foreach ($app->request->get() as $key => $value) {
-        //         if ($key[0] != '_' && !isset($entry[$key])) {
-        //             $entry[$key] = $value;
-        //         }
-        //     }
-        //     if (!empty($entry)) {
-        //         $controller->set('entry', $entry);
-        //     }
-        // });
     }
 
     public function getCriteria() {

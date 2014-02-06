@@ -81,7 +81,9 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
             // FIXME reekoheek $attributes['$id'] should be removed
         }
 
-        $this->attributes = $attributes;
+        // $this->attributes = $attributes;
+        $this->set($attributes);
+
     }
 
     public function reset() {

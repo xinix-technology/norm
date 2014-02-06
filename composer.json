@@ -7,6 +7,17 @@
             "email": "reekoheek@gmail.com",
             "homepage": "http://xinix.co.id",
             "role": "Developer"
+        },
+        {
+            "name": "Krisan Alfa",
+            "email": "krisan47@gmail.com",
+            "homepage": "https://twitter.com/krisanalfa",
+            "role": "Developer"
+        },
+        {
+            "name": "Aprianto Pramana Putra",
+            "email": "apriantopramanaputra@gmail.com",
+            "role": "Developer"
         }
     ],
     "require": {
