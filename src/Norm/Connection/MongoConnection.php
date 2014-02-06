@@ -22,7 +22,12 @@ class MongoConnection extends Connection {
         } else {
             $hostname = $this->options['hostname'];
             $port = $this->options['port'];
-            $database = $this->options['database'];
+
+            if (isset($this->options['database'])) {
+                $database = $this->options['database'];
+            } else {
+                throw new \Exception('[Norm] Missing database name, check your configuration!');
+            }
 
             $prefix = '';
             if (isset($this->options['username'])) {
