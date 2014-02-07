@@ -38,7 +38,7 @@ namespace Norm\Provider;
 /**
  * Norm provider for Bono web application framework
  *
- * This provider expects configuration:
+ * Expects connection configuration:
  *
  * <pre>
  * array (
@@ -64,6 +64,25 @@ namespace Norm\Provider;
  * )
  * </pre>
  *
+ * Expects collection schema configuration:
+ *
+ * <pre>
+ * array (
+ *     'norm.collections' => array (
+ *         'default' => array (
+ *             // ...
+ *         ),
+ *         'mapping' => array (
+ *             '{ModuleName}' => array (
+ *                 'schema' => array (
+ *                     '{field1}' => // ...
+ *                 )
+ *             ),
+ *             // ...
+ *         )
+ *     )
+ * )
+ * </pre>
  */
 class NormProvider extends \Bono\Provider\Provider {
     /**
