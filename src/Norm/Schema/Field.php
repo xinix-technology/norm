@@ -123,4 +123,12 @@ abstract class Field implements \ArrayAccess {
         }
         return $value;
     }
+
+    public function cellRaw($value) {
+        return $value;
+    }
+
+    public function getInputInRaw($value) {
+        return '<span class="field">'.$value.'</span>';
+    }
 }
