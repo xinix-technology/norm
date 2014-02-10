@@ -92,7 +92,7 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     }
 
     public function attach($doc) {
-        
+
         $doc = array_change_key_case($doc, CASE_LOWER);
 
         $doc = $this->connection->prepare($this, $doc);

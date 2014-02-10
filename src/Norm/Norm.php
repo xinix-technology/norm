@@ -110,10 +110,9 @@ class Norm {
     public static function createCollection($options) {
         $defaultConfig = isset(static::$collectionConfig['default']) ? static::$collectionConfig['default'] : array();
         $config = isset(static::$collectionConfig['mapping'][$options['name']]) ? static::$collectionConfig['mapping'][$options['name']] : array();
-        $config = array_merge($defaultConfig, $config);
+        $config = array_merge_recursive($defaultConfig, $config);
 
-        $options = array_merge($config, $options);
-
+        $options = array_merge_recursive($config, $options);
 
         if (isset($options['collection'])) {
             $Driver = $options['collection'];

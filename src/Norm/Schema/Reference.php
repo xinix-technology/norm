@@ -8,10 +8,12 @@ class Reference extends Field {
 
     protected $foreign;
     protected $foreignLabel;
+    protected $foreignKey;
 
-    public function to($foreign, $foreignLabel) {
+    public function to($foreign, $foreignKey = null, $foreignLabel) {
         $this->foreign = $foreign;
         $this->foreignLabel = $foreignLabel;
+        $this->foreignKey = $foreignKey;
         return $this;
     }
 
@@ -38,7 +40,13 @@ class Reference extends Field {
             } else {
                 $label = $entry->get($this->foreignLabel);
             }
-            $options[] = '<option value="'.$entry->getId().'" '.($entry->getId() === $value ? 'selected' : '').'>'.$label.'</option>';
+
+            if (is_null($this->foreignKey)) {
+                $options[] = '<option value="'.$entry->getId().'" '.($entry->getId() === $value ? 'selected' : '').'>'.$label.'</option>';
+            } else {
+                $options[] = '<option value="'.$entry->get($this->foreignKey).'" '.($entry->get($this->foreignKey) === $value ? 'selected' : '').'>'.$label.'</option>';
+            }
+
         }
         return '
             <select name="'.$this['name'].'"><option value="">---</option>'.implode('', $options).'</select>
@@ -49,7 +57,14 @@ class Reference extends Field {
         if (empty($value)) {
             return '';
         }
-        $model = Norm::factory($this->foreign)->findOne($value);
+
+        if (is_null($this->foreignKey)) {
+            $model = Norm::factory($this->foreign)->findOne($this->foreignKey);
+        } else {
+            $criteria = array($this->foreignKey => $value);
+            $model = Norm::factory($this->foreign)->findOne($criteria);
+        }
+
         if (is_callable($this->foreignLabel)) {
             $getLabel = $this->foreignLabel;
             $label = $getLabel($model);
@@ -66,6 +81,10 @@ class Reference extends Field {
 
         if (empty($value)) {
             $value = NULL;
+        }
+
+        if(! is_null($this->foreignKey)) {
+            $value = Norm::factory($this->foreign)->options['schema'][$this->foreignKey]->prepare($value);
         }
 
         return $value;
