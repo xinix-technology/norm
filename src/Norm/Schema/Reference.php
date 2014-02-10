@@ -21,7 +21,13 @@ class Reference extends Field {
         $foreign = Norm::factory($this->foreign);
 
         if ($this['readonly']) {
-            $entry = $foreign->findOne($value);
+            if (is_null($this->foreignKey)) {
+                $entry = Norm::factory($this->foreign)->findOne($this->foreignKey);
+            } else {
+                $criteria = array($this->foreignKey => $value);
+                $entry = Norm::factory($this->foreign)->findOne($criteria);
+            }
+
             if (is_callable($this->foreignLabel)) {
                 $getLabel = $this->foreignLabel;
                 $label = $getLabel($entry);
