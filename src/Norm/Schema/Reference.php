@@ -60,6 +60,8 @@ class Reference extends Field {
     }
 
     public function cell($value, $entry = NULL) {
+        $label = '';
+
         if (empty($value)) {
             return '';
         }
@@ -75,8 +77,11 @@ class Reference extends Field {
             $getLabel = $this->foreignLabel;
             $label = $getLabel($model);
         } else {
-            $label = $model->get($this->foreignLabel);
+            if ($model) {
+                $label = $model->get($this->foreignLabel);
+            }
         }
+
         return $label;
     }
 
