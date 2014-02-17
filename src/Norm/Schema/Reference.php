@@ -10,7 +10,7 @@ class Reference extends Field {
     protected $foreignLabel;
     protected $foreignKey;
 
-    public function to($foreign, $foreignKey = null, $foreignLabel) {
+    public function to($foreign, $foreignKey, $foreignLabel) {
         $this->foreign = $foreign;
         $this->foreignLabel = $foreignLabel;
         $this->foreignKey = $foreignKey;
@@ -59,6 +59,10 @@ class Reference extends Field {
         ';
     }
 
+    public function getRaw($value) {
+        return $value;
+    }
+
     public function cell($value, $entry = NULL) {
         $label = '';
 
@@ -67,7 +71,7 @@ class Reference extends Field {
         }
 
         if (is_null($this->foreignKey)) {
-            $model = Norm::factory($this->foreign)->findOne($this->foreignKey);
+            $model = Norm::factory($this->foreign)->findOne($value);
         } else {
             $criteria = array($this->foreignKey => $value);
             $model = Norm::factory($this->foreign)->findOne($criteria);
