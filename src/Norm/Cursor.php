@@ -15,7 +15,6 @@ class Cursor implements \Iterator,  \JsonKit\JsonSerializer {
 
     public function getNext() {
         $next = $this->cursor->getNext();
-
         if (isset($next)) {
             return $this->collection->attach($next);
         }

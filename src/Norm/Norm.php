@@ -40,9 +40,11 @@ use Norm\Connection;
 /**
  * Static class to bootstrap Norm framework functionality.
  *
- * Howto:
+ * To get collection with name specified from default connection:
  *
+ * <code>
  * Norm::factory('Content')
+ * </code>
  *
  */
 class Norm {

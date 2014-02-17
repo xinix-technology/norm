@@ -16,6 +16,10 @@ abstract class Field implements \ArrayAccess {
     protected $filter = array();
 
     public static function getInstance($name = '', $label = NULL) {
+        return static::create($name, $label);
+    }
+
+    public static function create($name = '', $label = NULL) {
         $Field = get_called_class();
 
         if (empty($name)) {
