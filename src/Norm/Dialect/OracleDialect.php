@@ -11,6 +11,7 @@ class OracleDialect extends SQLDialect {
 
         $fields[0] = 'id';
 	    $placeholders[] = 'SEQ_'.strtoupper($collectionName).'.NEXTVAL';
+        
         foreach ($data as $key => $value) {
             $fields[] = $key;
             $placeholders[] = ':'.$key;
@@ -22,9 +23,11 @@ class OracleDialect extends SQLDialect {
 
     public function insert($collectionName, $data){
         $id = 0;
-        $sql = $this->grammarInsert($collectionName, $data);
-        $statement = $this->raw->prepare($sql);
 
+        $data = $this->formatingData($data);
+        $sql = $this->grammarInsert($collectionName, $data);
+        
+        $statement = $this->raw->prepare($sql);
         foreach ($data as $key => &$value) {
         	$statement->bindParam(':'.$key, $value);
         }
@@ -40,21 +43,8 @@ class OracleDialect extends SQLDialect {
 
         $sets = array();
         foreach ($data as $key => $value) {
-            if ($key === '$id') {
-                $data['id'] = $value;
-                unset($data['$id']);
-                continue;
-            }
-
-            if ($key[0] === '$') {
-                $k = '_'.substr($key, 1);
-                $record[$k] = $value;
-                $sets[] = $k.' = :'.$k;
-                unset($record[$key]);
-            } else {
-                $k = $key;
-                $sets[] = $k.' = :'.$k;
-            }
+            $k = $key;
+            $sets[] = $k.' = :'.$k;
         }
 
         $sql = 'UPDATE '.$collectionName.' SET '.implode(', ', $sets) . ' WHERE id = :id';
@@ -62,16 +52,23 @@ class OracleDialect extends SQLDialect {
     }
 
     public function update($collectionName, $data){
+        $data = $this->formatingData($data);
         $sql = $this->grammarUpdate($collectionName, $data);
-
-        foreach ($data as $key => $value) {
-            if ($key === '$id') {
-                $data['id'] = $value;
-                unset($data['$id']);
-            }
-        }
-
         return $this->execute($sql, $data);
+    }
+
+    public function formatingData($data){
+        foreach ($data as $key => $value) {
+            unset($data[$key]);
+            $key = str_replace('$', '', $key);
+
+            if(strtotime($value)){
+                $format = strtotime($value);
+                $value = date('d-M-y h.i.s a',$format);
+            }
+            $data[$key] = $value;
+        }
+        return $data;
     }
 
 }
