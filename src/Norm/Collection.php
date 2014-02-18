@@ -26,9 +26,9 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         $this->connection = $options['connection'];
 
         if (isset($options['observers'])) {
-            foreach($options['observers'] as $observer) {
+            foreach($options['observers'] as $observer => $options) {
                 if (is_string($observer)) {
-                    $observer = new $observer();
+                    $observer = new $observer($options);
                 }
                 $this->observe($observer);
             }
@@ -92,7 +92,7 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     }
 
     public function attach($doc) {
-        
+
         $doc = array_change_key_case($doc, CASE_LOWER);
 
         $doc = $this->connection->prepare($this, $doc);
