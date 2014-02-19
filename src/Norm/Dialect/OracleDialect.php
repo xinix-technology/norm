@@ -23,8 +23,6 @@ class OracleDialect extends SQLDialect {
 
     public function insert($collectionName, $data){
         $id = 0;
-
-        $data = $this->formatingData($data);
         $sql = $this->grammarInsert($collectionName, $data);
         
         $statement = $this->raw->prepare($sql);
@@ -52,23 +50,8 @@ class OracleDialect extends SQLDialect {
     }
 
     public function update($collectionName, $data){
-        $data = $this->formatingData($data);
         $sql = $this->grammarUpdate($collectionName, $data);
         return $this->execute($sql, $data);
-    }
-
-    public function formatingData($data){
-        foreach ($data as $key => $value) {
-            unset($data[$key]);
-            $key = str_replace('$', '', $key);
-
-            if(strtotime($value)){
-                $format = strtotime($value);
-                $value = date('d-M-y h.i.s a',$format);
-            }
-            $data[$key] = $value;
-        }
-        return $data;
     }
 
 }

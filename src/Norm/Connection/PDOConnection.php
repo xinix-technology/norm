@@ -73,7 +73,7 @@ class PDOConnection extends \Norm\Connection {
 
         $collectionName = $collection->name;
         $schemes = $collection->schema();
-        $data = $model->dump();
+        $data = $this->marshall($model->dump());
         $result = false;
 
         if (is_null($model->getId())) {

@@ -119,25 +119,9 @@ class MongoConnection extends Connection {
 
     public function save(Collection $collection, Model $model) {
         $collectionName = $collection->name;
-        $modified = $model->toArray();
-
+        
         $schemes = $collection->schema();
-        // FIXME reekoheek, this should be prepare to persist method
-        foreach($modified as $key => $value) {
-            if (array_key_exists($key, $schemes)) {
-                $schema = $schemes[$key];
-                if ($schema instanceof \Norm\Schema\DateTime) {
-                    $modified[$key] = new MongoDate(strtotime($value));
-                }
-            }
-
-            if ($key[0] === '$') {
-                if ($key !== '$id' && $key !== '$type') {
-                    $modified['_'.substr($key, 1)] = $modified[$key];
-                }
-                unset($modified[$key]);
-            }
-        }
+        $modified = $this->marshall($model->dump());
 
         if ($model->getId()) {
             $criteria = array(
@@ -154,6 +138,14 @@ class MongoConnection extends Connection {
         $model->sync($modified);
 
         return $result['ok'];
+    }
+
+    public function marshall($object) {
+        if ($object instanceof \Norm\Type\DateTime) {
+            return new \MongoDate($object->getTimestamp());
+        } else {
+            return parent::marshall($object);
+        }
     }
 
     public function remove(Collection $collection, $model) {

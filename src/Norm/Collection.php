@@ -131,9 +131,10 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
 
         $this->applyHook('searched', $this, $result);
 
+        $cursor = new Cursor($result, $this);
+
         $this->criteria = null;
 
-        $cursor = new Cursor($result, $this);
         return $cursor;
     }
 
