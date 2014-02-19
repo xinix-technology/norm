@@ -87,6 +87,28 @@ abstract class Connection extends Hookable {
         }
         return false;
     }
+    
+    public function marshall($object) {
+        
+        if (is_array($object)) {
+            $result = array();
+            foreach ($object as $key => $value) {
+                if ($key[0] === '$') {
+                    if ($key === '$id' || $key === '$type') {
+                        continue;
+                    }
+                    $result['_'.substr($key, 1)] = $this->marshall($value);
+                } else {
+                    $result[$key] = $this->marshall($value);
+                }
+            }
+            return $result;
+        } elseif ($object instanceof \Norm\Type\DateTime) {
+            return $object->format('c');
+        } else {
+            return $object;
+        }
+    }
 
     abstract public function initialize($options);
     // abstract public function migrate(Collection $collection);

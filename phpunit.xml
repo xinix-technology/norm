@@ -16,5 +16,8 @@
         <testsuite name="Adapter oracle">
             <directory>./test/Norm/Oracle</directory>
         </testsuite>
+        <testsuite name="Adapter OCI">
+            <directory>./test/Norm/OCI</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

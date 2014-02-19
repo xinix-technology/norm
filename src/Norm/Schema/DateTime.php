@@ -9,11 +9,13 @@ class DateTime extends Field {
         }
 
         if ($value instanceof \DateTime) {
-            return $value->format('c');
+            $t = $value->format('c');
         } elseif (is_string($value)) {
-            return date('c', strtotime($value));
+            $t = date('c', strtotime($value));
+        } else {
+            $t = date('c', (int) $value);
         }
-        return date('c', (int) $value);
+        return new \Norm\Type\DateTime($t);
     }
 
     public function input($value, $entry = NULL) {
