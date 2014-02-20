@@ -78,7 +78,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
             $collectionSchema = $this->schema();
 
             if (!array_key_exists($key, $collectionSchema)) {
-                throw new \Exception('Cannot prepare data to set. Schema not found.');
+                return $value;
+                // throw new \Exception('Cannot prepare data to set. Schema not found for key ['.$key.'].');
             }
             $schema = $collectionSchema[$key];
         }
