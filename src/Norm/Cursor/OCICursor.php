@@ -18,6 +18,10 @@ class OCICursor implements \Iterator {
 
     protected $sortBy;
 
+    protected $limit = 0;
+    
+    protected $skip = 0;
+
 	public function __construct($collection) {
 		$this->collection = $collection;
 
@@ -72,22 +76,37 @@ class OCICursor implements \Iterator {
 
     public function getStatement() {
 
-    	if (is_null($this->statement)) {
-    		$query = 'SELECT * FROM '.$this->collection->name;
-    		
-    		$data = array();
+        if (is_null($this->statement)) {
+            $data = array();
+            $wheres = array();
+            
             if($this->criteria){
-    			$wheres = array();
-    			foreach ($this->criteria as $key => $value) {
-    				$wheres[] = $this->dialect->grammarExpression($key, $value, $data);
-    			}
-    			if (!empty($wheres)) {
-    				$query .= ' WHERE '.implode(' AND ', $wheres);
-    			}
-    		}
+                foreach ($this->criteria as $key => $value) {
+                    $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
+                }
+            }
 
+            $limit = '';
+            if ($this->limit > 0) {
+                $limit = 'rnum BETWEEN '.($this->skip + 1).' AND '.($this->skip + $this->limit);
+            } elseif ($this->skip > 0) {
+                $limit = 'rnum > '.$this->skip;
+            }
+
+            $select = ($limit !== '') ? 'rownum rnum, ' : '';
+            $select .= $this->collection->name.'.*';
+            $query = 'SELECT '.$select.' FROM '.$this->collection->name;
+
+            // if($this->skip){
+            //     $wheres[] = 'ROWNUM >= '.$this->skip;
+            // }
+
+            // if($this->limit){
+            //     $wheres[] = 'ROWNUM <= '.$this->limit;
+            // }
+
+            $order = '';
             if($this->sortBy){
-                $order = array();
                 foreach ($this->sortBy as $key => $value) {
                     if($value == 1){
                         $op = ' ASC';
@@ -97,8 +116,19 @@ class OCICursor implements \Iterator {
                     $order[] = $key . $op;
                 }
                 if(!empty($order)){
-                    $query .= ' ORDER BY '.implode(',', $order);
+                    $order = ' ORDER BY '.implode(',', $order);
                 }
+            }
+
+            if(!empty($wheres)){
+                $query .= ' WHERE '.implode(' AND ', $wheres);
+            }
+
+            $query .= $order;
+
+
+            if ($limit !== '') {
+                $query = 'SELECT * FROM ('.$query.') WHERE '.$limit;
             }
 
     		$this->statement = oci_parse($this->raw, $query);
@@ -107,7 +137,7 @@ class OCICursor implements \Iterator {
 				oci_bind_by_name($this->statement, ':'.$key, $data[$key]);
 			}
 
-			oci_execute($this->statement); 
+            oci_execute($this->statement); 
     	}
 
     	return $this->statement;
@@ -115,6 +145,16 @@ class OCICursor implements \Iterator {
 
     public function sort(array $fields) {
         $this->sortBy = $fields;
+        return $this;
+    }
+
+    public function limit($num){
+        $this->limit = $num;
+        return $this;
+    }
+
+    public function skip($offset) {
+        $this->skip = $offset;
         return $this;
     }
 
