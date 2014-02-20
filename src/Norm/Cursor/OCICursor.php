@@ -8,9 +8,9 @@ class OCICursor implements \Iterator {
 
     protected $statement;
 
-    protected $collection;
-    
-    protected $dialect;
+	protected $collection;
+
+	protected $dialect;
 
     protected $criteria;
 

@@ -4,7 +4,7 @@ namespace Norm\Connection;
 
 use \Norm\Collection;
 use \Norm\Model;
-use \Norm\PDO\Cursor;
+use \Norm\Cursor\PDOCursor;
 use \Norm\Schema\DateTime;
 use \Norm\Schema\Object;
 
@@ -85,7 +85,7 @@ class PDOConnection extends \Norm\Connection {
             }
         } else {
             $result = $this->dialect->update($collectionName, $data);
-            
+
             if ($result) {
                 $result = true;
             }
@@ -99,7 +99,7 @@ class PDOConnection extends \Norm\Connection {
             $this->dialect->prepareCollection($collection);
         }
 
-        return new Cursor($collection);
+        return new PDOCursor($collection);
     }
 
     public function prepare(Collection $collection, $object) {

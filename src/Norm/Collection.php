@@ -62,12 +62,14 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     }
 
     public function schema($schema = NULL) {
-        if (isset($this->options['schema'])) {
-            if (is_null($schema)) {
-                return $this->options['schema'];
-            } else {
-                $this->options['schema'] = $schema;
-            }
+        if (!isset($this->options['schema'])) {
+            $this->options['schema'] = array();
+        }
+
+        if (is_null($schema)) {
+            return $this->options['schema'];
+        } else {
+            $this->options['schema'] = $schema;
         }
     }
 
@@ -92,9 +94,6 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     }
 
     public function attach($doc) {
-
-        $doc = array_change_key_case($doc, CASE_LOWER);
-
         $doc = $this->connection->prepare($this, $doc);
         if (isset($this->options['model'])) {
             $Model = $this->options['model'];

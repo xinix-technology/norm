@@ -119,7 +119,7 @@ class MongoConnection extends Connection {
 
     public function save(Collection $collection, Model $model) {
         $collectionName = $collection->name;
-        
+
         $schemes = $collection->schema();
         $modified = $this->marshall($model->dump());
 
@@ -132,6 +132,7 @@ class MongoConnection extends Connection {
         } else {
             $result = $this->raw->$collectionName->insert($modified);
         }
+
 
         $modified = $this->prepare($collection, $modified);
 

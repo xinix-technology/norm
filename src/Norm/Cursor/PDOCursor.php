@@ -32,7 +32,7 @@
  * @package     Norm\PDO
  *
  */
-namespace Norm\PDO;
+namespace Norm\Cursor;
 
 use Norm\Collection;
 
@@ -40,7 +40,7 @@ use Norm\Collection;
  * Wrapper to PDO statement to produce cursor for Norm
  * @author Ganesha <reekoheek@gmail.com>
  */
-class Cursor implements \Iterator {
+class PDOCursor implements \Iterator {
 
     // FIXME reekoheek cursor cannot reset statement result to foreach multiple
     // times
@@ -109,7 +109,11 @@ class Cursor implements \Iterator {
      */
     public function valid() {
         $this->current = $this->getStatement()->fetch(\PDO::FETCH_ASSOC);
+
         $valid = ($this->current !== false);
+
+        $this->current = array_change_key_case($this->current, CASE_LOWER);
+
         return $valid;
     }
 
