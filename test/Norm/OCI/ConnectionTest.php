@@ -44,8 +44,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
                         'schema' => array(
                             'name' => String::getInstance('name'),
                             'address' => Text::getInstance('address'),
-                            'country' => String::getInstance('country'),
-                            'last_login' => DateTime::getInstance('last_login'),
+                            'country' => String::getInstance('country')
                         ),
                     )
                 ),
@@ -55,97 +54,122 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         Norm::init($config['norm.databases'],$config['norm.collections']);
     }
 
-    // public function testConnection(){
-    //     $user = Norm::factory('Users');
-    //     $this->assertNotEmpty($user);
-    // }
+    public function testConnection(){
+        $user = Norm::factory('Users');
+        $this->assertNotEmpty($user);
+    }
 
-    // public function testInsert() {
-    //     $name = 'Putra';
-    //     $address = 'Bekasi';
-    //     $country = 'Indonesia';
-    //     $last_login = time();
+    public function testInsert() {
+        $name = 'Putra';
+        $address = 'Bekasi';
+        $country = 'Indonesia';
 
-    //     $collection = Norm::factory('Test');
+        $collection = Norm::factory('Test');
 
-    //     $model = $collection->newInstance();
-    //     $model->set('name', $name);
-    //     $model->set('address', $address);
-    //     $model->set('country', $country);
-    //     $model->set('last_login', $last_login);
-    //     $result = $model->save();
+        $model = $collection->newInstance();
+        $model->set('name', $name);
+        $model->set('address', $address);
+        $model->set('country', $country);
+        $result = $model->save();
 
-    //     $this->assertNotEmpty($result, 'is return not empty');
+        $this->assertNotEmpty($result, 'is return not empty');
         
-    //     $model = $collection->findOne($model->getId());
+        $model = $collection->findOne($model->getId());
 
-    //     $this->assertEquals($model->get('name'), $name, 'has valid name field.');
-    //     $this->assertEquals($model->get('address'), $address, 'has valid address field.');
-    //     $this->assertEquals($model->get('country'), $country, 'has valid country field.');
-    // }
+        $this->assertEquals($model->get('name'), $name, 'has valid name field.');
+        $this->assertEquals($model->get('address'), $address, 'has valid address field.');
+        $this->assertEquals($model->get('country'), $country, 'has valid country field.');
+    }
 
-    // public function testUpdate() {
-    //     $name = 'Joko';
+    public function testUpdate() {
+        $name = 'Joko';
 
-    //     $collection = Norm::factory('Test');
-    //     $model = $collection->findOne(array( '$id' => 19 ));
+        $collection = Norm::factory('Test');
+        $model = $collection->findOne(array( '$id' => 1 ));
 
-    //     $model->set('name', $name);
-    //     $result = $model->save();
+        $model->set('name', $name);
+        $result = $model->save();
 
-    //     $this->assertNotEmpty($result, 'is return not empty');
+        $this->assertNotEmpty($result, 'is return not empty');
 
-    //     $model = $collection->findOne(array(
-    //         'id' => $model->getId()
-    //     ));
+        $model = $collection->findOne(array(
+            'id' => $model->getId()
+        ));
 
-    //     $this->assertEquals($model->get('name'), $name, 'has valid lastName field.');
-    // }
+        $this->assertEquals($model->get('name'), $name, 'has valid lastName field.');
+    }
 
-    // public function testRemove() {
+    public function testRemove() {
 
-    //     $collection = Norm::factory('Test');
+        $collection = Norm::factory('Test');
 
-    //     $model = $collection->findOne(array( 'id' => 28 ));
-    //     $id = $model->getId();
-    //     $model->remove();
+        $model = $collection->findOne(array( 'id' => 1 ));
+        $id = $model->getId();
+        $model->remove();
         
-    //     $this->assertNull($model->getId(), 'will lost model id after remove.');
+        $this->assertNull($model->getId(), 'will lost model id after remove.');
 
-    //     $model = $collection->findOne(array(
-    //         'id' => $id
-    //     ));
+        $model = $collection->findOne(array(
+            'id' => $id
+        ));
 
-    //     $this->assertNull($model, 'is null after deleted');
-    // }
+        $this->assertNull($model, 'is null after deleted');
+    }
 
-    // public function testSort(){
-    //     $collection = Norm::factory('Test');
+    public function testSort(){
+        $collection = Norm::factory('Test');
 
-    //     $sortParam = array(
-    //         'id' => 1
-    //     );
+        $sortParam = array(
+            'id' => 13
+        );
 
-    //     $cursor = $collection->find()->sort($sortParam);
+        $cursor = $collection->find()->sort($sortParam)->limit(3);
 
-    //     $data = array();
-    //     foreach ($cursor as $key => $value) {
-    //         $data[] = $value->toArray();
-    //     }
+        $data = array();
+        foreach ($cursor as $key => $value) {
+            $data[] = $value->toArray();
+        }
 
-    //     foreach ($data as $key => $v) {
-    //         if(!isset($data[$key+1])){
-    //             break;
-    //         }
+        foreach ($data as $key => $v) {
+            if(!isset($data[$key+1])){
+                break;
+            }
 
-    //         if($sortParam['id'] === 1){
-    //             $this->assertLessThan($data[$key+1]['$id'], $v['$id']);
-    //         } else {
-    //             $this->assertGreaterThan($data[$key+1]['$id'], $v['$id']);
-    //         }
-    //     }
-    // }
+            if($sortParam['id'] === 1){
+                $this->assertLessThan($data[$key+1]['$id'], $v['$id']);
+            } else {
+                $this->assertGreaterThan($data[$key+1]['$id'], $v['$id']);
+            }
+        }
+    }
 
+    public function testLimit(){
+        $collection = Norm::factory('Test');
+
+        $max = 8;
+        $cursor = $collection->find()->limit($max);
+
+        $data = array();
+        foreach ($cursor as $key => $value) {
+            $data[] = $value->toArray();
+        }
+
+        $this->assertEquals($max, count($data), 'has valid count data.');
+    }
+
+    public function testSkip(){
+        $collection = Norm::factory('Test');
+
+        $s = 10;
+        $cursor = $collection->find()->skip($s);
+
+        $data = array();
+        foreach ($cursor as $key => $value) {
+            $data[] = $value->toArray();
+        }
+
+        $this->assertLessThan($data[0]['rnum'], $s);
+    }
 }
 
 
