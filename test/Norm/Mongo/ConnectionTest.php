@@ -122,4 +122,8 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
             $this->assertNotEquals($row->get('firstName'), 'farid');
         }
     }
+
+    public function testComplexCriteria() {
+
+    }
 }
