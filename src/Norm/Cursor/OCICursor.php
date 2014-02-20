@@ -9,7 +9,7 @@ class OCICursor implements \Iterator {
 	protected $statement;
 
 	protected $collection;
-	
+
 	protected $dialect;
 
 	protected $criteria;
@@ -48,9 +48,11 @@ class OCICursor implements \Iterator {
     	$stid = $this->getStatement();
 
     	$this->current = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS);
-  
-    	$valid = ($this->current !== false);
-  
+
+        $valid = ($this->current !== false);
+
+        $this->current = array_change_key_case($this->current, CASE_LOWER);
+
         return $valid;
     }
 
@@ -70,7 +72,7 @@ class OCICursor implements \Iterator {
 
     	if (is_null($this->statement)) {
     		$query = 'SELECT * FROM '.$this->collection->name;
-    		
+
     		if($this->criteria){
     			$data = array();
     			$wheres = array();
@@ -83,12 +85,12 @@ class OCICursor implements \Iterator {
     		}
 
     		$this->statement = oci_parse($this->raw, $query);
-			
+
 			foreach ($data as $key => $value) {
 				oci_bind_by_name($this->statement, ':'.$key, $data[$key]);
 			}
 
-			oci_execute($this->statement); 
+			oci_execute($this->statement);
     	}
 
     	return $this->statement;
