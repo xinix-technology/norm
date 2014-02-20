@@ -82,6 +82,7 @@ class OCIConnection extends \Norm\Connection {
         $stid = oci_parse($this->raw,$sql);
         oci_bind_by_name($stid, ":id",$id);
         $result = oci_execute($stid);
+        oci_free_statement($stid);
 
         return $result;
     }
@@ -97,6 +98,7 @@ class OCIConnection extends \Norm\Connection {
             oci_bind_by_name($stid, ":".$key, $data[$key]);
 		}
 		oci_execute($stid);
+        oci_free_statement($stid);
         return $id;
     }
 
@@ -111,6 +113,7 @@ class OCIConnection extends \Norm\Connection {
         }
 
         $result = oci_execute($stid);
+        oci_free_statement($stid);
         return $result;
     }
 

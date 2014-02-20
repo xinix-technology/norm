@@ -16,6 +16,8 @@ class OCICursor implements \Iterator {
 
 	protected $raw;
 
+    protected $sortBy;
+
 	public function __construct($collection) {
 		$this->collection = $collection;
 
@@ -24,6 +26,8 @@ class OCICursor implements \Iterator {
 		$this->raw = $collection->connection->getRaw();
 
 		$this->criteria = $this->prepareCriteria($collection->criteria);
+
+        $this->row = 0;
 	}
 
 	public function current() {
@@ -37,11 +41,11 @@ class OCICursor implements \Iterator {
     }
 
     public function next() {
-    	throw new \Exception("Not implemented yet");
+    	$this->row++;
     }
 
     public function key() {
-    	throw new \Exception("Not implemented yet");
+    	return $this->row;
     }
 
     public function valid() {
@@ -71,8 +75,8 @@ class OCICursor implements \Iterator {
     	if (is_null($this->statement)) {
     		$query = 'SELECT * FROM '.$this->collection->name;
     		
-    		if($this->criteria){
-    			$data = array();
+    		$data = array();
+            if($this->criteria){
     			$wheres = array();
     			foreach ($this->criteria as $key => $value) {
     				$wheres[] = $this->dialect->grammarExpression($key, $value, $data);
@@ -81,6 +85,21 @@ class OCICursor implements \Iterator {
     				$query .= ' WHERE '.implode(' AND ', $wheres);
     			}
     		}
+
+            if($this->sortBy){
+                $order = array();
+                foreach ($this->sortBy as $key => $value) {
+                    if($value == 1){
+                        $op = ' ASC';
+                    } else {
+                        $op = ' DESC';
+                    }
+                    $order[] = $key . $op;
+                }
+                if(!empty($order)){
+                    $query .= ' ORDER BY '.implode(',', $order);
+                }
+            }
 
     		$this->statement = oci_parse($this->raw, $query);
 			
@@ -92,6 +111,11 @@ class OCICursor implements \Iterator {
     	}
 
     	return $this->statement;
+    }
+
+    public function sort(array $fields) {
+        $this->sortBy = $fields;
+        return $this;
     }
 
 }
