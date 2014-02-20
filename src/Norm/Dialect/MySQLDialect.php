@@ -122,8 +122,7 @@ class MySQLDialect extends SQLDialect {
         $sql = 'CREATE TABLE "'.$tmpTable.'" ('."\n".
                 '    '.implode(",\n    ", $fieldMeta)."\n".
                 ')';
-        var_dump($sql);
-        exit;
+
         $this->raw->query($sql);
 
         if ($tableExist) {
