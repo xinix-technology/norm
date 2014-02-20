@@ -4,17 +4,17 @@ namespace Norm\Cursor;
 
 class OCICursor implements \Iterator {
 
-	protected $current;
+    protected $current;
 
-	protected $statement;
+    protected $statement;
 
-	protected $collection;
-	
-	protected $dialect;
+    protected $collection;
+    
+    protected $dialect;
 
-	protected $criteria;
+    protected $criteria;
 
-	protected $raw;
+    protected $raw;
 
     protected $sortBy;
 
@@ -22,20 +22,20 @@ class OCICursor implements \Iterator {
     
     protected $skip = 0;
 
-	public function __construct($collection) {
-		$this->collection = $collection;
+    public function __construct($collection) {
+        $this->collection = $collection;
 
-		$this->dialect = $collection->connection->getDialect();
+        $this->dialect = $collection->connection->getDialect();
 
-		$this->raw = $collection->connection->getRaw();
+        $this->raw = $collection->connection->getRaw();
 
-		$this->criteria = $this->prepareCriteria($collection->criteria);
+        $this->criteria = $this->prepareCriteria($collection->criteria);
 
         $this->row = 0;
-	}
+    }
 
-	public function current() {
-		return $this->current;
+    public function current() {
+        return $this->current;
     }
 
     public function getNext() {
@@ -45,19 +45,19 @@ class OCICursor implements \Iterator {
     }
 
     public function next() {
-    	$this->row++;
+        $this->row++;
     }
 
     public function key() {
-    	return $this->row;
+        return $this->row;
     }
 
     public function valid() {
-    	$stid = $this->getStatement();
+        $stid = $this->getStatement();
 
-    	$this->current = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS);
+        $this->current = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS);
   
-    	$valid = ($this->current !== false);
+        $valid = ($this->current !== false);
   
         return $valid;
     }
@@ -97,14 +97,6 @@ class OCICursor implements \Iterator {
             $select .= $this->collection->name.'.*';
             $query = 'SELECT '.$select.' FROM '.$this->collection->name;
 
-            // if($this->skip){
-            //     $wheres[] = 'ROWNUM >= '.$this->skip;
-            // }
-
-            // if($this->limit){
-            //     $wheres[] = 'ROWNUM <= '.$this->limit;
-            // }
-
             $order = '';
             if($this->sortBy){
                 foreach ($this->sortBy as $key => $value) {
@@ -131,16 +123,16 @@ class OCICursor implements \Iterator {
                 $query = 'SELECT * FROM ('.$query.') WHERE '.$limit;
             }
 
-    		$this->statement = oci_parse($this->raw, $query);
-			
-			foreach ($data as $key => $value) {
-				oci_bind_by_name($this->statement, ':'.$key, $data[$key]);
-			}
+            $this->statement = oci_parse($this->raw, $query);
+            
+            foreach ($data as $key => $value) {
+                oci_bind_by_name($this->statement, ':'.$key, $data[$key]);
+            }
 
             oci_execute($this->statement); 
-    	}
+        }
 
-    	return $this->statement;
+        return $this->statement;
     }
 
     public function sort(array $fields) {
