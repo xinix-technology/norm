@@ -59,8 +59,8 @@ class Cursor implements \Iterator,  \JsonKit\JsonSerializer {
         return $this;
     }
 
-    public function count($foundOnly = FALSE) {
-        return $this->cursor->count($foundOnly);
+    public function count() {
+        return $this->cursor->count(true);
     }
 
     public function skip ($num) {
