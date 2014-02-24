@@ -27,7 +27,7 @@ class NormController extends RestController {
     }
 
     public function getSort() {
-        $sorts = $get = $this->request->get('!sort');
+        $sorts = $get = $this->request->get('!sort') ? :array();
         foreach ($sorts as $key => &$value) {
             $value = (int) $value;
         }
@@ -55,7 +55,6 @@ class NormController extends RestController {
                 $this->data['entry'] = $entry;
                 $this->flashNow('error', ''.$e);
             }
-
         }
 
         $this->data['entry'] = $entry;
@@ -70,10 +69,9 @@ class NormController extends RestController {
     }
 
     public function update($id) {
+        $entry = $this->collection->findOne($id)->toArray();
 
         if ($this->request->isPost() || $this->request->isPut()) {
-            $entry = $this->getCriteria();
-
             try {
                 $entry = array_merge($entry, $this->request->post());
                 $model = $this->collection->findOne($id);
@@ -84,11 +82,8 @@ class NormController extends RestController {
                 $this->data['entry'] = $entry;
                 $this->flashNow('error', ''.$e);
             }
-            $this->data['entry'] = $entry;
-        } else {
-            $model = $this->collection->findOne($id);
-            $this->data['entry'] = $model;
         }
+        $this->data['entry'] = $entry;
     }
 
     public function delete($id) {
