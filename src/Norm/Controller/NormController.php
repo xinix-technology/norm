@@ -19,7 +19,7 @@ class NormController extends RestController {
         $gets = $this->request->get();
         $criteria = array();
         foreach ($gets as $key => $value) {
-            if ($key[0] != '@') {
+            if ($key[0] !== '!') {
                 $criteria[$key] = $value;
             }
         }
@@ -27,15 +27,9 @@ class NormController extends RestController {
     }
 
     public function getSort() {
-        $get = $this->request->get('@sort');
-        $get = explode(',', $get);
-        $sorts = array();
-        foreach ($get as $value) {
-            $value = trim($value);
-            $value = explode(':', $value);
-            if (!empty($value[0])) {
-                $sorts[$value[0]] = (isset($value[1])) ? (int) $value[1] : 1;
-            }
+        $sorts = $get = $this->request->get('!sort') ? :array();
+        foreach ($sorts as $key => &$value) {
+            $value = (int) $value;
         }
         return $sorts;
     }
@@ -61,7 +55,6 @@ class NormController extends RestController {
                 $this->data['entry'] = $entry;
                 $this->flashNow('error', ''.$e);
             }
-
         }
 
         $this->data['entry'] = $entry;
@@ -76,10 +69,9 @@ class NormController extends RestController {
     }
 
     public function update($id) {
+        $entry = $this->collection->findOne($id)->toArray();
 
         if ($this->request->isPost() || $this->request->isPut()) {
-            $entry = $this->getCriteria();
-
             try {
                 $entry = array_merge($entry, $this->request->post());
                 $model = $this->collection->findOne($id);
@@ -90,11 +82,8 @@ class NormController extends RestController {
                 $this->data['entry'] = $entry;
                 $this->flashNow('error', ''.$e);
             }
-            $this->data['entry'] = $entry;
-        } else {
-            $model = $this->collection->findOne($id);
-            $this->data['entry'] = $model;
         }
+        $this->data['entry'] = $entry;
     }
 
     public function delete($id) {

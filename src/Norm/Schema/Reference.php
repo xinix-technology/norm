@@ -3,12 +3,14 @@
 namespace Norm\Schema;
 
 use Norm\Norm;
+use Bono\App;
 
 class Reference extends Field {
 
     protected $foreign;
     protected $foreignLabel;
     protected $foreignKey;
+    protected $byCriteria;
 
     public function to($foreign, $foreignKey, $foreignLabel) {
         $this->foreign = $foreign;
@@ -17,12 +19,20 @@ class Reference extends Field {
         return $this;
     }
 
+    public function by($byCriteria) {
+        $this->byCriteria = $byCriteria;
+        return $this;
+    }
+
     public function input($value, $entry = NULL) {
+        $app = App::getInstance();
+        
         $foreign = Norm::factory($this->foreign);
 
         if ($this['readonly']) {
             if (is_null($this->foreignKey)) {
-                $entry = Norm::factory($this->foreign)->findOne($this->foreignKey);
+            
+                $entry = Norm::factory($this->foreign)->findOne($value);
             } else {
                 $criteria = array($this->foreignKey => $value);
                 $entry = Norm::factory($this->foreign)->findOne($criteria);
@@ -32,31 +42,29 @@ class Reference extends Field {
                 $getLabel = $this->foreignLabel;
                 $label = $getLabel($entry);
             } else {
-                $label = $entry->get($this->foreignLabel);
+                $label = $entry[$this->foreignLabel];
             }
             return '<span class="field">'.$label.'</span>';
         }
 
-        $options = array();
-        $entries = $foreign->find();
-        foreach ($entries as $entry) {
-            if (is_callable($this->foreignLabel)) {
-                $getLabel = $this->foreignLabel;
-                $label = $getLabel($entry);
-            } else {
-                $label = $entry->get($this->foreignLabel);
+        $criteria = array();
+        if ($this->byCriteria) {
+            if ($entry) {
+                foreach ($this->byCriteria as $key => $v) {
+                    $criteria[$key] = @$entry[$v];
+                }
             }
-
-            if (is_null($this->foreignKey)) {
-                $options[] = '<option value="'.$entry->getId().'" '.($entry->getId() === $value ? 'selected' : '').'>'.$label.'</option>';
-            } else {
-                $options[] = '<option value="'.$entry->get($this->foreignKey).'" '.($entry->get($this->foreignKey) === $value ? 'selected' : '').'>'.$label.'</option>';
-            }
-
         }
-        return '
-            <select name="'.$this['name'].'"><option value="">---</option>'.implode('', $options).'</select>
-        ';
+        $entries = $foreign->find($criteria);
+
+        return $app->theme->partial('_schema/reference', array(
+            'entries' => $entries,
+            'self' => $this,
+            'value' => $value,
+            'entry' => $entry,
+            'foreignName' => $foreign->name,
+            'criteria' => $this->byCriteria,
+        ));
     }
 
     public function getRaw($value) {
@@ -103,5 +111,17 @@ class Reference extends Field {
         }
 
         return $value;
+    }
+
+    public function getForeignLabel() {
+        return $this->foreignLabel;
+    }
+
+    public function getForeignKey() {
+        return $this->foreignKey;
+    }
+
+    public function getForeign() {
+        return $this->foreign;
     }
 }

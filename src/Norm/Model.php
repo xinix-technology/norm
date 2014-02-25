@@ -78,10 +78,10 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
 
         if (isset($attributes['$id'])) {
             $this->id = $attributes['$id'];
-            // FIXME reekoheek $attributes['$id'] should be removed
+            // FIXME reekoheek $attributes['$id'] should be removed. is it ok?
+            unset($attributes['$id']);
         }
 
-        // $this->attributes = $attributes;
         $this->set($attributes);
 
     }
@@ -158,9 +158,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
                 $this->set($k, $v);
             }
         } else {
-            try {
-                $value = $this->prepare($key, $value);
-            } catch(\Exception $e) {}
+            $value = $this->prepare($key, $value);
+            
             $setter = 'set_'.$key;
             if (method_exists($this, $setter)) {
                 $this->$setter($key, $value);

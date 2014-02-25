@@ -4,34 +4,38 @@ namespace Norm\Cursor;
 
 class OCICursor implements \Iterator {
 
-	protected $current;
+    protected $current;
 
-	protected $statement;
+    protected $statement;
 
 	protected $collection;
 
 	protected $dialect;
 
-	protected $criteria;
+    protected $criteria;
 
-	protected $raw;
+    protected $raw;
 
     protected $sortBy;
 
-	public function __construct($collection) {
-		$this->collection = $collection;
+    protected $limit = 0;
+    
+    protected $skip = 0;
 
-		$this->dialect = $collection->connection->getDialect();
+    public function __construct($collection) {
+        $this->collection = $collection;
 
-		$this->raw = $collection->connection->getRaw();
+        $this->dialect = $collection->connection->getDialect();
 
-		$this->criteria = $this->prepareCriteria($collection->criteria);
+        $this->raw = $collection->connection->getRaw();
+
+        $this->criteria = $this->prepareCriteria($collection->criteria);
 
         $this->row = 0;
-	}
+    }
 
-	public function current() {
-		return $this->current;
+    public function current() {
+        return $this->current;
     }
 
     public function getNext() {
@@ -41,15 +45,15 @@ class OCICursor implements \Iterator {
     }
 
     public function next() {
-    	$this->row++;
+        $this->row++;
     }
 
     public function key() {
-    	return $this->row;
+        return $this->row;
     }
 
     public function valid() {
-    	$stid = $this->getStatement();
+        $stid = $this->getStatement();
 
     	$this->current = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS);
 
@@ -74,22 +78,29 @@ class OCICursor implements \Iterator {
 
     public function getStatement() {
 
-    	if (is_null($this->statement)) {
-    		$query = 'SELECT * FROM '.$this->collection->name;
-    		
-    		$data = array();
+        if (is_null($this->statement)) {
+            $data = array();
+            $wheres = array();
+            
             if($this->criteria){
-    			$wheres = array();
-    			foreach ($this->criteria as $key => $value) {
-    				$wheres[] = $this->dialect->grammarExpression($key, $value, $data);
-    			}
-    			if (!empty($wheres)) {
-    				$query .= ' WHERE '.implode(' AND ', $wheres);
-    			}
-    		}
+                foreach ($this->criteria as $key => $value) {
+                    $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
+                }
+            }
 
+            $limit = '';
+            if ($this->limit > 0) {
+                $limit = 'rnum BETWEEN '.($this->skip + 1).' AND '.($this->skip + $this->limit);
+            } elseif ($this->skip > 0) {
+                $limit = 'rnum > '.$this->skip;
+            }
+
+            $select = ($limit !== '') ? 'rownum rnum, ' : '';
+            $select .= $this->collection->name.'.*';
+            $query = 'SELECT '.$select.' FROM '.$this->collection->name;
+
+            $order = '';
             if($this->sortBy){
-                $order = array();
                 foreach ($this->sortBy as $key => $value) {
                     if($value == 1){
                         $op = ' ASC';
@@ -99,8 +110,19 @@ class OCICursor implements \Iterator {
                     $order[] = $key . $op;
                 }
                 if(!empty($order)){
-                    $query .= ' ORDER BY '.implode(',', $order);
+                    $order = ' ORDER BY '.implode(',', $order);
                 }
+            }
+
+            if(!empty($wheres)){
+                $query .= ' WHERE '.implode(' AND ', $wheres);
+            }
+
+            $query .= $order;
+
+
+            if ($limit !== '') {
+                $query = 'SELECT * FROM ('.$query.') WHERE '.$limit;
             }
 
     		$this->statement = oci_parse($this->raw, $query);
@@ -109,14 +131,24 @@ class OCICursor implements \Iterator {
 				oci_bind_by_name($this->statement, ':'.$key, $data[$key]);
 			}
 
-			oci_execute($this->statement);
-    	}
+            oci_execute($this->statement); 
+        }
 
-    	return $this->statement;
+        return $this->statement;
     }
 
     public function sort(array $fields) {
         $this->sortBy = $fields;
+        return $this;
+    }
+
+    public function limit($num){
+        $this->limit = $num;
+        return $this;
+    }
+
+    public function skip($offset) {
+        $this->skip = $offset;
         return $this;
     }
 

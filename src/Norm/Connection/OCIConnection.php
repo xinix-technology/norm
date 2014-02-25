@@ -10,17 +10,17 @@ use Norm\Dialect\OracleDialect;
 
 class OCIConnection extends \Norm\Connection {
 
-	protected $dialect;
+    protected $dialect;
 
-	public function initialize($options) {
-		
-		$defaultOptions = array(
-			'username' => NULL,
-			'password' => NULL,
-			'dbname' => NULL,
-			'charset' => NULL,
-			'mode' => NULL
-		);
+    public function initialize($options) {
+        
+        $defaultOptions = array(
+            'username' => NULL,
+            'password' => NULL,
+            'dbname' => NULL,
+            'charset' => NULL,
+            'mode' => NULL
+        );
 
         $this->options = array_merge($defaultOptions, $options);
         $this->raw = oci_connect($this->options['username'],$this->options['password'],$this->options['dbname'],$this->options['charset'],$this->options['mode']);
@@ -28,11 +28,11 @@ class OCIConnection extends \Norm\Connection {
     }
 
     public function listCollections() {
-    	throw new \Exception('Not implemented!');
+        throw new \Exception('Not implemented!');
     }
 
     public function prepare(Collection $collection, $object) {
-    	$newObject = array(
+        $newObject = array(
             '$id' => $object['id'],
         );
         foreach ($object as $key => $value) {
@@ -51,12 +51,12 @@ class OCIConnection extends \Norm\Connection {
     }
 
     public function save(Collection $collection, Model $model) {
-    	$collectionName = $collection->name;
+        $collectionName = $collection->name;
         $schemes = $collection->schema();
         $data = $this->marshall($model->dump());
         $result = false;
 
-    	if (is_null($model->getId())) {
+        if (is_null($model->getId())) {
             $id = $this->insert($collectionName, $data);
             if ($id) {
                 $model->setId($id);
@@ -74,7 +74,7 @@ class OCIConnection extends \Norm\Connection {
     }
 
     public function remove(Collection $collection, $model) {
-    	$collectionName = $collection->name;
+        $collectionName = $collection->name;
         $id = $model->getId();
 
         $sql = 'DELETE FROM '.$collectionName.' WHERE id = :id';
@@ -96,8 +96,8 @@ class OCIConnection extends \Norm\Connection {
         
         foreach ($data as $key => $value) {
             oci_bind_by_name($stid, ":".$key, $data[$key]);
-		}
-		oci_execute($stid);
+        }
+        oci_execute($stid);
         oci_free_statement($stid);
         return $id;
     }
@@ -140,7 +140,7 @@ class OCIConnection extends \Norm\Connection {
     }
 
     public function getDialect() {
-    	return $this->dialect;
+        return $this->dialect;
     }
 
 }
