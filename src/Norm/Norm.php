@@ -109,6 +109,10 @@ class Norm {
 
     }
 
+    public static function registerCollection($key, $options) {
+        static::$collectionConfig['mapping'][$key] = $options;
+    }
+
     public static function createCollection($options) {
         $defaultConfig = isset(static::$collectionConfig['default']) ? static::$collectionConfig['default'] : array();
         $config = isset(static::$collectionConfig['mapping'][$options['name']]) ? static::$collectionConfig['mapping'][$options['name']] : array();

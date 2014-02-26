@@ -9,12 +9,19 @@ abstract class Field implements \ArrayAccess {
 
     static protected $instances = array();
 
-    protected $multi = false;
 
     protected $attributes = array();
 
     protected $filter = array();
 
+    /**
+     * Get new instance of field schema
+     *
+     * DEPRECATED Method deprecated and will be replaced by Field::create on 0.2.0
+     * @param  string $name  [description]
+     * @param  [type] $label [description]
+     * @return [type]        [description]
+     */
     public static function getInstance($name = '', $label = NULL) {
         return static::create($name, $label);
     }
