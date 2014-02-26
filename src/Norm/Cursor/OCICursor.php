@@ -56,9 +56,9 @@ class OCICursor implements \Iterator {
         $stid = $this->getStatement();
 
         $this->current = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS);
-  
+
         $valid = ($this->current !== false);
-  
+
         return $valid;
     }
 
