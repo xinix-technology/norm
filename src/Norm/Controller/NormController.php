@@ -27,7 +27,7 @@ class NormController extends RestController {
     }
 
     public function getSort() {
-        $sorts = $get = $this->request->get('!sort') ? :array();
+        $sorts = $get = $this->request->get('!sort') ?: array();
         foreach ($sorts as $key => &$value) {
             $value = (int) $value;
         }
