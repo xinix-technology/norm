@@ -121,6 +121,7 @@ class MongoConnection extends Connection {
         $collectionName = $collection->name;
 
         $schemes = $collection->schema();
+
         $modified = $this->marshall($model->dump());
 
         if ($model->getId()) {
@@ -144,6 +145,8 @@ class MongoConnection extends Connection {
     public function marshall($object) {
         if ($object instanceof \Norm\Type\DateTime) {
             return new \MongoDate($object->getTimestamp());
+        } elseif ($object instanceof \Norm\Type\NormArray) {
+            return $object->toArray();
         } else {
             return parent::marshall($object);
         }

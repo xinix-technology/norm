@@ -55,11 +55,9 @@ class OCICursor implements \Iterator {
     public function valid() {
         $stid = $this->getStatement();
 
-    	$this->current = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS);
+        $this->current = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS);
 
         $valid = ($this->current !== false);
-
-        $this->current = array_change_key_case($this->current, CASE_LOWER);
 
         return $valid;
     }
@@ -125,11 +123,11 @@ class OCICursor implements \Iterator {
                 $query = 'SELECT * FROM ('.$query.') WHERE '.$limit;
             }
 
-    		$this->statement = oci_parse($this->raw, $query);
-
-			foreach ($data as $key => $value) {
-				oci_bind_by_name($this->statement, ':'.$key, $data[$key]);
-			}
+            $this->statement = oci_parse($this->raw, $query);
+            
+            foreach ($data as $key => $value) {
+                oci_bind_by_name($this->statement, ':'.$key, $data[$key]);
+            }
 
             oci_execute($this->statement); 
         }

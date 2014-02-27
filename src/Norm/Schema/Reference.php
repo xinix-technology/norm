@@ -5,6 +5,7 @@ namespace Norm\Schema;
 use Norm\Norm;
 use Bono\App;
 
+// TODO recheck this implementation later
 class Reference extends Field {
 
     protected $foreign;
@@ -12,10 +13,15 @@ class Reference extends Field {
     protected $foreignKey;
     protected $byCriteria;
 
-    public function to($foreign, $foreignKey, $foreignLabel) {
+    public function to($foreign, $foreignKey, $foreignLabel = null) {
         $this->foreign = $foreign;
-        $this->foreignLabel = $foreignLabel;
-        $this->foreignKey = $foreignKey;
+        if (is_null($foreignLabel)) {
+            $this->foreignLabel = $foreignKey;
+            $this->foreignKey = null;
+        } else {
+            $this->foreignLabel = $foreignLabel;
+            $this->foreignKey = $foreignKey;
+        }
         return $this;
     }
 
@@ -26,12 +32,12 @@ class Reference extends Field {
 
     public function input($value, $entry = NULL) {
         $app = App::getInstance();
-        
+
         $foreign = Norm::factory($this->foreign);
 
         if ($this['readonly']) {
             if (is_null($this->foreignKey)) {
-            
+
                 $entry = Norm::factory($this->foreign)->findOne($value);
             } else {
                 $criteria = array($this->foreignKey => $value);
