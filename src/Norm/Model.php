@@ -159,7 +159,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
             }
         } else {
             $value = $this->prepare($key, $value);
-            
+
             $setter = 'set_'.$key;
             if (method_exists($this, $setter)) {
                 $this->$setter($key, $value);

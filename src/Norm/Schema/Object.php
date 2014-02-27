@@ -2,12 +2,15 @@
 
 namespace Norm\Schema;
 
+// FIXME unimplemented yet!
 class Object extends Field {
-    public function prepare($value) {
-        return json_decode($value);
+     public function prepare($value) {
+
+        if (is_string($value)) {
+            $value = json_decode($value);
+        }
+
+        return new \Norm\Type\Object($value);
     }
 
-    public function input($value, $entry = NULL) {
-        return '<textarea name="'.$this['name'].'">'.(@$value).'</textarea>';
-    }
 }
