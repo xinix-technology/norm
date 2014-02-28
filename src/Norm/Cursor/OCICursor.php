@@ -67,10 +67,12 @@ class OCICursor implements ICursor {
     }
 
     public function prepareCriteria($criteria) {
+
         if (isset($criteria['$id'])) {
             $criteria['id'] = $criteria['$id'];
             unset($criteria['$id']);
         }
+
         return $criteria ? : array();
     }
 

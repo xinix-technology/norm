@@ -24,12 +24,14 @@ class OCIConnection extends \Norm\Connection {
 
         $this->options = array_merge($defaultOptions, $options);
         $this->raw = oci_connect($this->options['username'],$this->options['password'],$this->options['dbname'],$this->options['charset'],$this->options['mode']);
-        $this->initialDateFormat();
+
+        $this->prepareInit();
+
         $this->dialect = new OracleDialect($this);
     }
 
-    private function initialDateFormat(){
-        $stid = oci_parse($this->raw,"alter SESSION set NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
+    private function prepareInit(){
+        $stid = oci_parse($this->raw,"ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
         $result = oci_execute($stid);
         oci_free_statement($stid);
     }
