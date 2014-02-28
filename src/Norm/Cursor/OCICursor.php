@@ -4,10 +4,6 @@ namespace Norm\Cursor;
 
 class OCICursor implements ICursor {
 
-    protected $current;
-
-    protected $statement;
-
 	protected $collection;
 
 	protected $dialect;
@@ -22,6 +18,12 @@ class OCICursor implements ICursor {
 
     protected $skip = 0;
 
+    protected $match;
+
+    protected $rows = NULL;
+
+    protected $index = -1;
+
     public function __construct($collection) {
         $this->collection = $collection;
 
@@ -29,13 +31,13 @@ class OCICursor implements ICursor {
 
         $this->raw = $collection->connection->getRaw();
 
-        $this->criteria = $this->prepareCriteria($collection->criteria);
-
-        $this->row = 0;
+        $this->criteria = $collection->criteria;
     }
 
     public function current() {
-        return $this->current;
+        if ($this->valid()) {
+            return $this->rows[$this->index];
+        }
     }
 
     public function getNext() {
@@ -44,29 +46,40 @@ class OCICursor implements ICursor {
     }
 
     public function next() {
-        $this->row++;
+
+        if (is_null($this->rows)) {
+            $this->execute();
+        }
+
+        $this->index++;
     }
 
     public function key() {
-        return $this->row;
+        return $this->index;
     }
 
     public function valid() {
-        $stid = $this->getStatement();
-
-        $this->current = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS);
-
-        $valid = ($this->current !== false);
-
-        return $valid;
+        return isset($this->rows[$this->index]);
     }
 
     public function rewind() {
+        $this->index = -1;
+
+        $this->next();
 
     }
 
-    public function prepareCriteria($criteria) {
+    public function count() {
+        if (is_null($this->rows)) return 0;
+        return count($this->rows);
+    }
 
+    public function match($q) {
+        $this->match = $q;
+        return $this;
+    }
+
+    public function prepareCriteria($criteria) {
         if (isset($criteria['$id'])) {
             $criteria['id'] = $criteria['$id'];
             unset($criteria['$id']);
@@ -75,65 +88,93 @@ class OCICursor implements ICursor {
         return $criteria ? : array();
     }
 
-    public function getStatement() {
+    public function execute() {
 
-        if (is_null($this->statement)) {
-            $data = array();
-            $wheres = array();
+        $data = array();
+        $wheres = array();
+        $matchOrs = array();
 
-            if($this->criteria){
-                foreach ($this->criteria as $key => $value) {
+        if (is_null($this->match)) {
+            $criteria = $this->prepareCriteria($this->criteria);
+            if($criteria) {
+                foreach ($criteria as $key => $value) {
                     $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
                 }
             }
-
-            $limit = '';
-            if ($this->limit > 0) {
-                $limit = 'rnum BETWEEN '.($this->skip + 1).' AND '.($this->skip + $this->limit);
-            } elseif ($this->skip > 0) {
-                $limit = 'rnum > '.$this->skip;
+        } else {
+            $schema = $this->collection->schema();
+            $i = 0;
+            foreach ($schema as $key => $value) {
+                $matchOrs[] = $key.' LIKE :f'.$i;
+                $i++;
             }
-
-            $select = ($limit !== '') ? 'rownum rnum, ' : '';
-            $select .= $this->collection->name.'.*';
-            $query = 'SELECT '.$select.' FROM '.$this->collection->name;
-
-            $order = '';
-            if($this->sortBy){
-                foreach ($this->sortBy as $key => $value) {
-                    if($value == 1){
-                        $op = ' ASC';
-                    } else {
-                        $op = ' DESC';
-                    }
-                    $order[] = $key . $op;
-                }
-                if(!empty($order)){
-                    $order = ' ORDER BY '.implode(',', $order);
-                }
-            }
-
-            if(!empty($wheres)){
-                $query .= ' WHERE '.implode(' AND ', $wheres);
-            }
-
-            $query .= $order;
-
-
-            if ($limit !== '') {
-                $query = 'SELECT * FROM ('.$query.') WHERE '.$limit;
-            }
-
-            $this->statement = oci_parse($this->raw, $query);
-
-            foreach ($data as $key => $value) {
-                oci_bind_by_name($this->statement, ':'.$key, $data[$key]);
-            }
-
-            oci_execute($this->statement);
+            $wheres[] = '('.implode(' OR ', $matchOrs).')';
         }
 
-        return $this->statement;
+        $limit = '';
+        if ($this->limit > 0) {
+            $limit = 'rnum BETWEEN '.($this->skip + 1).' AND '.($this->skip + $this->limit);
+        } elseif ($this->skip > 0) {
+            $limit = 'rnum > '.$this->skip;
+        }
+
+        $select = ($limit !== '') ? 'rownum rnum, ' : '';
+        $select .= $this->collection->name.'.*';
+        $query = 'SELECT '.$select.' FROM '.$this->collection->name;
+
+        $order = '';
+        if($this->sortBy){
+            foreach ($this->sortBy as $key => $value) {
+                if($value == 1){
+                    $op = ' ASC';
+                } else {
+                    $op = ' DESC';
+                }
+                $order[] = $key . $op;
+            }
+            if(!empty($order)){
+                $order = ' ORDER BY '.implode(',', $order);
+            }
+        }
+
+        if(!empty($wheres)){
+            $query .= ' WHERE '.implode(' AND ', $wheres);
+        }
+
+        $query .= $order;
+
+
+        if ($limit !== '') {
+            $query = 'SELECT * FROM ('.$query.') WHERE '.$limit;
+        }
+
+        $statement = oci_parse($this->raw, $query);
+
+        foreach ($data as $key => $value) {
+            oci_bind_by_name($statement, ':'.$key, $data[$key]);
+        }
+
+        if($matchOrs) {
+            $match = '%'.$this->match.'%';
+
+            foreach ($matchOrs as $key => $value) {
+                oci_bind_by_name($statement, ':f'.$key, $match);
+            }
+        }
+
+        oci_execute($statement);
+
+        $result = array();
+        while($row = oci_fetch_array($statement, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS)) {
+            $result[] = $row;
+        }
+        $this->rows = $result;
+
+        oci_free_statement($statement);
+
+        $this->index = -1;
+
+
     }
 
     public function sort(array $fields) {
