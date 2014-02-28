@@ -88,7 +88,10 @@ class NormController extends RestController {
     }
 
     public function update($id) {
-        $entry = $this->collection->findOne($id)->toArray();
+        $entry = $this->collection->findOne($id);
+        if (isset($entry)) {
+            $entry = $entry->toArray();
+        }
 
         if ($this->request->isPost() || $this->request->isPut()) {
             try {
