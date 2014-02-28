@@ -135,6 +135,10 @@ abstract class Field implements \ArrayAccess {
         return $value;
     }
 
+    public function toJSON($value) {
+        return $value;
+    }
+
     public function cellRaw($value) {
         return $value;
     }

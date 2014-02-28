@@ -3,6 +3,7 @@
 namespace Norm\Schema;
 
 class Boolean extends Field {
+
     public function input($value, $entry = NULL) {
         if ($this['readonly']) {
             return parent::input($value ? 'True' : 'False', $entry);

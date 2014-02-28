@@ -280,8 +280,26 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
     /**
      * Implement the json serializer normalizing the data structures.
      */
+
     public function jsonSerialize() {
-        return $this->toArray();
+        if (!\Norm\Norm::options('include')) {
+            return $this->toArray();
+        }
+
+        $destination = array();
+        $source =  $this->toArray();
+
+        $schema = $this->collection->schema();
+
+        foreach($source as $key => $value) {
+            if (isset($schema[$key])) {
+                $destination[$key] = $schema[$key]->toJSON($value);
+            } else {
+                $destination[$key] = $value;
+            }
+            $destination[$key] = \JsonKit\JsonKit::replaceObject($destination[$key]);
+        }
+        return $destination;
     }
 
 }
