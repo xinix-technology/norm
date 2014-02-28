@@ -2,7 +2,7 @@
 
 namespace Norm\Cursor;
 
-class OCICursor implements \Iterator {
+class OCICursor implements ICursor {
 
     protected $current;
 
@@ -19,7 +19,7 @@ class OCICursor implements \Iterator {
     protected $sortBy;
 
     protected $limit = 0;
-    
+
     protected $skip = 0;
 
     public function __construct($collection) {
@@ -79,7 +79,7 @@ class OCICursor implements \Iterator {
         if (is_null($this->statement)) {
             $data = array();
             $wheres = array();
-            
+
             if($this->criteria){
                 foreach ($this->criteria as $key => $value) {
                     $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
@@ -124,12 +124,12 @@ class OCICursor implements \Iterator {
             }
 
             $this->statement = oci_parse($this->raw, $query);
-            
+
             foreach ($data as $key => $value) {
                 oci_bind_by_name($this->statement, ':'.$key, $data[$key]);
             }
 
-            oci_execute($this->statement); 
+            oci_execute($this->statement);
         }
 
         return $this->statement;

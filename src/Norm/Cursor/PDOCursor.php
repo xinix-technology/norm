@@ -40,7 +40,7 @@ use Norm\Collection;
  * Wrapper to PDO statement to produce cursor for Norm
  * @author Ganesha <reekoheek@gmail.com>
  */
-class PDOCursor implements \Iterator {
+class PDOCursor implements ICursor {
 
     // FIXME reekoheek cursor cannot reset statement result to foreach multiple
     // times
