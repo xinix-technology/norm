@@ -24,7 +24,14 @@ class OCIConnection extends \Norm\Connection {
 
         $this->options = array_merge($defaultOptions, $options);
         $this->raw = oci_connect($this->options['username'],$this->options['password'],$this->options['dbname'],$this->options['charset'],$this->options['mode']);
+        $this->initialDateFormat();
         $this->dialect = new OracleDialect($this);
+    }
+
+    private function initialDateFormat(){
+        $stid = oci_parse($this->raw,"alter SESSION set NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
+        $result = oci_execute($stid);
+        oci_free_statement($stid);
     }
 
     public function listCollections() {
@@ -32,6 +39,8 @@ class OCIConnection extends \Norm\Connection {
     }
 
     public function prepare(Collection $collection, $object) {
+        $object = array_change_key_case($object,CASE_LOWER);
+        
         $newObject = array(
             '$id' => $object['id'],
         );
@@ -119,7 +128,7 @@ class OCIConnection extends \Norm\Connection {
 
     public function marshall($object) {
         if ($object instanceof \Norm\Type\DateTime) {
-            return $object->format('d-M-y h.i.s a');
+            return $object->format('Y-m-d H:i:s');
         } elseif (is_array($object)) {
             $result = array();
             foreach ($object as $key => $value) {
