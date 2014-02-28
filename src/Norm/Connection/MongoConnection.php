@@ -79,9 +79,7 @@ class MongoConnection extends Connection {
     }
 
     public function query(Collection $collection) {
-        $cursor = new MongoCursor($collection);
-
-        return $cursor;
+        return new MongoCursor($collection);
     }
 
     public function save(Collection $collection, Model $model) {
@@ -100,7 +98,6 @@ class MongoConnection extends Connection {
         } else {
             $result = $this->raw->$collectionName->insert($modified);
         }
-
 
         $modified = $this->prepare($collection, $modified);
 

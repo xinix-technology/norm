@@ -28,7 +28,7 @@ class Cursor implements ICursor,  \JsonKit\JsonSerializer {
     }
 
     public function next() {
-        return $this->cursor->next();
+        $this->cursor->next();
     }
 
     public function key() {
@@ -62,11 +62,12 @@ class Cursor implements ICursor,  \JsonKit\JsonSerializer {
     }
 
     public function count() {
-        return $this->cursor->count(true);
+        return $this->cursor->count();
     }
 
     public function match($q) {
-        return $this->cursor->match($q);
+        $this->cursor->match($q);
+        return $this;
     }
 
     public function skip($num) {

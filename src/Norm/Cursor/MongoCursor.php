@@ -8,16 +8,49 @@ class MongoCursor implements ICursor {
 
     protected $criteria;
 
+    protected $sort;
+
+    protected $skip;
+
+    protected $limit;
+
+    protected $cursor;
+
     public function __construct($collection = null) {
         $this->collection = $collection;
 
         $this->criteria = $this->prepareCriteria($collection->criteria);
     }
 
+    public function getCursor() {
+        if (is_null($this->cursor)) {
+            $rawCollection = $this->collection->connection->getRaw()->{$this->collection->name};
+
+            if (isset($this->criteria)) {
+                $this->cursor = $rawCollection->find($this->criteria);
+            } else {
+                $this->cursor = $rawCollection->find();
+            }
+            if (isset($this->sort)) {
+                $this->cursor->sort($this->sort);
+            }
+            if (isset($this->skip)) {
+                $this->cursor->skip($this->skip);
+            }
+
+            if (isset($this->limit)) {
+                $this->cursor->limit($this->limit);
+            }
+        }
+
+        return $this->cursor;
+    }
+
     public function prepareCriteria($criteria) {
-        // var_dump($criteria);
+        if (empty($criteria)) return null;
 
         $newCriteria = array();
+
         if (!empty($criteria['$id'])) {
             $newCriteria['_id'] = new \MongoId($criteria['$id']);
             unset($criteria['$id']);
@@ -42,46 +75,61 @@ class MongoCursor implements ICursor {
     }
 
     public function getNext() {
-        throw new \Exception('Unimplemented yet!');
+        return $this->getCursor()->getNext();
     }
 
     public function current() {
-        throw new \Exception('Unimplemented yet!');
+        return $this->getCursor()->current();
     }
 
     public function next() {
-        throw new \Exception('Unimplemented yet!');
+        $this->getCursor()->next();
     }
 
     public function key() {
-        throw new \Exception('Unimplemented yet!');
+        return $this->getCursor()->key();
     }
 
     public function valid() {
-        throw new \Exception('Unimplemented yet!');
+        return $this->getCursor()->valid();
     }
 
     public function rewind() {
-        throw new \Exception('Unimplemented yet!');
+        $this->getCursor()->rewind();
     }
 
     public function limit($num) {
-        throw new \Exception('Unimplemented yet!');
+        $this->limit = $num;
+        return $this;
     }
 
     public function sort(array $fields) {
-        throw new \Exception('Unimplemented yet!');
+        $this->sort = $fields;
+        return $this;
     }
 
     public function count() {
-        throw new \Exception('Unimplemented yet!');
+        return $this->getCursor()->count(true);
     }
 
     public function match($q) {
-        throw new \Exception('Unimplemented yet!');
+        if (is_null($q)) {
+            return $this;
+        }
+
+        $orCriteria = array();
+
+        $schema = $this->collection->schema();
+        foreach ($schema as $key => $value) {
+            $orCriteria[] = array($key => array('$regex' => new \MongoRegex("/$q/i")));
+        }
+        $this->criteria = array('$or' => $orCriteria);
+
+        return $this;
     }
 
     public function skip($num) {
-        throw new \Exception('Unimplemented yet!');
+        $this->skip = $num;
+        return $this;
     }
 }

@@ -39,9 +39,8 @@ class OCICursor implements ICursor {
     }
 
     public function getNext() {
-        if ($this->valid()) {
-            return $this->current();
-        }
+        $this->next();
+        return $this->current();
     }
 
     public function next() {
