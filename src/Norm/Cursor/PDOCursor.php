@@ -36,11 +36,13 @@ namespace Norm\Cursor;
 
 use Norm\Collection;
 
+
+// FIXME reekoheek: see OCICursor
 /**
  * Wrapper to PDO statement to produce cursor for Norm
  * @author Ganesha <reekoheek@gmail.com>
  */
-class PDOCursor implements \Iterator {
+class PDOCursor implements ICursor {
 
     // FIXME reekoheek cursor cannot reset statement result to foreach multiple
     // times
@@ -171,7 +173,6 @@ class PDOCursor implements \Iterator {
         $wheres = array();
         $data = array();
         foreach ($this->criteria as $key => $value) {
-            // var_dump('crit:'.$key.':'.json_encode($value));
             $wheres[] = $this->collection->connection->getDialect()->grammarExpression($key, $value, $data);
         }
 
@@ -180,10 +181,6 @@ class PDOCursor implements \Iterator {
             $sql .= ' WHERE '.implode(' AND ', $wheres);
         }
 
-        // var_dump('count');
-        // var_dump('countcrit');
-        // var_dump($this->criteria);
-        // var_dump($sql);
         $statement = $this->collection->connection->getRaw()->prepare($sql);
 
         $statement->execute($data);

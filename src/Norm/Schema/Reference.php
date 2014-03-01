@@ -6,6 +6,7 @@ use Norm\Norm;
 use Bono\App;
 
 // TODO recheck this implementation later
+// FIXME remove all properties and add attributes by set()
 class Reference extends Field {
 
     protected $foreign;

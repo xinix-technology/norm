@@ -70,6 +70,8 @@ class Norm {
      */
     protected static $collectionConfig;
 
+    protected static $options = array();
+
     /**
      * Initialize framework from configuration. First connection registered from
      * config will be the default connection.
@@ -107,6 +109,21 @@ class Norm {
             static::$defaultConnection = $first;
         }
 
+    }
+
+    public static function options($key, $value = ':get:') {
+        if (is_array($key)) {
+            foreach ($key as $k => $v) {
+                static::$options($k, $v);
+            }
+            return;
+        }
+
+        if ($value === ':get:') {
+            return isset(static::$options[$key]) ? static::$options[$key] : null;
+        }
+
+        static::$options[$key] = $value;
     }
 
     public static function registerCollection($key, $options) {

@@ -2,7 +2,7 @@
 
 namespace Norm\Type;
 
-class NormArray implements \JsonKit\JsonSerializer, \ArrayAccess {
+class NormArray implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator {
     protected $attributes = array();
 
     public function __construct($attributes) {
@@ -13,8 +13,7 @@ class NormArray implements \JsonKit\JsonSerializer, \ArrayAccess {
     }
 
     public function jsonSerialize() {
-        throw new \Exception('Unimplemented yet!');
-        return 'not serialized!';
+        return $this->attributes;
     }
 
     public function offsetGet($key) {
@@ -35,6 +34,26 @@ class NormArray implements \JsonKit\JsonSerializer, \ArrayAccess {
 
     public function has($o) {
         return in_array($o, $this->attributes);
+    }
+
+    public function current() {
+        return current($this->attributes);
+    }
+
+    public function next() {
+        return next($this->attributes);
+    }
+
+    public function key() {
+        return key($this->attributes);
+    }
+
+    public function valid() {
+        return $this->current();
+    }
+
+    public function rewind() {
+        return reset($this->attributes);
     }
 
     public function toArray() {

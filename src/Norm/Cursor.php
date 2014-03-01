@@ -2,7 +2,9 @@
 
 namespace Norm;
 
-class Cursor implements \Iterator,  \JsonKit\JsonSerializer {
+use Norm\Cursor\ICursor;
+
+class Cursor implements ICursor,  \JsonKit\JsonSerializer {
 
     protected $cursor;
 
@@ -26,7 +28,7 @@ class Cursor implements \Iterator,  \JsonKit\JsonSerializer {
     }
 
     public function next() {
-        return $this->cursor->next();
+        $this->cursor->next();
     }
 
     public function key() {
@@ -60,10 +62,15 @@ class Cursor implements \Iterator,  \JsonKit\JsonSerializer {
     }
 
     public function count() {
-        return $this->cursor->count(true);
+        return $this->cursor->count();
     }
 
-    public function skip ($num) {
+    public function match($q) {
+        $this->cursor->match($q);
+        return $this;
+    }
+
+    public function skip($num) {
         $this->cursor->skip($num);
         return $this;
     }
