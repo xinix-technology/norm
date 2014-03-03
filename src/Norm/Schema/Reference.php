@@ -133,23 +133,15 @@ class Reference extends Field {
     }
 
     public function toJSON($value) {
-        // return 'xxx';
         $foreignCollection = Norm::factory($this->foreign);
 
-
-        // $result = array();
-        // foreach($value as $k => $v) {
-        //     // try {
-        //     $result[$k] = $foreignCollection->findOne(array($this['foreignKey'] => $v));
-        //     // } catch(\Exception $e) {
-        //     //     var_dump($this, $k, $v);
-        //     //     var_dump($e);
-        //     //     exit;
-        //     // }
-        // }
-
-        if (isset($_GET['!include'])) {
+        if (\Norm\Norm::options('include')) {
             $foreignKey = $this->getForeignKey();
+            // if ($value == 'sadmin@mail.net') {
+
+            //     var_dump($foreignKey);
+            //     exit;
+            // }
             if (is_null($foreignKey)) {
                 return $foreignCollection->findOne($value);
             } else {
