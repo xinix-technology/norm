@@ -48,7 +48,6 @@ class NormController extends RestController {
         $match = $this->request->get('!match') ?: null;
         return $match;
     }
-
     public function search() {
         $entries = $this->collection->find($this->getCriteria())
             ->match($this->getMatch())

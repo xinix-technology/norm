@@ -15,7 +15,7 @@ class OCICursor implements ICursor {
     protected $sortBy;
 
     protected $limit = 0;
-
+    
     protected $skip = 0;
 
     protected $match;
