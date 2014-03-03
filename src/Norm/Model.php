@@ -280,7 +280,6 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
     /**
      * Implement the json serializer normalizing the data structures.
      */
-
     public function jsonSerialize() {
         if (!\Norm\Norm::options('include')) {
             return $this->toArray();

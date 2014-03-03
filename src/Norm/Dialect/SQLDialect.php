@@ -157,7 +157,7 @@ class SQLDialect {
                 unset($data['$id']);
             }
         }
-
+        
         return $this->execute($sql, $data);
     }
 }
