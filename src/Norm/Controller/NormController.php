@@ -110,9 +110,14 @@ class NormController extends RestController {
 
     public function delete($id) {
         if ($this->request->isPost() || $this->request->isDelete()) {
-            $model = $this->collection->findOne($id);
-            $model->remove();
+            $id = explode(',', $id);
 
+            foreach ($id as $value) {
+                $model = $this->collection->findOne($value);
+                $model->remove();
+                
+            }
+            
             $this->flash('info', $this->clazz.' deleted.');
             $this->redirect($this->getRedirectUri());
         }
