@@ -47,7 +47,7 @@ namespace Norm\Filter;
  * raise and sub exceptions as array of exceptions raise on the same field name.
  *
  */
-class FilterException extends \RuntimeException {
+class FilterException extends \Bono\Exception\RestException {
 
     /**
      * Database field name where exception raise
@@ -68,6 +68,10 @@ class FilterException extends \RuntimeException {
      */
     public static function factory($message) {
         return new static($message);
+    }
+
+    function __construct($message = '', $code = 0, $exception = null) {
+        parent::__construct($message, 400, $exception);
     }
 
     /**

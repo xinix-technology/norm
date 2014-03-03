@@ -12,7 +12,7 @@ class Date extends DateTime {
             return $format($value, $entry);
         }
         if ($value) {
-            $value = date('Y-m-d', strtotime($value));
+            $value = $value->format('Y-m-d');
         }
 
         return '<input type="date" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].'" autocomplete="off" />';
@@ -22,6 +22,6 @@ class Date extends DateTime {
         if ($this->has('cellFormat') && $format = $this['cellFormat']) {
             return $format($value, $entry);
         }
-        return date('Y-m-d', strtotime($value));
+        return $value->format('Y-m-d');
     }
 }
