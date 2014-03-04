@@ -15,7 +15,7 @@ class OCICursor implements ICursor {
     protected $sortBy;
 
     protected $limit = 0;
-    
+
     protected $skip = 0;
 
     protected $match;
@@ -105,7 +105,7 @@ class OCICursor implements ICursor {
             $schema = $this->collection->schema();
             $i = 0;
             foreach ($schema as $key => $value) {
-                $matchOrs[] = $key.' LIKE :f'.$i;
+                $matchOrs[] = 'LOWER('.$key.') LIKE lower(:f'.$i.')';
                 $i++;
             }
             $wheres[] = '('.implode(' OR ', $matchOrs).')';
@@ -113,12 +113,12 @@ class OCICursor implements ICursor {
 
         $limit = '';
         if ($this->limit > 0) {
-            $limit = 'rnum BETWEEN '.($this->skip + 1).' AND '.($this->skip + $this->limit);
+            $limit = 'ROWNUM BETWEEN '.($this->skip + 1).' AND '.($this->skip + $this->limit);
         } elseif ($this->skip > 0) {
-            $limit = 'rnum > '.$this->skip;
+            $limit = 'ROWNUM > '.$this->skip;
         }
 
-        $select = ($limit !== '') ? 'rownum rnum, ' : '';
+        $select = ($limit !== '') ? 'rownum, ' : '';
         $select .= $this->collection->name.'.*';
         $query = 'SELECT '.$select.' FROM '.$this->collection->name;
 

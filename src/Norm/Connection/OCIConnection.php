@@ -13,7 +13,7 @@ class OCIConnection extends \Norm\Connection {
     protected $dialect;
 
     public function initialize($options) {
-        
+
         $defaultOptions = array(
             'username' => NULL,
             'password' => NULL,
@@ -74,7 +74,7 @@ class OCIConnection extends \Norm\Connection {
         } else {
             $data['id'] = $model->getId();
             $result = $this->update($collectionName, $data);
-            
+
             if ($result) {
                 $result = true;
             }
@@ -102,7 +102,7 @@ class OCIConnection extends \Norm\Connection {
 
         $stid = oci_parse($this->raw,$sql);
         oci_bind_by_name($stid, ":id",$id);
-        
+
         foreach ($data as $key => $value) {
             oci_bind_by_name($stid, ":".$key, $data[$key]);
         }
