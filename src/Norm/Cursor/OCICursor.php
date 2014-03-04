@@ -105,7 +105,7 @@ class OCICursor implements ICursor {
             $schema = $this->collection->schema();
             $i = 0;
             foreach ($schema as $key => $value) {
-                $matchOrs[] = $key.' LIKE :f'.$i;
+                $matchOrs[] = 'LOWER('.$key.') LIKE lower(:f'.$i.')';
                 $i++;
             }
             $wheres[] = '('.implode(' OR ', $matchOrs).')';
