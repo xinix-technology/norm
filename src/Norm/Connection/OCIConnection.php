@@ -31,7 +31,15 @@ class OCIConnection extends \Norm\Connection {
 
     private function prepareInit(){
         $stid = oci_parse($this->raw,"ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
-        $result = oci_execute($stid);
+        oci_execute($stid);
+        oci_free_statement($stid);
+
+        $stid = oci_parse($this->raw,"ALTER SESSION SET NLS_SORT = BINARY_CI");
+        oci_execute($stid);
+        oci_free_statement($stid);
+
+        $stid = oci_parse($this->raw,"ALTER SESSION SET NLS_COMP = LINGUISTIC");
+        oci_execute($stid);
         oci_free_statement($stid);
     }
 

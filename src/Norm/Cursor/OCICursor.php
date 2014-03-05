@@ -2,6 +2,8 @@
 
 namespace Norm\Cursor;
 
+use Norm\Norm;
+
 class OCICursor implements ICursor {
 
 	protected $collection;
@@ -103,10 +105,18 @@ class OCICursor implements ICursor {
             }
         } else {
             $schema = $this->collection->schema();
+
             $i = 0;
             foreach ($schema as $key => $value) {
-                $matchOrs[] = 'LOWER('.$key.') LIKE lower(:f'.$i.')';
-                $i++;
+                if($value instanceof \Norm\Schema\Reference){
+                    $foreign = $value->getForeign();
+                    $foreignLable = $value->getForeignLabel();
+                    $foreignKey = $value->getForeignKey();
+                    $matchOrs[] = $this->getQueryReference($key, $foreign, $foreignLable, $foreignKey, &$i);
+                } else {
+                    $matchOrs[] = $key.' LIKE :f'.$i;
+                    $i++;
+                }
             }
             $wheres[] = '('.implode(' OR ', $matchOrs).')';
         }
@@ -173,8 +183,6 @@ class OCICursor implements ICursor {
         oci_free_statement($statement);
 
         $this->index = -1;
-
-
     }
 
     public function sort(array $fields) {
@@ -192,4 +200,20 @@ class OCICursor implements ICursor {
         return $this;
     }
 
+    public function getQueryReference($key = '', $foreign = '', $foreignLable = '', $foreignKey = '', &$i){
+        $model = Norm::factory($foreign);
+        $refSchemes = $model->schema();
+        $foreignKey = $foreignKey?: 'id';
+
+        $query = $key . ' IN (SELECT '.$foreignKey.' FROM '.strtolower($foreign).' WHERE '.$foreignLable.' LIKE :f'.$i.') ';
+        $i++;
+
+        return $query;
+    }
+
 }
+
+
+
+
+
