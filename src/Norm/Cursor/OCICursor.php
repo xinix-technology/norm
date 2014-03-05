@@ -112,7 +112,7 @@ class OCICursor implements ICursor {
                     $foreign = $value->getForeign();
                     $foreignLable = $value->getForeignLabel();
                     $foreignKey = $value->getForeignKey();
-                    $matchOrs[] = $this->getQueryReference($key, $foreign, $foreignLable, $foreignKey, &$i);
+                    $matchOrs[] = $this->getQueryReference($key, $foreign, $foreignLable, $foreignKey, $i);
                 } else {
                     $matchOrs[] = $key.' LIKE :f'.$i;
                     $i++;
