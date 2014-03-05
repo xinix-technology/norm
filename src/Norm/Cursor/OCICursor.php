@@ -114,7 +114,7 @@ class OCICursor implements ICursor {
                     $foreignKey = $value->getForeignKey();
                     $matchOrs[] = $this->getQueryReference($key, $foreign, $foreignLable, $foreignKey, &$i);
                 } else {
-                    $matchOrs[] = 'LOWER('.$key.') LIKE lower(:f'.$i.')';
+                    $matchOrs[] = $key.' LIKE :f'.$i;
                     $i++;
                 }
             }
@@ -205,7 +205,7 @@ class OCICursor implements ICursor {
         $refSchemes = $model->schema();
         $foreignKey = $foreignKey?: 'id';
 
-        $query = $key . ' IN (SELECT '.$foreignKey.' FROM '.strtolower($foreign).' WHERE LOWER('.$foreignLable.') LIKE lower(:f'.$i.')) ';
+        $query = $key . ' IN (SELECT '.$foreignKey.' FROM '.strtolower($foreign).' WHERE '.$foreignLable.' LIKE :f'.$i.') ';
         $i++;
 
         return $query;
