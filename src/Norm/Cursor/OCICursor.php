@@ -6,9 +6,9 @@ use Norm\Norm;
 
 class OCICursor implements ICursor {
 
-	protected $collection;
+    protected $collection;
 
-	protected $dialect;
+    protected $dialect;
 
     protected $criteria;
 
@@ -121,18 +121,10 @@ class OCICursor implements ICursor {
             $wheres[] = '('.implode(' OR ', $matchOrs).')';
         }
 
-        $limit = '';
-        if ($this->limit > 0) {
-            $limit = 'ROWNUM BETWEEN '.($this->skip + 1).' AND '.($this->skip + $this->limit);
-        } elseif ($this->skip > 0) {
-            $limit = 'ROWNUM > '.$this->skip;
-        }
+        $select  = 'rownum ROWNUMBER, ' . $this->collection->name.'.*';
+        $query   = 'SELECT '.$select.' FROM '.$this->collection->name;
+        $order   = '';
 
-        $select = ($limit !== '') ? 'rownum, ' : '';
-        $select .= $this->collection->name.'.*';
-        $query = 'SELECT '.$select.' FROM '.$this->collection->name;
-
-        $order = '';
         if($this->sortBy){
             foreach ($this->sortBy as $key => $value) {
                 if($value == 1){
@@ -147,12 +139,23 @@ class OCICursor implements ICursor {
             }
         }
 
-        if(!empty($wheres)){
+        if(!empty($wheres)) {
             $query .= ' WHERE '.implode(' AND ', $wheres);
         }
 
-        $query .= $order;
+        $limit = '';
 
+        if ($this->skip > 0) {
+            $limit = 'ROWNUMBER > '.($this->skip).' AND ROWNUM <= (SELECT COUNT(ROWNUM) FROM ('.$query.'))';
+
+            if ($this->limit > 0) {
+                $limit = 'ROWNUMBER > '.($this->skip).' AND ROWNUM <= ' . $this->limit;
+            }
+        } else if($this->limit > 0) {
+            $limit = 'ROWNUM <= ' . $this->limit;
+        }
+
+        $query .= $order;
 
         if ($limit !== '') {
             $query = 'SELECT * FROM ('.$query.') WHERE '.$limit;
