@@ -71,28 +71,60 @@ class OCICursor extends \Norm\Cursor implements ICursor {
 
     }
 
+    // FIXME: krisanalfa Make a separate function to build where, matchOr, skip, limit, and order
     public function count($foundOnly = false) {
-        $wheres = array();
-        $data = array();
-
+        $wheres   = array();
+        $data     = array();
+        $matchOrs = array();
         $criteria = $this->prepareCriteria($this->criteria);
 
-        if($criteria) {
-            foreach ($criteria as $key => $value) {
-                $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
+        if (is_null($this->match)) {
+            $criteria = $this->prepareCriteria($this->criteria);
+            if($criteria) {
+                foreach ($criteria as $key => $value) {
+                    $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
+                }
             }
+        } else {
+            $schema = $this->collection->schema();
+
+            $i = 0;
+            foreach ($schema as $key => $value) {
+                if($value instanceof \Norm\Schema\Reference){
+                    $foreign = $value->getForeign();
+                    $foreignLable = $value->getForeignLabel();
+                    $foreignKey = $value->getForeignKey();
+                    $matchOrs[] = $this->getQueryReference($key, $foreign, $foreignLable, $foreignKey, $i);
+                } else {
+                    $matchOrs[] = $key.' LIKE :f'.$i;
+                    $i++;
+                }
+            }
+            $wheres[] = '('.implode(' OR ', $matchOrs).')';
         }
 
         $query = "SELECT count(ROWNUM) r FROM " . $this->collection->name;
 
         if ($foundOnly) {
-            $query .= ' WHERE ' . implode(' AND ', $wheres);
+            if(!empty($wheres)) {
+                $query .= ' WHERE '.implode(' AND ', $wheres);
+            }
         }
 
         $statement = oci_parse($this->raw, $query);
 
         foreach ($data as $key => $value) {
             oci_bind_by_name($statement, ':'.$key, $data[$key]);
+        }
+
+        if($foundOnly) {
+            if ($matchOrs) {
+                $match = '%'.$this->match.'%';
+
+                foreach ($matchOrs as $key => $value) {
+                    oci_bind_by_name($statement, ':f'.$key, $match);
+                }
+            }
         }
 
         oci_execute($statement);
@@ -124,6 +156,7 @@ class OCICursor extends \Norm\Cursor implements ICursor {
         return $criteria ? : array();
     }
 
+    // FIXME: krisanalfa Make a separate function to build where, matchOr, skip, limit, and order
     public function execute() {
 
         $data = array();
