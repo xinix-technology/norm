@@ -22,10 +22,6 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     public function __construct(array $options = array()) {
         $this->options = $options;
 
-        if (! isset($this->options['pagination'])) {
-            $this->options['pagination'] = 10;
-        }
-
         $this->clazz = Inflector::classify($options['name']);
         $this->name = Inflector::tableize($this->clazz);
         $this->connection = $options['connection'];
