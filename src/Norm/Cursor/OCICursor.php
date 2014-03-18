@@ -166,9 +166,10 @@ class OCICursor extends \Norm\Cursor implements ICursor {
         if (is_null($this->match)) {
             $criteria = $this->prepareCriteria($this->criteria);
             if($criteria) {
-                foreach ($criteria as $key => $value) {
-                    $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
-                }
+                $wheres[] = $this->dialect->grammarExpression(null, $criteria, $data);
+                // foreach ($criteria as $key => $value) {
+                //     $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
+                // }
             }
         } else {
             $schema = $this->collection->schema();

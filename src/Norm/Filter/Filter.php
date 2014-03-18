@@ -98,6 +98,19 @@ class Filter {
         return new static($rules);
     }
 
+    public static function create($filters = array()) {
+        $rules = array();
+
+        foreach ($filters as $key => $filter) {
+            $filter = explode('|', $filter);
+            foreach ($filter as $f) {
+                $rules[$key][] = trim($f);
+            }
+        }
+
+        return new static($rules);
+    }
+
     public function __construct($rules) {
         $this->rules = $rules;
     }
@@ -116,17 +129,17 @@ class Filter {
                         }
                         $method = $method[0];
 
-                            if (method_exists($this, 'filter_'.$method)) {
-                                $method = 'filter_'.$method;
-                                $data[$k] = $this->$method($k, $data[$k], $data, $args);
-                            } elseif (isset(static::$registries[$method])) {
-                                $method = static::$registries[$method];
-                                $data[$k] = $method($k, $data[$k], $data, $args);
-                            } elseif (function_exists($method)) {
-                                $data[$k] = $method($data[$k]);
-                            } else {
-                                throw new \Exception('Filter "'.$rule.'" not found.');
-                            }
+                        if (method_exists($this, 'filter_'.$method)) {
+                            $method = 'filter_'.$method;
+                            $data[$k] = $this->$method($k, $data[$k], $data, $args);
+                        } elseif (isset(static::$registries[$method])) {
+                            $method = static::$registries[$method];
+                            $data[$k] = $method($k, $data[$k], $data, $args);
+                        } elseif (function_exists($method)) {
+                            $data[$k] = $method($data[$k]);
+                        } else {
+                            throw new \Exception('Filter "'.$rule.'" not found.');
+                        }
                     } elseif (is_callable($rule)) {
                         $data[$k] = call_user_func($rule, $k, $data[$k], $data, $args);
                     }
