@@ -4,7 +4,7 @@ namespace Norm\Cursor;
 
 use Norm\Norm;
 
-class OCICursor implements ICursor {
+class OCICursor extends \Norm\Cursor implements ICursor {
 
     protected $collection;
 
@@ -72,8 +72,23 @@ class OCICursor implements ICursor {
     }
 
     public function count() {
-        if (is_null($this->rows)) return 0;
-        return count($this->rows);
+        $query = "SELECT count(ROWNUM) r FROM " . $this->collection->name;
+
+        $statement = oci_parse($this->raw, $query);
+
+        oci_execute($statement);
+
+        $result = array();
+        while($row = oci_fetch_array($statement, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS)) {
+            $result[] = $row;
+        }
+
+        oci_free_statement($statement);
+
+        $r = reset($result);
+        $r = $r['R'];
+
+        return (int) $r;
     }
 
     public function match($q) {
@@ -121,7 +136,13 @@ class OCICursor implements ICursor {
             $wheres[] = '('.implode(' OR ', $matchOrs).')';
         }
 
-        $select  = 'rownum ROWNUMBER, ' . $this->collection->name.'.*';
+        $select  = '';
+
+        if ($this->skip > 0 or $this->limit > 0) {
+            $select .= 'rownum r, ';
+        }
+
+        $select  .= $this->collection->name.'.*';
         $query   = 'SELECT '.$select.' FROM '.$this->collection->name;
         $order   = '';
 
@@ -146,10 +167,10 @@ class OCICursor implements ICursor {
         $limit = '';
 
         if ($this->skip > 0) {
-            $limit = 'ROWNUMBER > '.($this->skip).' AND ROWNUM <= (SELECT COUNT(ROWNUM) FROM ('.$query.'))';
+            $limit = 'r > '.($this->skip).' AND ROWNUM <= (SELECT COUNT(ROWNUM) FROM ('.$query.'))';
 
             if ($this->limit > 0) {
-                $limit = 'ROWNUMBER > '.($this->skip).' AND ROWNUM <= ' . $this->limit;
+                $limit = 'r > '.($this->skip).' AND ROWNUM <= ' . $this->limit;
             }
         } else if($this->limit > 0) {
             $limit = 'ROWNUM <= ' . $this->limit;
@@ -215,8 +236,4 @@ class OCICursor implements ICursor {
     }
 
 }
-
-
-
-
 
