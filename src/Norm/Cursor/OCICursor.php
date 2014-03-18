@@ -71,10 +71,29 @@ class OCICursor extends \Norm\Cursor implements ICursor {
 
     }
 
-    public function count() {
+    public function count($foundOnly = false) {
+        $wheres = array();
+        $data = array();
+
+        $criteria = $this->prepareCriteria($this->criteria);
+
+        if($criteria) {
+            foreach ($criteria as $key => $value) {
+                $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
+            }
+        }
+
         $query = "SELECT count(ROWNUM) r FROM " . $this->collection->name;
 
+        if ($foundOnly) {
+            $query .= ' WHERE ' . implode(' AND ', $wheres);
+        }
+
         $statement = oci_parse($this->raw, $query);
+
+        foreach ($data as $key => $value) {
+            oci_bind_by_name($statement, ':'.$key, $data[$key]);
+        }
 
         oci_execute($statement);
 

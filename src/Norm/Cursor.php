@@ -63,8 +63,8 @@ class Cursor implements ICursor,  \JsonKit\JsonSerializer {
         return $this;
     }
 
-    public function count() {
-        return $this->cursor->count();
+    public function count($foundOnly = false) {
+        return $this->cursor->count($foundOnly);
     }
 
     public function match($q) {
