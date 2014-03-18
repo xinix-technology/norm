@@ -10,6 +10,8 @@ class Cursor implements ICursor,  \JsonKit\JsonSerializer {
 
     protected $collection;
 
+    protected $links;
+
     public function __construct($cursor, $collection) {
         $this->cursor = $cursor;
         $this->collection = $collection;
@@ -61,8 +63,8 @@ class Cursor implements ICursor,  \JsonKit\JsonSerializer {
         return $this;
     }
 
-    public function count() {
-        return $this->cursor->count();
+    public function count($foundOnly = false) {
+        return $this->cursor->count($foundOnly);
     }
 
     public function match($q) {
@@ -73,6 +75,10 @@ class Cursor implements ICursor,  \JsonKit\JsonSerializer {
     public function skip($num) {
         $this->cursor->skip($num);
         return $this;
+    }
+
+    public function links() {
+        return $this->links;
     }
 
     public function jsonSerialize() {
