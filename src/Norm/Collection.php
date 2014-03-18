@@ -21,6 +21,7 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
 
     public function __construct(array $options = array()) {
         $this->options = $options;
+
         $this->clazz = Inflector::classify($options['name']);
         $this->name = Inflector::tableize($this->clazz);
         $this->connection = $options['connection'];

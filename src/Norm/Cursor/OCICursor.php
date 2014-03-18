@@ -4,11 +4,11 @@ namespace Norm\Cursor;
 
 use Norm\Norm;
 
-class OCICursor implements ICursor {
+class OCICursor extends \Norm\Cursor implements ICursor {
 
-	protected $collection;
+    protected $collection;
 
-	protected $dialect;
+    protected $dialect;
 
     protected $criteria;
 
@@ -71,9 +71,43 @@ class OCICursor implements ICursor {
 
     }
 
-    public function count() {
-        if (is_null($this->rows)) return 0;
-        return count($this->rows);
+    public function count($foundOnly = false) {
+        $wheres = array();
+        $data = array();
+
+        $criteria = $this->prepareCriteria($this->criteria);
+
+        if($criteria) {
+            foreach ($criteria as $key => $value) {
+                $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
+            }
+        }
+
+        $query = "SELECT count(ROWNUM) r FROM " . $this->collection->name;
+
+        if ($foundOnly) {
+            $query .= ' WHERE ' . implode(' AND ', $wheres);
+        }
+
+        $statement = oci_parse($this->raw, $query);
+
+        foreach ($data as $key => $value) {
+            oci_bind_by_name($statement, ':'.$key, $data[$key]);
+        }
+
+        oci_execute($statement);
+
+        $result = array();
+        while($row = oci_fetch_array($statement, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS)) {
+            $result[] = $row;
+        }
+
+        oci_free_statement($statement);
+
+        $r = reset($result);
+        $r = $r['R'];
+
+        return (int) $r;
     }
 
     public function match($q) {
@@ -121,18 +155,16 @@ class OCICursor implements ICursor {
             $wheres[] = '('.implode(' OR ', $matchOrs).')';
         }
 
-        $limit = '';
-        if ($this->limit > 0) {
-            $limit = 'ROWNUM BETWEEN '.($this->skip + 1).' AND '.($this->skip + $this->limit);
-        } elseif ($this->skip > 0) {
-            $limit = 'ROWNUM > '.$this->skip;
+        $select  = '';
+
+        if ($this->skip > 0 or $this->limit > 0) {
+            $select .= 'rownum r, ';
         }
 
-        $select = ($limit !== '') ? 'rownum, ' : '';
-        $select .= $this->collection->name.'.*';
-        $query = 'SELECT '.$select.' FROM '.$this->collection->name;
+        $select  .= $this->collection->name.'.*';
+        $query   = 'SELECT '.$select.' FROM '.$this->collection->name;
+        $order   = '';
 
-        $order = '';
         if($this->sortBy){
             foreach ($this->sortBy as $key => $value) {
                 if($value == 1){
@@ -147,12 +179,23 @@ class OCICursor implements ICursor {
             }
         }
 
-        if(!empty($wheres)){
+        if(!empty($wheres)) {
             $query .= ' WHERE '.implode(' AND ', $wheres);
         }
 
-        $query .= $order;
+        $limit = '';
 
+        if ($this->skip > 0) {
+            $limit = 'r > '.($this->skip).' AND ROWNUM <= (SELECT COUNT(ROWNUM) FROM ('.$query.'))';
+
+            if ($this->limit > 0) {
+                $limit = 'r > '.($this->skip).' AND ROWNUM <= ' . $this->limit;
+            }
+        } else if($this->limit > 0) {
+            $limit = 'ROWNUM <= ' . $this->limit;
+        }
+
+        $query .= $order;
 
         if ($limit !== '') {
             $query = 'SELECT * FROM ('.$query.') WHERE '.$limit;
@@ -212,8 +255,4 @@ class OCICursor implements ICursor {
     }
 
 }
-
-
-
-
 

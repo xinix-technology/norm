@@ -21,6 +21,6 @@ class Boolean extends Field {
     }
 
     public function prepare($value) {
-        return (bool) $value;
+        return (boolean) $value;
     }
 }

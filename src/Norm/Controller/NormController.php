@@ -48,6 +48,7 @@ class NormController extends RestController {
         $match = $this->request->get('!match') ?: null;
         return $match;
     }
+
     public function search() {
         $entries = $this->collection->find($this->getCriteria())
             ->match($this->getMatch())
@@ -114,9 +115,9 @@ class NormController extends RestController {
             foreach ($id as $value) {
                 $model = $this->collection->findOne($value);
                 $model->remove();
-                
+
             }
-            
+
             $this->flash('info', $this->clazz.' deleted.');
             $this->redirect($this->getRedirectUri());
         }
