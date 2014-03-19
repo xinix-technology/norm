@@ -68,10 +68,15 @@ class NormController extends RestController {
                 $model = $this->collection->newInstance();
                 $result = $model->set($entry)->save();
 
-                $this->flash('info', $this->clazz.' created.');
-                $this->redirect($this->getRedirectUri());
+                h('controller.create.success', $this);
+
+                $this->flashNow('info', $this->clazz.' created.');
+                // $this->redirect($this->getRedirectUri());
+
             } catch(\Exception $e) {
-                $this->data['entry'] = $entry;
+
+                h('controller.create.error', $this);
+
                 $this->flashNow('error', ''.$e);
             }
         }
@@ -98,10 +103,16 @@ class NormController extends RestController {
                 $entry = array_merge($entry, $this->request->post());
                 $model = $this->collection->findOne($id);
                 $model->set($entry)->save();
-                $this->flash('info', $this->clazz.' updated.');
-                $this->redirect($this->getRedirectUri());
+
+                h('controller.update.success', $this);
+
+                $this->flashNow('info', $this->clazz.' updated.');
+                // $this->redirect($this->getRedirectUri());
+
             } catch(\Exception $e) {
-                $this->data['entry'] = $entry;
+
+                h('controller.update.error', $this);
+
                 $this->flashNow('error', ''.$e);
             }
         }
@@ -109,18 +120,24 @@ class NormController extends RestController {
     }
 
     public function delete($id) {
+        $id = explode(',', $id);
         if ($this->request->isPost() || $this->request->isDelete()) {
-            $id = explode(',', $id);
 
+            $this->data['entries'] = array();
             foreach ($id as $value) {
                 $model = $this->collection->findOne($value);
                 $model->remove();
 
+                $this->data['entries'][] = $model;
             }
 
-            $this->flash('info', $this->clazz.' deleted.');
-            $this->redirect($this->getRedirectUri());
+            h('controller.delete.success', $this);
+
+            $this->flashNow('info', $this->clazz.' deleted.');
+            // $this->redirect($this->getRedirectUri());
         }
+
+        $this->data['ids'] = $id;
     }
 
     public function getRedirectUri() {

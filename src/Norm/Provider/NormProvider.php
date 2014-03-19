@@ -102,5 +102,16 @@ class NormProvider extends \Bono\Provider\Provider {
         $collectionConfig = $this->app->config('norm.collections');
 
         \Norm\Norm::init($dbConfig, $collectionConfig);
+
+        $controllerConfig = $this->app->config('bono.controllers');
+        if (!isset($controllerConfig['default'])) {
+            $controllerConfig['default'] = '\\Norm\\Controller\\NormController';
+        }
+        $this->app->config('bono.controllers', $controllerConfig);
+
+        class_alias('\\Norm\\Norm', 'Norm');
+
+        $d = explode(DIRECTORY_SEPARATOR.'src', __DIR__);
+        $this->app->theme->addBaseDirectory($d[0], 10);
     }
 }

@@ -166,7 +166,7 @@ class PDOCursor implements ICursor {
         return $this;
     }
 
-    public function count() {
+    public function count($foundOnly = false) {
 
         $sql = 'SELECT COUNT(1) AS c FROM '. $this->collection->name;
 

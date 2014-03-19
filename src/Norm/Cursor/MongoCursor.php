@@ -108,8 +108,8 @@ class MongoCursor implements ICursor {
         return $this;
     }
 
-    public function count() {
-        return $this->getCursor()->count(true);
+    public function count($foundOnly = false) {
+        return $this->getCursor()->count($foundOnly);
     }
 
     public function match($q) {
