@@ -91,10 +91,10 @@ class OCICursor extends \Norm\Cursor implements ICursor {
             $i = 0;
             foreach ($schema as $key => $value) {
                 if($value instanceof \Norm\Schema\Reference){
-                    $foreign = $value->getForeign();
-                    $foreignLable = $value->getForeignLabel();
-                    $foreignKey = $value->getForeignKey();
-                    $matchOrs[] = $this->getQueryReference($key, $foreign, $foreignLable, $foreignKey, $i);
+                    $foreign = $value['foreign'];
+                    $foreignLabel = $value['foreignLabel'];
+                    $foreignKey = $value['foreignKey'];
+                    $matchOrs[] = $this->getQueryReference($key, $foreign, $foreignLabel, $foreignKey, $i);
                 } else {
                     $matchOrs[] = $key.' LIKE :f'.$i;
                     $i++;
@@ -176,10 +176,10 @@ class OCICursor extends \Norm\Cursor implements ICursor {
             $i = 0;
             foreach ($schema as $key => $value) {
                 if($value instanceof \Norm\Schema\Reference){
-                    $foreign = $value->getForeign();
-                    $foreignLable = $value->getForeignLabel();
-                    $foreignKey = $value->getForeignKey();
-                    $matchOrs[] = $this->getQueryReference($key, $foreign, $foreignLable, $foreignKey, $i);
+                    $foreign = $value['foreign'];
+                    $foreignLabel = $value['foreignLabel'];
+                    $foreignKey = $value['foreignKey'];
+                    $matchOrs[] = $this->getQueryReference($key, $foreign, $foreignLabel, $foreignKey, $i);
                 } else {
                     $matchOrs[] = $key.' LIKE :f'.$i;
                     $i++;
@@ -237,7 +237,7 @@ class OCICursor extends \Norm\Cursor implements ICursor {
         $statement = oci_parse($this->raw, $query);
 
         foreach ($data as $key => $value) {
-            oci_bind_by_name($statement, ':'.$key, $data[$key]);
+            oci_bind_by_name($statement, ':'.$key, $value);
         }
 
         if($matchOrs) {
@@ -276,12 +276,16 @@ class OCICursor extends \Norm\Cursor implements ICursor {
         return $this;
     }
 
-    public function getQueryReference($key = '', $foreign = '', $foreignLable = '', $foreignKey = '', &$i){
-        $model = Norm::factory($foreign);
+    public function getQueryReference($key = '', $foreign = '', $foreignLabel = '', $foreignKey = '', &$i){
+        $model      = Norm::factory($foreign);
         $refSchemes = $model->schema();
-        $foreignKey = $foreignKey?: 'id';
+        $foreignKey = $foreignKey ?: 'id';
 
-        $query = $key . ' IN (SELECT '.$foreignKey.' FROM '.strtolower($foreign).' WHERE '.$foreignLable.' LIKE :f'.$i.') ';
+        if ($foreignKey == '$id') {
+            $foreignKey = 'id';
+        }
+
+        $query = $key . ' IN (SELECT '.$foreignKey.' FROM '.strtolower($foreign).' WHERE '.$foreignLabel.' LIKE :f'.$i.') ';
         $i++;
 
         return $query;
