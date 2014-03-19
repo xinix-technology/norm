@@ -109,7 +109,9 @@ class NormProvider extends \Bono\Provider\Provider {
         }
         $this->app->config('bono.controllers', $controllerConfig);
 
-        class_alias('\\Norm\\Norm', '\\Norm');
+        if (! class_exists('\\Norm')) {
+            class_alias('\\Norm\\Norm', 'Norm');
+        }
 
         $d = explode(DIRECTORY_SEPARATOR.'src', __DIR__);
         $this->app->theme->addBaseDirectory($d[0], 10);
