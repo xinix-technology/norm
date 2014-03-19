@@ -237,7 +237,7 @@ class OCICursor extends \Norm\Cursor implements ICursor {
         $statement = oci_parse($this->raw, $query);
 
         foreach ($data as $key => $value) {
-            oci_bind_by_name($statement, ':'.$key, $value);
+            oci_bind_by_name($statement, ':'.$key, $data[$key]);
         }
 
         if($matchOrs) {
