@@ -148,11 +148,15 @@ class OCICursor extends \Norm\Cursor implements ICursor {
     }
 
     public function prepareCriteria($criteria) {
-
+        if(is_null($criteria)){
+            $criteria = array();
+        }
+        
         if (array_key_exists('$id', $criteria)) {
             $criteria['id'] = $criteria['$id'];
             unset($criteria['$id']);
         }
+
         
         return $criteria ? : array();
     }
