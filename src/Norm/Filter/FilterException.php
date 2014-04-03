@@ -109,4 +109,9 @@ class FilterException extends \Bono\Exception\RestException {
         }
         return $str;
     }
+
+    // TODO i dont know why getMessage overriding dont work
+    // public function __toString() {
+    //     return $this->getMessage();
+    // }
 }

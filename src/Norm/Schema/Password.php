@@ -26,4 +26,8 @@ class Password extends Field {
     // public function prepare($value) {
     //     return $value;
     // }
+
+    public function toJSON($value) {
+        return '';
+    }
 }
