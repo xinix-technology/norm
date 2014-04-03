@@ -14,7 +14,7 @@ class Date extends DateTime {
         }
 
         if ($this['readonly']) {
-            return '<span class="field">'.$value->format('Y-m-d').'</span>';
+            return '<span class="field">'.(($value) ? $value->format('Y-m-d') : '').'</span>';
         }
 
         if ($format = $this['inputFormat']) {
