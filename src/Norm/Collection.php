@@ -7,7 +7,8 @@ use Norm\Model;
 use Norm\Cursor;
 use Norm\Filter\Filter;
 
-class Collection extends Hookable implements \JsonKit\JsonSerializer {
+class Collection extends Hookable implements \JsonKit\JsonSerializer
+{
     public $clazz;
     public $name;
     public $connection;
@@ -19,7 +20,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     protected $filter;
 
 
-    public function __construct(array $options = array()) {
+    public function __construct(array $options = array())
+    {
         $this->options = $options;
 
         $this->clazz = Inflector::classify($options['name']);
@@ -27,7 +29,7 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         $this->connection = $options['connection'];
 
         if (isset($options['observers'])) {
-            foreach($options['observers'] as $observer => $options) {
+            foreach ($options['observers'] as $observer => $options) {
                 if (is_string($observer)) {
                     $observer = new $observer($options);
                 }
@@ -36,7 +38,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         }
     }
 
-    public function observe($observer) {
+    public function observe($observer)
+    {
         if (method_exists($observer, 'saving')) {
             $this->hook('saving', array($observer, 'saving'));
         }
@@ -62,7 +65,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         }
     }
 
-    public function schema($schema = NULL) {
+    public function schema($schema = null)
+    {
         if (!isset($this->options['schema'])) {
             $this->options['schema'] = array();
         }
@@ -74,7 +78,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         }
     }
 
-    public function prepare($key, $value, $schema = NULL) {
+    public function prepare($key, $value, $schema = null)
+    {
         if (is_null($schema)) {
             $collectionSchema = $this->schema();
 
@@ -87,7 +92,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         return $schema->prepare($value);
     }
 
-    public function hydrate($cursor) {
+    public function hydrate($cursor)
+    {
         $results = array();
         foreach ($cursor as $key => $doc) {
             $results[] = $this->attach($doc);
@@ -95,7 +101,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         return $results;
     }
 
-    public function attach($doc) {
+    public function attach($doc)
+    {
         $doc = $this->connection->prepare($this, $doc);
         if (isset($this->options['model'])) {
             $Model = $this->options['model'];
@@ -109,7 +116,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         }
     }
 
-    public function criteria($criteria = null) {
+    public function criteria($criteria = null)
+    {
         if (isset($criteria)) {
             if (!isset($this->criteria)) {
                 $this->criteria = array();
@@ -123,7 +131,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         }
     }
 
-    public function find($criteria = null) {
+    public function find($criteria = null)
+    {
         $this->criteria($criteria);
 
         $this->applyHook('searching', $this);
@@ -139,7 +148,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         return $cursor;
     }
 
-    public function findOne($criteria = null) {
+    public function findOne($criteria = null)
+    {
         $cursor = $this->find($criteria);
         $this->criteria = null;
         return $cursor->getNext();
@@ -221,7 +231,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
     //     }
     // }
 
-    public function newInstance($cloned = array()) {
+    public function newInstance($cloned = array())
+    {
         if ($cloned instanceof Model) {
             $cloned = $cloned->toArray(Model::FETCH_PUBLISHED);
         }
@@ -232,7 +243,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         return new Model($cloned, array('collection' => $this));
     }
 
-    public function save(Model $model, $options = array()) {
+    public function save(Model $model, $options = array())
+    {
         if (!isset($options['filter']) || $options['filter'] === true) {
             $this->filter($model);
         }
@@ -247,7 +259,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         return $result;
     }
 
-    public function filter(Model $model, $key = NULL) {
+    public function filter(Model $model, $key = null)
+    {
         if (is_null($this->filter)) {
             $this->filter = Filter::fromSchema($this->schema());
         }
@@ -269,7 +282,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
         }
     }
 
-    public function remove($model) {
+    public function remove($model)
+    {
 
         $this->applyHook('removing', $model);
 
@@ -280,16 +294,17 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer {
 
         $this->applyHook('removed', $model);
 
-        $this->criteria = NULL;
+        $this->criteria = null;
         return $result;
     }
 
-    public function migrate() {
+    public function migrate()
+    {
         $this->connection->migrate($this);
     }
 
-    public function jsonSerialize() {
+    public function jsonSerialize()
+    {
         return $this->clazz;
     }
-
 }

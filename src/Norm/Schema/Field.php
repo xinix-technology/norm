@@ -5,10 +5,10 @@ namespace Norm\Schema;
 use \ROH\Util\Inflector;
 use Norm\Filter\Filter;
 
-abstract class Field implements \ArrayAccess {
+abstract class Field implements \ArrayAccess
+{
 
     static protected $instances = array();
-
 
     protected $attributes = array();
 
@@ -22,11 +22,13 @@ abstract class Field implements \ArrayAccess {
      * @param  [type] $label [description]
      * @return [type]        [description]
      */
-    public static function getInstance($name = '', $label = NULL) {
+    public static function getInstance($name = '', $label = null)
+    {
         return static::create($name, $label);
     }
 
-    public static function create($name = '', $label = NULL) {
+    public static function create($name = '', $label = null)
+    {
         $Field = get_called_class();
 
         if (empty($name)) {
@@ -40,7 +42,8 @@ abstract class Field implements \ArrayAccess {
         return new $Field($name, $label);
     }
 
-    public function __construct($name, $label = NULL) {
+    public function __construct($name, $label = null)
+    {
         if (is_null($label)) {
             $label = Inflector::humanize($name);
         }
@@ -48,11 +51,13 @@ abstract class Field implements \ArrayAccess {
         $this->set('label', $label);
     }
 
-    public function prepare($value) {
+    public function prepare($value)
+    {
         return $value;
     }
 
-    public function filter() {
+    public function filter()
+    {
         if (func_num_args() == 0) {
             return $this->filter;
         }
@@ -78,43 +83,52 @@ abstract class Field implements \ArrayAccess {
 
     }
 
-    public function has($k) {
+    public function has($k)
+    {
         return array_key_exists($k, $this->attributes);
     }
 
-    public function set($k, $v) {
+    public function set($k, $v)
+    {
         $this->attributes[$k] = $v;
         return $this;
     }
 
-    public function get($k, $default = NULL) {
+    public function get($k, $default = null)
+    {
         if (!$this->has($k)) {
             return $default;
         }
         return $this->attributes[$k];
     }
 
-    public function offsetExists ($offset) {
+    public function offsetExists ($offset)
+    {
         return $this->has($offset);
     }
 
-    public function offsetGet ($offset) {
+    public function offsetGet ($offset)
+    {
         return $this->get($offset);
     }
 
-    public function offsetSet ($offset , $value) {
+    public function offsetSet ($offset , $value)
+    {
         $this->set($offset, $value);
     }
 
-    public function offsetUnset ($offset) {
+    public function offsetUnset ($offset)
+    {
         unset($this->attributes[$offset]);
     }
 
-    public function label() {
+    public function label()
+    {
         return '<label>'.$this['label'].($this['filter-required'] ? '*' : '').'</label>';
     }
 
-    public function input($value, $entry = NULL) {
+    public function input($value, $entry = null)
+    {
         if ($this['readonly']) {
             if ($format = $this['inputFormat']) {
                 return $format($value, $entry, $this);
@@ -130,22 +144,26 @@ abstract class Field implements \ArrayAccess {
         return '<input type="text" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].'" autocomplete="off" class="'.$classes.'" />';
     }
 
-    public function cell($value, $entry = NULL) {
+    public function cell($value, $entry = null)
+    {
         if ($this->has('cellFormat') && $format = $this['cellFormat']) {
             return $format($value, $entry, $this);
         }
         return $value;
     }
 
-    public function toJSON($value) {
+    public function toJSON($value)
+    {
         return $value;
     }
 
-    public function cellRaw($value) {
+    public function cellRaw($value)
+    {
         return $value;
     }
 
-    public function getInputInRaw($value) {
+    public function getInputInRaw($value)
+    {
         return '<span class="field">'.$value.'</span>';
     }
 }

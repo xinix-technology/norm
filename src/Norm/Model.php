@@ -8,7 +8,8 @@ namespace Norm;
  * Default model implementation.
  */
 
-class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
+class Model implements \JsonKit\JsonSerializer, \ArrayAccess
+{
 
     /**
      * Constants for fetching toArray method.
@@ -61,7 +62,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      *
      * @var int|string
      */
-    protected $id = NULL;
+    protected $id = null;
 
     /**
      * Constructor.
@@ -69,7 +70,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      * @param array  $attributes Attributes of model.
      * @param array  $options    Options to construct the model.
      */
-    public function __construct(array $attributes = array(), $options = array()) {
+    public function __construct(array $attributes = array(), $options = array())
+    {
         $this->collection = $options['collection'];
 
         $this->connection = $this->collection->connection;
@@ -86,8 +88,9 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
 
     }
 
-    public function reset() {
-        $this->id = NULL;
+    public function reset()
+    {
+        $this->id = null;
         $this->attributes = array();
     }
 
@@ -96,7 +99,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      *
      * @return int|string
      */
-    public function getId() {
+    public function getId()
+    {
         return $this->id;
     }
 
@@ -105,7 +109,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      *
      * @return int|string
      */
-    public function setId($givenId) {
+    public function setId($givenId)
+    {
         if (!isset($this->id)) {
             $this->id = $givenId;
             $this->set('$id', $givenId);
@@ -113,7 +118,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
         return $this->id;
     }
 
-    public function has($offset) {
+    public function has($offset)
+    {
         return array_key_exists($offset, $this->attributes);
     }
 
@@ -123,7 +129,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      * @param  string $key
      * @return mixed
      */
-    public function get($key) {
+    public function get($key)
+    {
         $getter = 'get_'.$key;
         if (method_exists($this, $getter)) {
             return $this->$getter($key);
@@ -132,11 +139,13 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
         }
     }
 
-    public function dump() {
+    public function dump()
+    {
         return $this->attributes;
     }
 
-    public function add($key, $value) {
+    public function add($key, $value)
+    {
         if (!isset($this->attributes[$key])) {
             $this->attributes[$key] = array();
         }
@@ -152,7 +161,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      * @param string|array $key
      * @param string       $value Optional.
      */
-    public function set($key, $value = '') {
+    public function set($key, $value = '')
+    {
         if (is_array($key)) {
             foreach ($key as $k => $v) {
                 $this->set($k, $v);
@@ -170,7 +180,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
         return $this;
     }
 
-    public function rmset($key) {
+    public function rmset($key)
+    {
         if (is_array($key)) {
             foreach ($key as $k => $v) {
                 $this->unset($k, $v);
@@ -188,7 +199,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      * @param  [type] $attributes [description]
      * @return [type]             [description]
      */
-    public function sync($attributes) {
+    public function sync($attributes)
+    {
         foreach ($attributes as $key => $attribute) {
             if ($key[0] !== '$') {
                 $this->attributes[$key] = $attribute;
@@ -202,7 +214,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
 
     }
 
-    public function prepare($key, $value, $schema = NULL) {
+    public function prepare($key, $value, $schema = null)
+    {
         return $this->collection->prepare($key, $value, $schema);
     }
 
@@ -211,7 +224,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      *
      * @return int Status of saving.
      */
-    public function save($options = array()) {
+    public function save($options = array())
+    {
         return $this->collection->save($this, $options);
     }
 
@@ -219,7 +233,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      * Remove the model.
      * @return int Status of removal.
      */
-    public function remove() {
+    public function remove()
+    {
         return $this->collection->remove($this);
     }
 
@@ -228,7 +243,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
      * @param  mixed  $fetchType
      * @return array
      */
-    public function toArray($fetchType = Model::FETCH_ALL) {
+    public function toArray($fetchType = Model::FETCH_ALL)
+    {
         if ($fetchType === Model::FETCH_RAW) {
             return $this->attributes;
         }
@@ -240,7 +256,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
             $attributes['$id'] = $this->getId();
 
             foreach ($this->attributes as $key => $value) {
-                if($key[0] === '$') {
+                if ($key[0] === '$') {
                     $attributes[$key] = $value;
                 }
             }
@@ -248,7 +264,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
 
         if ($fetchType === Model::FETCH_ALL || $fetchType === Model::FETCH_PUBLISHED) {
             foreach ($this->attributes as $key => $value) {
-                if($key[0] !== '$') {
+                if ($key[0] !== '$') {
                     $attributes[$key] = $value;
                 }
 
@@ -258,29 +274,34 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
         return $attributes;
     }
 
-    public function offsetExists ($offset) {
+    public function offsetExists ($offset)
+    {
         return $this->has($offset);
     }
 
-    public function offsetGet ($offset) {
+    public function offsetGet ($offset)
+    {
         if ($offset === '$id') {
             return $this->getId();
         }
         return $this->get($offset);
     }
 
-    public function offsetSet ($offset, $value) {
+    public function offsetSet ($offset, $value)
+    {
         return $this->set($offset, $value);
     }
 
-    public function offsetUnset ($offset) {
+    public function offsetUnset ($offset)
+    {
         return $this->rmset($offset);
     }
 
     /**
      * Implement the json serializer normalizing the data structures.
      */
-    public function jsonSerialize() {
+    public function jsonSerialize()
+    {
         if (!\Norm\Norm::options('include')) {
             return $this->toArray();
         }
@@ -290,7 +311,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess {
 
         $schema = $this->collection->schema();
 
-        foreach($source as $key => $value) {
+        foreach ($source as $key => $value) {
             if (isset($schema[$key]) && !is_null($value)) {
                 $destination[$key] = $schema[$key]->toJSON($value);
             } else {

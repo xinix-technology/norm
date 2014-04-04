@@ -5,18 +5,22 @@ namespace Norm\Controller;
 use \Bono\Controller\RestController;
 use \Norm\Norm;
 
-class NormController extends RestController {
+class NormController extends RestController
+{
 
     protected $collection;
 
-    public function __construct($app, $uri) {
+    public function __construct($app, $uri)
+    {
         parent::__construct($app, $uri);
 
         $this->collection = Norm::factory($this->clazz);
     }
 
-    public function getCriteria() {
+    public function getCriteria()
+    {
         $gets = $this->request->get();
+
         $criteria = array();
         foreach ($gets as $key => $value) {
             if ($key[0] !== '!') {
@@ -26,7 +30,8 @@ class NormController extends RestController {
         return $criteria;
     }
 
-    public function getSort() {
+    public function getSort()
+    {
         $sorts = $get = $this->request->get('!sort') ?: array();
         foreach ($sorts as $key => &$value) {
             $value = (int) $value;
@@ -34,22 +39,26 @@ class NormController extends RestController {
         return $sorts;
     }
 
-    public function getSkip() {
+    public function getSkip()
+    {
         $skip = $this->request->get('!skip') ?: null;
         return $skip;
     }
 
-    public function getLimit() {
+    public function getLimit()
+    {
         $limit = $this->request->get('!limit') ?: null;
         return $limit;
     }
 
-    public function getMatch() {
+    public function getMatch()
+    {
         $match = $this->request->get('!match') ?: null;
         return $match;
     }
 
-    public function search() {
+    public function search()
+    {
         $entries = $this->collection->find($this->getCriteria())
             ->match($this->getMatch())
             ->sort($this->getSort())
@@ -59,7 +68,8 @@ class NormController extends RestController {
         $this->data['entries'] = $entries;
     }
 
-    public function create() {
+    public function create()
+    {
         $entry = $this->getCriteria();
 
         if ($this->request->isPost()) {
@@ -73,18 +83,20 @@ class NormController extends RestController {
                 $this->flashNow('info', $this->clazz.' created.');
                 // $this->redirect($this->getRedirectUri());
 
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
 
                 h('controller.create.error', $this);
 
                 $this->flashNow('error', ''.$e);
             }
+
         }
 
         $this->data['entry'] = $entry;
     }
 
-    public function read($id) {
+    public function read($id)
+    {
         $this->data['entry'] = $this->collection->findOne($id);
 
         if (is_null($this->data['entry'])) {
@@ -92,7 +104,8 @@ class NormController extends RestController {
         }
     }
 
-    public function update($id) {
+    public function update($id)
+    {
         $entry = $this->collection->findOne($id);
         if (isset($entry)) {
             $entry = $entry->toArray();
@@ -109,7 +122,7 @@ class NormController extends RestController {
                 $this->flashNow('info', $this->clazz.' updated.');
                 // $this->redirect($this->getRedirectUri());
 
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
 
                 h('controller.update.error', $this);
 
@@ -119,7 +132,8 @@ class NormController extends RestController {
         $this->data['entry'] = $entry;
     }
 
-    public function delete($id) {
+    public function delete($id)
+    {
         $id = explode(',', $id);
         if ($this->request->isPost() || $this->request->isDelete()) {
 
@@ -140,7 +154,8 @@ class NormController extends RestController {
         $this->data['ids'] = $id;
     }
 
-    public function getRedirectUri() {
+    public function getRedirectUri()
+    {
         $continue = $this->request->get('@continue');
         if (empty($continue)) {
             return $this->getBaseUri();

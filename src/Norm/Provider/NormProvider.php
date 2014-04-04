@@ -84,24 +84,31 @@ namespace Norm\Provider;
  * )
  * </pre>
  */
-class NormProvider extends \Bono\Provider\Provider {
+class NormProvider extends \Bono\Provider\Provider
+{
     /**
      * Initialize the provider
      */
-    public function initialize() {
-        $dbConfig = $this->app->config('norm.datasources');
-        // DEPRECATED: norm.databases deprecated
-        if (is_null($dbConfig)) {
-            $dbConfig = $this->app->config('norm.databases');
+    public function initialize()
+    {
+        if (!isset($this->options['datasources'])) {
+            $this->options['datasources'] = $this->app->config('norm.datasources');
         }
 
-        if (is_null($dbConfig)) {
+        // DEPRECATED: norm.databases deprecated
+        if (!isset($this->options['datasources'])) {
+            $this->options['datasources'] = $this->app->config('norm.databases');
+        }
+
+        if (!isset($this->options['datasources'])) {
             throw new \Exception('[Norm] No data source configuration. Append "norm.datasources" bono configuration!');
         }
 
-        $collectionConfig = $this->app->config('norm.collections');
+        if (!isset($this->options['collections'])) {
+            $this->options['collections'] = $this->app->config('norm.collections');
+        }
 
-        \Norm\Norm::init($dbConfig, $collectionConfig);
+        \Norm\Norm::init($this->options['datasources'], $this->options['collections']);
 
         $controllerConfig = $this->app->config('bono.controllers');
         if (!isset($controllerConfig['default'])) {
