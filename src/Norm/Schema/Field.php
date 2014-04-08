@@ -124,7 +124,7 @@ abstract class Field implements \ArrayAccess
 
     public function label()
     {
-        return '<label>'.$this['label'].($this['filter-required'] ? '*' : '').'</label>';
+        return '<label>'.l($this['label']).($this['filter-required'] ? '*' : '').'</label>';
     }
 
     public function input($value, $entry = null)
@@ -141,7 +141,7 @@ abstract class Field implements \ArrayAccess
         }
         $classes = '';
 
-        return '<input type="text" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].'" autocomplete="off" class="'.$classes.'" />';
+        return '<input type="text" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.l($this['label']).'" autocomplete="off" class="'.$classes.'" />';
     }
 
     public function cell($value, $entry = null)

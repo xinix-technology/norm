@@ -137,9 +137,22 @@ class NormController extends RestController
         $id = explode(',', $id);
         if ($this->request->isPost() || $this->request->isDelete()) {
 
+            $single = false;
+            if (count($id) === 1) {
+                $single = true;
+            }
+
             $this->data['entries'] = array();
             foreach ($id as $value) {
                 $model = $this->collection->findOne($value);
+
+                if (is_null($model)) {
+                    if ($single) {
+                        $this->app->notFound();
+                    }
+                    continue;
+                }
+
                 $model->remove();
 
                 $this->data['entries'][] = $model;
@@ -162,5 +175,10 @@ class NormController extends RestController
         } else {
             return $continue;
         }
+    }
+
+    public function schema($schema = null)
+    {
+        return $this->collection->schema($schema);
     }
 }
