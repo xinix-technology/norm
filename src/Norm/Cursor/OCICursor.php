@@ -66,9 +66,7 @@ class OCICursor extends \Norm\Cursor implements ICursor {
 
     public function rewind() {
         $this->index = -1;
-
         $this->next();
-
     }
 
     // FIXME: krisanalfa Make a separate function to build where, matchOr, skip, limit, and order
@@ -108,15 +106,19 @@ class OCICursor extends \Norm\Cursor implements ICursor {
         if ($foundOnly) {
             if(!empty($wheres)) {
                 $query .= ' WHERE '.implode(' AND ', $wheres);
+
+                $statement = oci_parse($this->raw, $query);
+                foreach ($data as $key => $value) {
+                    oci_bind_by_name($statement, ':'.$key, $data[$key]);
+                }
+            } else {
+                $statement = oci_parse($this->raw, $query);
             }
+        } else {
+            $statement = oci_parse($this->raw, $query);
         }
 
-        $statement = oci_parse($this->raw, $query);
-
-        foreach ($data as $key => $value) {
-            oci_bind_by_name($statement, ':'.$key, $data[$key]);
-        }
-
+        $match = '';
         if($foundOnly) {
             if ($matchOrs) {
                 $match = '%'.$this->match.'%';
@@ -128,7 +130,6 @@ class OCICursor extends \Norm\Cursor implements ICursor {
         }
 
         oci_execute($statement);
-
         $result = array();
         while($row = oci_fetch_array($statement, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS)) {
             $result[] = $row;
@@ -151,13 +152,12 @@ class OCICursor extends \Norm\Cursor implements ICursor {
         if(is_null($criteria)){
             $criteria = array();
         }
-        
+
         if (array_key_exists('$id', $criteria)) {
             $criteria['id'] = $criteria['$id'];
             unset($criteria['$id']);
         }
 
-        
         return $criteria ? : array();
     }
 
@@ -165,20 +165,23 @@ class OCICursor extends \Norm\Cursor implements ICursor {
     public function execute() {
 
         $data = array();
-        $wheres = array();
         $matchOrs = array();
+        $wheres = array();
+        $order = '';
+        $limit = '';
+        $query = 'SELECT * FROM '.$this->collection->name;
 
         if (is_null($this->match)) {
             $criteria = $this->prepareCriteria($this->criteria);
+
             if($criteria) {
                 foreach ($criteria as $key => $value) {
                     $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
                 }
             }
         } else {
-            $schema = $this->collection->schema();
-
             $i = 0;
+            $schema = $this->collection->schema();
             foreach ($schema as $key => $value) {
                 if($value instanceof \Norm\Schema\Reference){
                     $foreign = $value['foreign'];
@@ -192,16 +195,6 @@ class OCICursor extends \Norm\Cursor implements ICursor {
             }
             $wheres[] = '('.implode(' OR ', $matchOrs).')';
         }
-
-        $select  = '';
-
-        if ($this->skip > 0 or $this->limit > 0) {
-            $select .= 'rownum r, ';
-        }
-
-        $select  .= $this->collection->name.'.*';
-        $query   = 'SELECT '.$select.' FROM '.$this->collection->name;
-        $order   = '';
 
         if($this->sortBy){
             foreach ($this->sortBy as $key => $value) {
@@ -217,30 +210,23 @@ class OCICursor extends \Norm\Cursor implements ICursor {
             }
         }
 
-        if(!empty($wheres)) {
+        if ($this->skip > 0) {
+            $limit = 'r > '.($this->skip);
+
+            if ($this->limit > 0) {
+                $limit = ' WHERE r > '.$this->skip.' AND ROWNUM <= ' . $this->limit;
+            }
+        } else if($this->limit > 0) {
+            $limit = ' WHERE ROWNUM <= ' . $this->limit;
+        }
+
+        if($wheres){
             $query .= ' WHERE '.implode(' AND ', $wheres);
         }
 
-        $limit = '';
+        $sql = 'SELECT * FROM (SELECT ROWNUM r, DATA.* FROM ('.$query.$order.') DATA )'.$limit;
 
-        if ($this->skip > 0) {
-            $limit = 'r > '.($this->skip).' AND ROWNUM <= (SELECT COUNT(ROWNUM) FROM ('.$query.'))';
-
-            if ($this->limit > 0) {
-                $limit = 'r > '.($this->skip).' AND ROWNUM <= ' . $this->limit;
-            }
-        } else if($this->limit > 0) {
-            $limit = 'ROWNUM <= ' . $this->limit;
-        }
-
-        $query .= $order;
-
-        if ($limit !== '') {
-            $query = 'SELECT * FROM ('.$query.') WHERE '.$limit;
-        }
-
-        $statement = oci_parse($this->raw, $query);
-
+        $statement = oci_parse($this->raw, $sql);
         foreach ($data as $key => $value) {
             oci_bind_by_name($statement, ':'.$key, $data[$key]);
         }
@@ -257,12 +243,12 @@ class OCICursor extends \Norm\Cursor implements ICursor {
 
         $result = array();
         while($row = oci_fetch_array($statement, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS)) {
+            unset($row['R']);
             $result[] = $row;
         }
         $this->rows = $result;
 
         oci_free_statement($statement);
-
         $this->index = -1;
     }
 

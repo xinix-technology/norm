@@ -62,7 +62,6 @@ class SQLDialect {
                 break;
         }
 
-
         if ($op == 'in') {
             $fgroup = array();
             foreach ($value as $k => $v) {
