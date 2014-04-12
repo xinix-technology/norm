@@ -112,7 +112,7 @@ abstract class Field implements \ArrayAccess
         return $this->get($offset);
     }
 
-    public function offsetSet ($offset , $value)
+    public function offsetSet ($offset, $value)
     {
         $this->set($offset, $value);
     }
@@ -139,9 +139,14 @@ abstract class Field implements \ArrayAccess
         if ($format = $this['inputFormat']) {
             return $format($value, $entry, $this);
         }
+
         $classes = '';
 
-        return '<input type="text" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].'" autocomplete="off" class="'.$classes.'" />';
+        return '<input type="text" name="'.
+            $this['name'].'" value="'.
+            (@$value).'" placeholder="'.
+            $this['label'].'" autocomplete="off" class="'.
+            $classes.'" />';
     }
 
     public function cell($value, $entry = null)

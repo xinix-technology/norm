@@ -2,62 +2,75 @@
 
 namespace Norm\Type;
 
-class NormArray implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator {
+class NormArray implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator
+{
     protected $attributes = array();
 
-    public function __construct($attributes) {
+    public function __construct($attributes)
+    {
         if ($attributes instanceof NormArray) {
             $attributes = $attributes->toArray();
         }
         $this->attributes = $attributes;
     }
 
-    public function jsonSerialize() {
+    public function jsonSerialize()
+    {
         return $this->attributes;
     }
 
-    public function offsetGet($key) {
+    public function offsetGet($key)
+    {
         return $this->attributes[$key];
     }
 
-    public function offsetSet($key, $value) {
+    public function offsetSet($key, $value)
+    {
         $this->attributes[$key] = $value;
     }
 
-    public function offsetExists($key) {
+    public function offsetExists($key)
+    {
         return isset($this->attributes[$key]);
     }
 
-    public function offsetUnset($key) {
+    public function offsetUnset($key)
+    {
         unset($this->attributes[$key]);
     }
 
-    public function has($o) {
+    public function has($o)
+    {
         return in_array($o, $this->attributes);
     }
 
-    public function current() {
+    public function current()
+    {
         return current($this->attributes);
     }
 
-    public function next() {
+    public function next()
+    {
         return next($this->attributes);
     }
 
-    public function key() {
+    public function key()
+    {
         return key($this->attributes);
     }
 
-    public function valid() {
+    public function valid()
+    {
         return $this->current();
     }
 
-    public function rewind() {
+    public function rewind()
+    {
         return reset($this->attributes);
     }
 
-    public function toArray() {
+    public function toArray()
+    {
         return $this->attributes;
     }
-
 }

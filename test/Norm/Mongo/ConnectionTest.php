@@ -8,10 +8,12 @@ use Norm\Model;
 
 require_once('Fixture.php');
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase {
+class ConnectionTest extends \PHPUnit_Framework_TestCase
+{
     private $connection;
 
-    public function setUp() {
+    public function setUp()
+    {
         $this->connection = Fixture::init();
     }
 
@@ -85,7 +87,8 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
     // }
 
 
-    public function testSort() {
+    public function testSort()
+    {
         $collection = Norm::factory('User');
 
         $a = $collection->find()->sort(array('firstName' => 1));
@@ -97,21 +100,24 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($a['firstName'], 'putra');
     }
 
-    public function testLimit() {
+    public function testLimit()
+    {
         $collection = Norm::factory('User');
 
         $a = $collection->find()->limit(2);
         $this->assertEquals($a->count(), 2);
     }
 
-    public function testSkip() {
+    public function testSkip()
+    {
         $collection = Norm::factory('User');
 
         $a = $collection->find()->skip(1);
         $this->assertEquals($a->getNext()->get('firstName'), 'farid');
     }
 
-    public function testExpressionNE() {
+    public function testExpressionNE()
+    {
         $collection = Norm::factory('User');
 
         $a = $collection->find(array(
@@ -123,7 +129,8 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         }
     }
 
-    public function testComplexCriteria() {
+    public function testComplexCriteria()
+    {
 
     }
 }

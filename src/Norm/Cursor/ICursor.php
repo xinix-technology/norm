@@ -2,7 +2,8 @@
 
 namespace Norm\Cursor;
 
-interface ICursor extends \Iterator {
+interface ICursor extends \Iterator
+{
     public function getNext();
 
     public function current();

@@ -8,14 +8,17 @@ use Norm\Model;
 
 require_once('Fixture.php');
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase {
+class ConnectionTest extends \PHPUnit_Framework_TestCase
+{
     private $connection;
 
-    public function setUp() {
+    public function setUp()
+    {
         $this->connection = Fixture::init();
     }
 
-    public function testInsert() {
+    public function testInsert()
+    {
         $firstName = 'adoel';
         $lastName = 'razman';
 
@@ -35,7 +38,8 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($model->get('lastName'), $lastName, 'has valid lastName field.');
     }
 
-    public function testUpdate() {
+    public function testUpdate()
+    {
         $lastName = 'putri';
 
         $collection = Norm::factory('User');
@@ -54,7 +58,8 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($model->get('lastName'), $lastName, 'has valid lastName field.');
     }
 
-    public function testRemove() {
+    public function testRemove()
+    {
 
         $collection = Norm::factory('User');
 
@@ -71,7 +76,8 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->assertNull($model, 'is null after deleted');
     }
 
-    public function testQuery() {
+    public function testQuery()
+    {
         $collection = Norm::factory('User');
 
         $a = $collection->find();
@@ -81,9 +87,9 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($a[0] instanceof Model, 'is able to get array of Model instances');
     }
 
-    public function tearDown() {
+    public function tearDown()
+    {
         $config = Fixture::config('norm.databases');
         exec('rm -fr '.$config['sqlite']['database']);
-
     }
 }

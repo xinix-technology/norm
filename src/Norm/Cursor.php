@@ -4,7 +4,8 @@ namespace Norm;
 
 use Norm\Cursor\ICursor;
 
-class Cursor implements ICursor,  \JsonKit\JsonSerializer {
+class Cursor implements ICursor, \JsonKit\JsonSerializer
+{
 
     protected $cursor;
 
@@ -12,40 +13,48 @@ class Cursor implements ICursor,  \JsonKit\JsonSerializer {
 
     protected $links;
 
-    public function __construct($cursor, $collection) {
+    public function __construct($cursor, $collection)
+    {
         $this->cursor = $cursor;
         $this->collection = $collection;
     }
 
-    public function getNext() {
+    public function getNext()
+    {
         $next = $this->cursor->getNext();
         if (isset($next)) {
             return $this->collection->attach($next);
         }
-        return NULL;
+        return null;
     }
 
-    public function current() {
+    public function current()
+    {
         return $this->collection->attach($this->cursor->current());
     }
 
-    public function next() {
+    public function next()
+    {
         $this->cursor->next();
     }
 
-    public function key() {
+    public function key()
+    {
         return $this->cursor->key();
     }
 
-    public function valid() {
+    public function valid()
+    {
         return $this->cursor->valid();
     }
 
-    public function rewind() {
+    public function rewind()
+    {
         return $this->cursor->rewind();
     }
 
-    public function toArray() {
+    public function toArray()
+    {
         $result = array();
         foreach ($this as $key => $value) {
             $result[] = $value;
@@ -53,35 +62,42 @@ class Cursor implements ICursor,  \JsonKit\JsonSerializer {
         return $result;
     }
 
-    public function limit($num) {
+    public function limit($num)
+    {
         $this->cursor->limit($num);
         return $this;
     }
 
-    public function sort(array $fields) {
+    public function sort(array $fields)
+    {
         $this->cursor->sort($fields);
         return $this;
     }
 
-    public function count($foundOnly = false) {
+    public function count($foundOnly = false)
+    {
         return $this->cursor->count($foundOnly);
     }
 
-    public function match($q) {
+    public function match($q)
+    {
         $this->cursor->match($q);
         return $this;
     }
 
-    public function skip($num) {
+    public function skip($num)
+    {
         $this->cursor->skip($num);
         return $this;
     }
 
-    public function links() {
+    public function links()
+    {
         return $this->links;
     }
 
-    public function jsonSerialize() {
+    public function jsonSerialize()
+    {
         return $this->toArray();
     }
 }

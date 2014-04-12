@@ -2,7 +2,8 @@
 
 namespace Norm\Dialect;
 
-class MySQLDialect extends SQLDialect {
+class MySQLDialect extends SQLDialect
+{
     protected $FIELD_MAP = array(
         'Norm\Schema\Boolean' => 'TINYINT',
         'Norm\Schema\DateTime' => 'DATETIME',
@@ -13,7 +14,8 @@ class MySQLDialect extends SQLDialect {
         'Norm\Schema\Text' => 'TEXT',
     );
 
-    public function listCollections() {
+    public function listCollections()
+    {
         $statement = $this->raw->query("SHOW TABLES");
         $result = $statement->fetchAll();
         $retval = array();
@@ -23,7 +25,8 @@ class MySQLDialect extends SQLDialect {
         return $retval;
     }
 
-    public function prepareCollection($collection) {
+    public function prepareCollection($collection)
+    {
         throw new \Exception('Not implemented yet! Please recheck the method later!');
         $collectionName = $collection->name;
         $collectionSchema = $collection->schema();
@@ -50,7 +53,7 @@ class MySQLDialect extends SQLDialect {
                 'name' => 'id',
                 'type' => 'INTEGER',
                 'notnull' => '1',
-                'dflt_value' => NULL,
+                'dflt_value' => null,
                 'pk' => '1',
                 'autoincrement' => '1',
             ),
@@ -62,7 +65,7 @@ class MySQLDialect extends SQLDialect {
         foreach ($collectionSchema as $schemaField) {
             $existingField = isset($fields[$schemaField['name']]) ? $fields[$schemaField['name']] : array();
             $clazz = get_class($schemaField);
-            $type = (isset($this->FIELD_MAP[$clazz])) ? $this->FIELD_MAP[$clazz] : NULL;
+            $type = (isset($this->FIELD_MAP[$clazz])) ? $this->FIELD_MAP[$clazz] : null;
 
             if (!isset($existingField['type']) || $existingField['type'] !== $type) {
                 $isUpdated = true;
@@ -126,7 +129,9 @@ class MySQLDialect extends SQLDialect {
         $this->raw->query($sql);
 
         if ($tableExist) {
-            $sql = 'INSERT INTO "' . $tmpTable . '" (' . implode(', ', $newFieldNames) . ') SELECT '.implode(', ', $oldFieldNames).' FROM "'.$collectionName.'"';
+            $sql = 'INSERT INTO "' . $tmpTable .
+                '" (' . implode(', ', $newFieldNames) . ') SELECT ' .
+                implode(', ', $oldFieldNames).' FROM "'.$collectionName.'"';
             $this->raw->query($sql);
             $sql = 'DROP TABLE "'.$collectionName.'"';
             $this->raw->query($sql);

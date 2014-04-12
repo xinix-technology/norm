@@ -38,7 +38,8 @@ namespace Norm\Filter;
 /**
  * Filter (validation) for database field
  */
-class Filter {
+class Filter
+{
 
     /**
      * Registries of available filters
@@ -63,7 +64,8 @@ class Filter {
      * @param  string $key   Key name of filter
      * @param  string $clazz PHP class to use
      */
-    public static function register($key, $clazz) {
+    public static function register($key, $clazz)
+    {
         static::$registries[$key] = $clazz;
     }
 
@@ -74,7 +76,8 @@ class Filter {
      * @param  array  $postFilter Filters that will be run after the filter
      * @return \Norm\Filter\Filter
      */
-    public static function fromSchema($schema, $preFilter = array(), $postFilter = array()) {
+    public static function fromSchema($schema, $preFilter = array(), $postFilter = array())
+    {
         $rules = array();
 
         foreach ($preFilter as $key => $filter) {
@@ -98,7 +101,8 @@ class Filter {
         return new static($rules);
     }
 
-    public static function create($filters = array()) {
+    public static function create($filters = array())
+    {
         $rules = array();
 
         foreach ($filters as $key => $filter) {
@@ -111,14 +115,16 @@ class Filter {
         return new static($rules);
     }
 
-    public function __construct($rules) {
+    public function __construct($rules)
+    {
         $this->rules = $rules;
     }
 
-    public function run($data, $key = NULL) {
+    public function run($data, $key = null)
+    {
         $this->errors = array();
 
-        foreach($this->rules as $k => $ruleChain) {
+        foreach ($this->rules as $k => $ruleChain) {
             foreach ($ruleChain as $rule) {
                 try {
                     if (is_string($rule)) {
@@ -129,7 +135,7 @@ class Filter {
                         }
                         $method = $method[0];
 
-                        if (method_exists($this, 'filter_'.$method)) {
+                        if (method_exists($this, 'filter'.ucfirst($method))) {
                             $method = 'filter_'.$method;
                             $data[$k] = $this->$method($k, $data[$k], $data, $args);
                         } elseif (isset(static::$registries[$method])) {
@@ -143,12 +149,12 @@ class Filter {
                     } elseif (is_callable($rule)) {
                         $data[$k] = call_user_func($rule, $k, $data[$k], $data, $args);
                     }
-                } catch(SkipException $e) {
+                } catch (SkipException $e) {
                     break;
-                } catch(FilterException $e) {
+                } catch (FilterException $e) {
                     $this->errors[] = ''.$e;
                     break;
-                } catch(\Exception $e) {
+                } catch (\Exception $e) {
                     $this->errors[] = $e->getMessage();
                     break;
                 }
@@ -157,18 +163,21 @@ class Filter {
         return $data;
     }
 
-    public function errors() {
+    public function errors()
+    {
         return $this->errors;
     }
 
-    public function filter_required($key, $value) {
+    public function filterRequired($key, $value)
+    {
         if (is_null($value) || $value === '') {
             throw FilterException::factory('Field %s is required')->name($key);
         }
         return $value;
     }
 
-    public function filter_confirmed($key, $value, $data) {
+    public function filterConfirmed($key, $value, $data)
+    {
         if ($value == '') {
             unset($data[$key]);
             unset($data[$key.'_confirmation']);
@@ -181,7 +190,8 @@ class Filter {
         return $value;
     }
 
-    public function filter_unique($key, $value, $data, $args = array()) {
+    public function filterUnique($key, $value, $data, $args = array())
+    {
         $clazz = $args[0];
         $field = isset($args[1]) ? $args[1] : $key;
         $model = \Norm\Norm::factory($clazz)->findOne(array($field => $value));
@@ -191,7 +201,8 @@ class Filter {
         return $value;
     }
 
-    public function filter_requiredWith($key, $value, $data, $args = array()) {
+    public function filterRequiredWith($key, $value, $data, $args = array())
+    {
         if (!empty($data[$args[0]]) && (is_null($value) || $value === '')) {
             throw FilterException::factory('Field %s is required')->name($key);
         }
@@ -199,7 +210,8 @@ class Filter {
 
     }
 
-    public function filter_requiredWithout($key, $value, $data, $args = array()) {
+    public function filterRequiredWithout($key, $value, $data, $args = array())
+    {
         if (empty($data[$args[0]]) && (is_null($value) || $value === '')) {
             throw FilterException::factory('Field %s is required')->name($key);
         }
@@ -207,7 +219,8 @@ class Filter {
 
     }
 
-    public function filter_min($key, $value, $data, $args = array()) {
+    public function filterMin($key, $value, $data, $args = array())
+    {
         if ($value < $args[0]) {
             throw FilterException::factory('Field %s less than '.$args[0])->name($key);
         }
@@ -215,11 +228,11 @@ class Filter {
 
     }
 
-    public function filter_ip($key, $value) {
+    public function filterIp($key, $value)
+    {
         if (!empty($value) && !filter_var($value, FILTER_VALIDATE_IP)) {
             throw FilterException::factory('Field %s is not valid IP Address')->name($key);
         }
         return $value;
     }
-
 }

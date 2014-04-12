@@ -2,21 +2,26 @@
 
 namespace Norm\Schema;
 
-class Password extends Field {
-    public function input($value, $entry = NULL) {
+class Password extends Field
+{
+    public function input($value, $entry = null)
+    {
         if ($this['readonly']) {
             return '<span class="field">*hidden*</span>';
         }
 
         return '
             <div class="row">
-                <input class="span-6" type="password" name="'.$this['name'].'" value="" placeholder="Password" autocomplete="off" />
-                <input class="span-6" type="password" name="'.$this['name'].'_confirmation" value="" placeholder="Password confirmation" autocomplete="off" />
+                <input class="span-6" type="password" name="'.$this['name'].
+                    '" value="" placeholder="Password" autocomplete="off" />
+                <input class="span-6" type="password" name="'.$this['name'].
+                    '_confirmation" value="" placeholder="Password confirmation" autocomplete="off" />
             </div>
         ';
     }
 
-    public function cell($value, $entry = NULL) {
+    public function cell($value, $entry = null)
+    {
         if ($this->has('cellFormat')) {
             return parent::cell($value, $entry);
         }
@@ -27,7 +32,8 @@ class Password extends Field {
     //     return $value;
     // }
 
-    public function toJSON($value) {
+    public function toJSON($value)
+    {
         return '';
     }
 }

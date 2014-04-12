@@ -47,7 +47,8 @@ namespace Norm\Filter;
  * raise and sub exceptions as array of exceptions raise on the same field name.
  *
  */
-class FilterException extends \Bono\Exception\RestException {
+class FilterException extends \Bono\Exception\RestException
+{
 
     /**
      * Database field name where exception raise
@@ -66,11 +67,13 @@ class FilterException extends \Bono\Exception\RestException {
      * @param  string $message Message of new exception
      * @return \Norm\Filter\FilterException
      */
-    public static function factory($message) {
+    public static function factory($message)
+    {
         return new static($message);
     }
 
-    function __construct($message = '', $code = 0, $exception = null) {
+    public function __construct($message = '', $code = 0, $exception = null)
+    {
         parent::__construct($message, 400, $exception);
     }
 
@@ -79,7 +82,8 @@ class FilterException extends \Bono\Exception\RestException {
      * @param  string $name The field name
      * @return FilterException return self object to be chained
      */
-    public function name($name) {
+    public function name($name)
+    {
         $this->name = $name;
         return $this;
     }
@@ -89,7 +93,8 @@ class FilterException extends \Bono\Exception\RestException {
      * @param  array $sub Sub exceptions
      * @return FilterException return self object to be chained
      */
-    public function sub($sub) {
+    public function sub($sub)
+    {
         $this->sub = $sub;
         return $this;
     }
@@ -98,7 +103,8 @@ class FilterException extends \Bono\Exception\RestException {
      * Return string representation for object
      * @return string representation for object
      */
-    public function __toString() {
+    public function __toString()
+    {
         $str = '';
         if (is_array($this->sub)) {
             foreach ($this->sub as $c) {

@@ -4,7 +4,8 @@ namespace Norm\Sqlite;
 
 use Norm\Norm;
 
-class Fixture {
+class Fixture
+{
     protected static $config = array(
         'norm.databases' => array(
             'sqlite' => array(
@@ -15,7 +16,8 @@ class Fixture {
         ),
     );
 
-    public static function config($key = '') {
+    public static function config($key = '')
+    {
         if (empty($key)) {
             return Fixture::$config;
         } else {
@@ -23,7 +25,8 @@ class Fixture {
         }
     }
 
-    public static function init() {
+    public static function init()
+    {
         Norm::reset();
         Norm::init(Fixture::config('norm.databases'));
 
@@ -31,13 +34,14 @@ class Fixture {
 
         $raw = $connection->getRaw();
 
+        $sql = "CREATE TABLE IF NOT EXISTS user (
+            id INTEGER PRIMARY KEY,
+            firstName TEXT,
+            lastName TEXT
+        )";
+
         $raw->exec("DROP TABLE IF EXISTS user");
-        $raw->exec("
-            CREATE TABLE IF NOT EXISTS user (
-              id INTEGER PRIMARY KEY,
-              firstName TEXT,
-              lastName TEXT
-            )");
+        $raw->exec($sql);
 
         $raw->exec("INSERT INTO user(firstName, lastName) VALUES('putra', 'pramana')");
 
