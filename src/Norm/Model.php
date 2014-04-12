@@ -245,6 +245,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      */
     public function toArray($fetchType = Model::FETCH_ALL)
     {
+
         if ($fetchType === Model::FETCH_RAW) {
             return $this->attributes;
         }
@@ -269,6 +270,12 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
                 }
 
             }
+        }
+
+        $hidden = (isset($this->collection->options['hidden'])) ? $this->collection->options['hidden'] : null;
+
+        if ($hidden) {
+            return array_diff_key($attributes, array_flip((array) $hidden));
         }
 
         return $attributes;
@@ -321,5 +328,4 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         }
         return $destination;
     }
-
 }
