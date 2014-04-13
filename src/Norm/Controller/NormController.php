@@ -80,14 +80,18 @@ class NormController extends RestController
 
                 h('controller.create.success', $this);
 
-                $this->flashNow('info', $this->clazz.' created.');
+                h('notification.info', $this->clazz.' created.');
+
+                // $this->flashNow('info', $this->clazz.' created.');
                 // $this->redirect($this->getRedirectUri());
 
             } catch (\Exception $e) {
 
                 h('controller.create.error', $this);
 
-                $this->flashNow('error', ''.$e);
+                h('notification.error', $e);
+
+                // $this->flashNow('error', $e);
             }
 
         }
@@ -119,14 +123,18 @@ class NormController extends RestController
 
                 h('controller.update.success', $this);
 
-                $this->flashNow('info', $this->clazz.' updated.');
+                h('notification.info', $this->clazz.' updated');
+
+                // $this->flashNow('info', $this->clazz.' updated.');
                 // $this->redirect($this->getRedirectUri());
 
             } catch (\Exception $e) {
 
                 h('controller.update.error', $this);
 
-                $this->flashNow('error', ''.$e);
+                h('notification.error', $e);
+
+                // $this->flashNow('error', $e);
             }
         }
         $this->data['entry'] = $entry;
@@ -160,7 +168,9 @@ class NormController extends RestController
 
             h('controller.delete.success', $this);
 
-            $this->flashNow('info', $this->clazz.' deleted.');
+            h('notification.info', $this->clazz.' deleted.');
+
+            // $this->flashNow('info', $this->clazz.' deleted.');
             // $this->redirect($this->getRedirectUri());
         }
 

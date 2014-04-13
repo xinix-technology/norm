@@ -2,10 +2,12 @@
 
 namespace Norm\Schema;
 
-class Date extends DateTime {
+class Date extends DateTime
+{
 
-    public function input($value, $entry = NULL) {
-        if(is_string($value)) {
+    public function input($value, $entry = null)
+    {
+        if (is_string($value)) {
             $value = new \Norm\Type\DateTime(date('c', strtotime($value)));
         }
 
@@ -25,10 +27,12 @@ class Date extends DateTime {
             $value = $value->format('Y-m-d');
         }
 
-        return '<input type="date" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].'" autocomplete="off" />';
+        return '<input type="date" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].
+            '" autocomplete="off" />';
     }
 
-    public function cell($value, $entry = NULL) {
+    public function cell($value, $entry = null)
+    {
         if ($this->has('cellFormat') && $format = $this['cellFormat']) {
             return $format($value, $entry);
         }

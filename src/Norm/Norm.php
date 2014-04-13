@@ -47,7 +47,8 @@ use Norm\Connection;
  * </code>
  *
  */
-class Norm {
+class Norm
+{
 
     /**
      * Register all connections.
@@ -78,8 +79,9 @@ class Norm {
      *
      * @param  array  $config [description]
      */
-    public static function init($config, $collectionConfig = array()) {
-        $first = NULL;
+    public static function init($config, $collectionConfig = array())
+    {
+        $first = null;
 
         static::$collectionConfig = $collectionConfig;
 
@@ -91,7 +93,10 @@ class Norm {
             $value['name'] = $key;
 
             if (!isset($value['driver'])) {
-                throw new \Exception('[Norm] Cannot instantiate connection "'.$key.'", Driver "'.@$value['driver'].'" not found!');
+                throw new \Exception(
+                    '[Norm] Cannot instantiate connection "'.$key.
+                    '", Driver "'.@$value['driver'].'" not found!'
+                );
             }
             $Driver = $value['driver'];
 
@@ -111,7 +116,8 @@ class Norm {
 
     }
 
-    public static function options($key, $value = ':get:') {
+    public static function options($key, $value = ':get:')
+    {
         if (is_array($key)) {
             foreach ($key as $k => $v) {
                 static::$options($k, $v);
@@ -126,13 +132,20 @@ class Norm {
         static::$options[$key] = $value;
     }
 
-    public static function registerCollection($key, $options) {
+    public static function registerCollection($key, $options)
+    {
         static::$collectionConfig['mapping'][$key] = $options;
     }
 
-    public static function createCollection($options) {
-        $defaultConfig = isset(static::$collectionConfig['default']) ? static::$collectionConfig['default'] : array();
-        $config = isset(static::$collectionConfig['mapping'][$options['name']]) ? static::$collectionConfig['mapping'][$options['name']] : array();
+    public static function createCollection($options)
+    {
+        $defaultConfig = isset(static::$collectionConfig['default'])
+            ? static::$collectionConfig['default']
+            : array();
+
+        $config = isset(static::$collectionConfig['mapping'][$options['name']])
+            ? static::$collectionConfig['mapping'][$options['name']]
+            : array();
         $config = array_merge_recursive($defaultConfig, $config);
 
         $options = array_merge_recursive($config, $options);
@@ -154,7 +167,8 @@ class Norm {
      * @param  string $connectionName [description]
      * @return Norm\Connection        [description]
      */
-    public static function getConnection($connectionName = '') {
+    public static function getConnection($connectionName = '')
+    {
         if (!$connectionName) {
             $connectionName = static::$defaultConnection;
         }
@@ -166,8 +180,9 @@ class Norm {
     /**
      * Reset connection registry
      */
-    public static function reset() {
-        static::$defaultConnection = NULL;
+    public static function reset()
+    {
+        static::$defaultConnection = null;
     }
 
     /**
@@ -178,7 +193,8 @@ class Norm {
      * @param  array  $parameters Parameters
      * @return mixed              Return value
      */
-    public static function __callStatic($method, $parameters) {
+    public static function __callStatic($method, $parameters)
+    {
         $connection = static::getConnection();
         if ($connection) {
             return call_user_func_array(array($connection, $method), $parameters);
@@ -186,5 +202,4 @@ class Norm {
             throw new \Exception("[Norm] No connection exists.");
         }
     }
-
 }

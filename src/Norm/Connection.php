@@ -38,32 +38,38 @@ namespace Norm;
 /**
  * Base class for connection instance
  */
-abstract class Connection extends Hookable {
+abstract class Connection extends Hookable
+{
     protected $options;
 
     protected $raw;
 
     protected $collections = array();
 
-    public function __construct($options) {
+    public function __construct($options)
+    {
         $this->options = $options;
 
         $this->initialize($options);
     }
 
-    public function getOptions() {
+    public function getOptions()
+    {
         return $this->options;
     }
 
-    public function getName() {
+    public function getName()
+    {
         return $this->options['name'];
     }
 
-    public function getRaw() {
+    public function getRaw()
+    {
         return $this->raw;
     }
 
-    public function factory($collectionName) {
+    public function factory($collectionName)
+    {
         if (!isset($this->collections[$collectionName])) {
             $collection = Norm::createCollection(array(
                 'name' => $collectionName,
@@ -78,7 +84,8 @@ abstract class Connection extends Hookable {
         return $this->collections[$collectionName];
     }
 
-    public function hasCollection($name) {
+    public function hasCollection($name)
+    {
         $collections = $this->listCollections();
         foreach ($collections as $key => $collection) {
             if ($collection === $name) {
@@ -88,7 +95,8 @@ abstract class Connection extends Hookable {
         return false;
     }
 
-    public function marshall($object) {
+    public function marshall($object)
+    {
 
         if (is_array($object)) {
             $result = array();
@@ -107,6 +115,8 @@ abstract class Connection extends Hookable {
             return $object->format('c');
         } elseif ($object instanceof \Norm\Type\NormArray) {
             return json_encode($object->toArray());
+        } elseif (method_exists($object, 'marshall')) {
+            return $object->marshall();
         } else {
             return $object;
         }

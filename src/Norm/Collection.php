@@ -267,17 +267,7 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
 
         if (is_null($key)) {
             $this->filter->run($model);
-            $errors = $this->filter->errors();
-
-            if ($errors) {
-                $err = new \Norm\Filter\FilterException();
-                throw $err->sub($errors);
-            }
         } else {
-            // $backtrace = debug_backtrace();
-            // foreach ($backtrace as $trace) {
-            //     var_dump($trace['file'].':'.$trace['line'].' -> '.$trace['class'].'::'.$trace['function']);
-            // }
             throw new \Exception(__METHOD__.' unimplemented selective field filter.');
         }
     }

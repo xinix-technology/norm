@@ -43,17 +43,18 @@ namespace Norm\Filter;
  * Filter (validation) will raise FilterException instead of return succeed or
  * failing condition.
  *
- * The FilterException contains information of field name where the exception
- * raise and sub exceptions as array of exceptions raise on the same field name.
+ * The FilterException contains information of field context where the exception
+ * raise and sub exceptions as array of exceptions raise on the same field context.
  *
  */
-class FilterException extends \Bono\Exception\RestException {
+class FilterException extends \Bono\Exception\RestException
+{
 
     /**
-     * Database field name where exception raise
+     * Database field context where exception raise
      * @var string
      */
-    protected $name;
+    protected $context;
 
     /**
      * Array of sub exceptions
@@ -61,26 +62,38 @@ class FilterException extends \Bono\Exception\RestException {
      */
     protected $sub;
 
+    protected $args;
+
+    protected $formatMessage;
+
     /**
      * Factory method to create new exception
      * @param  string $message Message of new exception
      * @return \Norm\Filter\FilterException
      */
-    public static function factory($message) {
-        return new static($message);
+    public static function factory($context, $message)
+    {
+        return (new static($message))->context($context);
     }
 
-    function __construct($message = '', $code = 0, $exception = null) {
+    public function __construct($message = '', $code = 0, $exception = null)
+    {
+        $this->formatMessage = $message;
         parent::__construct($message, 400, $exception);
     }
 
     /**
-     * Set field name of exception
-     * @param  string $name The field name
+     * Set field context of exception
+     * @param  string $context The field context
      * @return FilterException return self object to be chained
      */
-    public function name($name) {
-        $this->name = $name;
+    public function context($context = null)
+    {
+        if (is_null($context)) {
+            return $this->context;
+        }
+
+        $this->context = $context;
         return $this;
     }
 
@@ -89,29 +102,23 @@ class FilterException extends \Bono\Exception\RestException {
      * @param  array $sub Sub exceptions
      * @return FilterException return self object to be chained
      */
-    public function sub($sub) {
+    public function sub($sub = null)
+    {
+        if (is_null($sub)) {
+            return $this->sub;
+        }
+
         $this->sub = $sub;
         return $this;
     }
 
-    /**
-     * Return string representation for object
-     * @return string representation for object
-     */
-    public function __toString() {
-        $str = '';
-        if (is_array($this->sub)) {
-            foreach ($this->sub as $c) {
-                $str .= '<p>'.$c."</p>\n";
-            }
-        } else {
-            $str .= sprintf($this->getMessage(), $this->name);
-        }
-        return $str;
-    }
+    public function args()
+    {
+        $this->args = func_get_args();
 
-    // TODO i dont know why getMessage overriding dont work
-    // public function __toString() {
-    //     return $this->getMessage();
-    // }
+        $params = array_merge(array($this->formatMessage), $this->args);
+        $this->message = call_user_func_array('sprintf', $params);
+
+        return $this;
+    }
 }
