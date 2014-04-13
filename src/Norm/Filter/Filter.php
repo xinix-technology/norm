@@ -136,7 +136,7 @@ class Filter
                         $method = $method[0];
 
                         if (method_exists($this, 'filter'.ucfirst($method))) {
-                            $method = 'filter_'.$method;
+                            $method = 'filter'.ucfirst($method);
                             $data[$k] = $this->$method($k, $data[$k], $data, $args);
                         } elseif (isset(static::$registries[$method])) {
                             $method = static::$registries[$method];
