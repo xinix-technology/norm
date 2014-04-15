@@ -2,7 +2,8 @@
 
 namespace Norm\Cursor;
 
-class MongoCursor implements ICursor {
+class MongoCursor implements ICursor
+{
 
     protected $collection;
 
@@ -16,13 +17,15 @@ class MongoCursor implements ICursor {
 
     protected $cursor;
 
-    public function __construct($collection = null) {
+    public function __construct($collection = null)
+    {
         $this->collection = $collection;
 
         $this->criteria = $this->prepareCriteria($collection->criteria);
     }
 
-    public function getCursor() {
+    public function getCursor()
+    {
         if (is_null($this->cursor)) {
             $rawCollection = $this->collection->connection->getRaw()->{$this->collection->name};
 
@@ -46,8 +49,11 @@ class MongoCursor implements ICursor {
         return $this->cursor;
     }
 
-    public function prepareCriteria($criteria) {
-        if (empty($criteria)) return null;
+    public function prepareCriteria($criteria)
+    {
+        if (empty($criteria)) {
+            return null;
+        }
 
         $newCriteria = array();
 
@@ -57,7 +63,7 @@ class MongoCursor implements ICursor {
         }
 
         foreach ($criteria as $key => $value) {
-            $value = $value ?: NULL;
+            $value = $value ?: null;
             $splitted = explode('!', $key);
 
             if ($splitted[0][0] == '$') {
@@ -74,45 +80,55 @@ class MongoCursor implements ICursor {
         return $newCriteria;
     }
 
-    public function getNext() {
+    public function getNext()
+    {
         return $this->getCursor()->getNext();
     }
 
-    public function current() {
+    public function current()
+    {
         return $this->getCursor()->current();
     }
 
-    public function next() {
+    public function next()
+    {
         $this->getCursor()->next();
     }
 
-    public function key() {
+    public function key()
+    {
         return $this->getCursor()->key();
     }
 
-    public function valid() {
+    public function valid()
+    {
         return $this->getCursor()->valid();
     }
 
-    public function rewind() {
+    public function rewind()
+    {
         $this->getCursor()->rewind();
     }
 
-    public function limit($num) {
+    public function limit($num)
+    {
         $this->limit = $num;
         return $this;
     }
 
-    public function sort(array $fields) {
+    public function sort(array $fields)
+    {
         $this->sort = $fields;
         return $this;
     }
 
-    public function count($foundOnly = false) {
+    public function count($foundOnly = false)
+    {
         return $this->getCursor()->count($foundOnly);
     }
 
-    public function match($q) {
+    public function match($q)
+    {
         if (is_null($q)) {
             return $this;
         }
@@ -128,7 +144,8 @@ class MongoCursor implements ICursor {
         return $this;
     }
 
-    public function skip($num) {
+    public function skip($num)
+    {
         $this->skip = $num;
         return $this;
     }
