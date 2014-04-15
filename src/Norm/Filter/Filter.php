@@ -195,7 +195,7 @@ class Filter
         $clazz = $args[0];
         $field = isset($args[1]) ? $args[1] : $key;
         $model = \Norm\Norm::factory($clazz)->findOne(array($field => $value));
-        if(isset($model) && $model['$id'] != $data['$id']) {
+        if (isset($model) && $model['$id'] != $data['$id']) {
             throw FilterException::factory('Field %s must be unique')->name($key);
         }
         return $value;
