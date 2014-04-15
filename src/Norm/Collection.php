@@ -29,11 +29,16 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
         $this->connection = $options['connection'];
 
         if (isset($options['observers'])) {
-            foreach ($options['observers'] as $observer => $options) {
-                if (is_string($observer)) {
-                    $observer = new $observer($options);
+            foreach ($options['observers'] as $Observer => $options) {
+                if (is_int($Observer)) {
+                    $Observer = $options;
+                    $options = null;
                 }
-                $this->observe($observer);
+
+                if (is_string($Observer)) {
+                    $Observer = new $Observer($options);
+                }
+                $this->observe($Observer);
             }
         }
     }
