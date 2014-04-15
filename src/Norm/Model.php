@@ -58,6 +58,12 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     protected $attributes;
 
     /**
+     * Model old attributes before setting new attributes
+     * @var array
+     */
+    protected $oldAttributes;
+
+    /**
      * Model id.
      *
      * @var int|string
@@ -86,8 +92,16 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
         $this->set($attributes);
 
+        // populate oldAttributes
+        $this->populateOld();
+
+
     }
 
+    /**
+     * Reset model to deleted state
+     * @return void
+     */
     public function reset()
     {
         $this->id = null;
@@ -212,6 +226,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
             $this->id = $attributes['$id'];
         }
 
+        $this->populateOld();
+
     }
 
     public function prepare($key, $value, $schema = null)
@@ -322,4 +338,18 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         return $destination;
     }
 
+    protected function populateOld()
+    {
+        $this->oldAttributes = array();
+        if (is_array($this->attributes)) {
+            foreach ($this->attributes as $k => $v) {
+                $this->oldAttributes[$k] = $v;
+            }
+        }
+    }
+
+    public function previous($key)
+    {
+        return $this->oldAttributes[$key];
+    }
 }
