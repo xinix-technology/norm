@@ -163,7 +163,6 @@ class OCICursor extends \Norm\Cursor implements ICursor {
 
     // FIXME: krisanalfa Make a separate function to build where, matchOr, skip, limit, and order
     public function execute() {
-
         $data = array();
         $matchOrs = array();
         $wheres = array();
