@@ -6,12 +6,15 @@ class NormArray implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator
 {
     protected $attributes = array();
 
-    public function __construct($attributes)
+    public function __construct($attributes = null)
     {
-        if ($attributes instanceof NormArray) {
-            $attributes = $attributes->toArray();
+        if ($attributes) {
+            if ($attributes instanceof NormArray) {
+                $attributes = $attributes->toArray();
+            }
+            $this->attributes = $attributes;
         }
-        $this->attributes = $attributes;
+
     }
 
     public function jsonSerialize()
@@ -37,6 +40,11 @@ class NormArray implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator
     public function offsetUnset($key)
     {
         unset($this->attributes[$key]);
+    }
+
+    public function add($o)
+    {
+        $this->attributes[] = $o;
     }
 
     public function has($o)
@@ -73,5 +81,4 @@ class NormArray implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator
     {
         return $this->attributes;
     }
-
 }

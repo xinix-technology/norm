@@ -101,16 +101,37 @@ class NormController extends RestController
 
     public function read($id)
     {
-        $this->data['entry'] = $this->collection->findOne($id);
+        $found = false;
+        try {
+            $this->data['entry'] = $entry = $this->collection->findOne($id);
+            if (isset($entry)) {
+                $found = true;
+            }
+        } catch (\Exception $e) {
 
-        if (is_null($this->data['entry'])) {
-            $this->app->notFound();
+        }
+
+        if (!$found) {
+            return $this->app->notFound();
         }
     }
 
     public function update($id)
     {
-        $entry = $this->collection->findOne($id);
+        $found = false;
+        try {
+            $entry = $this->collection->findOne($id);
+            if (isset($entry)) {
+                $found = true;
+            }
+        } catch (\Exception $e) {
+
+        }
+
+        if (!$found) {
+            return $this->app->notFound();
+        }
+
         if (isset($entry)) {
             $entry = $entry->toArray();
         }

@@ -348,8 +348,11 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         }
     }
 
-    public function previous($key)
+    public function previous($key = null)
     {
+        if (is_null($key)) {
+            return $this->oldAttributes;
+        }
         return $this->oldAttributes[$key];
     }
 }

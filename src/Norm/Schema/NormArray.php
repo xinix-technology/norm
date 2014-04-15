@@ -2,12 +2,14 @@
 
 namespace Norm\Schema;
 
-class NormArray extends Field {
+class NormArray extends Field
+{
 
-    public function prepare($value) {
+    public function prepare($value)
+    {
 
-        if(empty($value)){
-            return '';
+        if (empty($value)) {
+            return new \Norm\Type\NormArray();
         }
 
         if (is_string($value)) {
@@ -17,4 +19,17 @@ class NormArray extends Field {
         return new \Norm\Type\NormArray($value);
     }
 
+    public function input($value, $entry = null)
+    {
+        $texts = array();
+        if ($value) {
+            if ($value instanceof \Norm\Type\NormArray) {
+                $value = $value->toArray();
+            }
+            $value = implode(',', $value);
+        }
+
+
+        return parent::input($value, $entry);
+    }
 }
