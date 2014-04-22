@@ -8,25 +8,22 @@ use Bono\App;
 class Reference extends Field
 {
 
-    // protected $foreign;
-    // protected $foreignLabel;
-    // protected $foreignKey;
-    // protected $byCriteria;
-
-    public function to($foreign, $foreignKey, $foreignLabel = null)
+    public function to($foreign, $foreignKey = null, $foreignLabel = null)
     {
-        $this->set('foreign', $foreign);
-        if (is_null($foreignLabel)) {
-            $this->set('foreignLabel', $foreignKey);
-            $this->set('foreignKey', null);
+        $argc = func_num_args();
+        if ($argc === 1) {
+            $this['foreignKey']  = '$id';
+            $this['foreignLabel']  = 'name';
+        } elseif ($argc === 2) {
+            $this['foreignKey'] = '$id';
+            $this['foreignLabel'] = $foreignKey;
         } else {
-            $this->set('foreignLabel', $foreignLabel);
-            $this->set('foreignKey', $foreignKey);
+            $this['foreignKey'] = $foreignKey;
+            $this['foreignLabel'] = $foreignLabel;
         }
 
-        if (!$this['foreignKey']) {
-            $this->set('foreignKey', '$id');
-        }
+        $this['foreign'] = $foreign;
+
         return $this;
     }
 
@@ -44,27 +41,23 @@ class Reference extends Field
             throw new \Exception('Reference schema should invoke Reference::to()');
         }
 
-        $foreign = Norm::factory($this['foreign']);
-
         if ($this['readonly']) {
-            if (is_null($this['foreignKey'])) {
-                $entry = Norm::factory($this['foreign'])->findOne($value);
+            if (is_array($this['foreign'])) {
+                $label = $this['foreign'][$value];
             } else {
-                $criteria = array($this['foreignKey'] => $value);
-                $entry = Norm::factory($this['foreign'])->findOne($criteria);
+                $entry = Norm::factory($this['foreign'])->findOne(array($this['foreignKey'] => $value));
+                if (is_callable($this['foreignLabel'])) {
+                    $getLabel = $this['foreignLabel'];
+                    $label = $getLabel($entry);
+                } else {
+                    $label = $entry[$this['foreignLabel']];
+                }
             }
 
-            if (is_callable($this['foreignLabel'])) {
-                $getLabel = $this['foreignLabel'];
-                $label = $getLabel($entry);
-            } else {
-                $label = $entry[$this['foreignLabel']];
-            }
             return '<span class="field">'.$label.'</span>';
         }
 
-        $template = '_schema/reference';
-        $template = $app->theme->resolve($template);
+        $template = $app->theme->resolve('_schema/reference');
 
         return $app->theme->partial($template, array(
             'self' => $this,
@@ -89,6 +82,15 @@ class Reference extends Field
         //     return $html;
         // }
 
+    }
+
+    public function findOptions()
+    {
+        if (is_array($this['foreign'])) {
+            return $this['foreign'];
+        }
+        // FIXME please fix this to adapt options by $this['byCriteria']
+        return Norm::factory($this['foreign'])->find();
     }
 
     public function getRaw($value)
