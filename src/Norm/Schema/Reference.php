@@ -106,7 +106,9 @@ class Reference extends Field
             return '';
         }
 
-        if (is_null($this['foreignKey'])) {
+        if (is_array($this['foreign'])) {
+            return $this['foreign'][$value];
+        } elseif (is_null($this['foreignKey'])) {
             $model = Norm::factory($this['foreign'])->findOne($value);
         } else {
             $criteria = array($this['foreignKey'] => $value);
