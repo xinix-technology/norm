@@ -8,10 +8,12 @@ use Norm\Model;
 use Norm\Type\DateTime;
 use Norm\Cursor\MongoCursor;
 
-class MongoConnection extends Connection {
+class MongoConnection extends Connection
+{
     // protected $client;
 
-    public function initialize($options) {
+    public function initialize($options)
+    {
         $defaultOptions = array(
             'hostname' => \MongoClient::DEFAULT_HOST,
             'port' => \MongoClient::DEFAULT_PORT,
@@ -45,7 +47,8 @@ class MongoConnection extends Connection {
     //     return $this->client;
     // }
 
-    public function listCollections() {
+    public function listCollections()
+    {
         $retval = array();
 
         $collections = $this->raw->listCollections();
@@ -60,12 +63,15 @@ class MongoConnection extends Connection {
     //     // noop
     // }
 
-    public function prepare(Collection $collection, $object) {
+    public function prepare(Collection $collection, $object)
+    {
         $newObject = array(
             '$id' => (string) $object['_id'],
         );
         foreach ($object as $key => $value) {
-            if ($key === '_id') continue;
+            if ($key === '_id') {
+                continue;
+            }
             if ($key[0] === '_') {
                 $key[0] = '$';
             }
@@ -78,11 +84,13 @@ class MongoConnection extends Connection {
         return $newObject;
     }
 
-    public function query(Collection $collection) {
+    public function query(Collection $collection)
+    {
         return new MongoCursor($collection);
     }
 
-    public function save(Collection $collection, Model $model) {
+    public function save(Collection $collection, Model $model)
+    {
         $collectionName = $collection->name;
 
         $schemes = $collection->schema();
@@ -93,7 +101,12 @@ class MongoConnection extends Connection {
             $criteria = array(
                 '_id' => new \MongoId($model->getId()),
             );
-            $modified = $this->raw->$collectionName->findAndModify($criteria, array('$set' => $modified), null, array('new' => true));
+            $modified = $this->raw->$collectionName->findAndModify(
+                $criteria,
+                array('$set' => $modified),
+                null,
+                array('new' => true)
+            );
             $result['ok'] = 1;
         } else {
             $result = $this->raw->$collectionName->insert($modified);
@@ -106,7 +119,8 @@ class MongoConnection extends Connection {
         return $result['ok'];
     }
 
-    public function marshall($object) {
+    public function marshall($object)
+    {
         if ($object instanceof \Norm\Type\DateTime) {
             return new \MongoDate($object->getTimestamp());
         } elseif ($object instanceof \Norm\Type\NormArray) {
@@ -116,7 +130,8 @@ class MongoConnection extends Connection {
         }
     }
 
-    public function remove(Collection $collection, $model) {
+    public function remove(Collection $collection, $model)
+    {
         $collectionName = $collection->name;
 
         if ($model instanceof Model) {
@@ -129,5 +144,4 @@ class MongoConnection extends Connection {
 
         return $this->raw->$collectionName->remove($criteria);
     }
-
 }
