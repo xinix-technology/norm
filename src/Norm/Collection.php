@@ -43,6 +43,11 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
         }
     }
 
+    public function option($key)
+    {
+        return $this->options[$key] ?: null;
+    }
+
     public function observe($observer)
     {
         if (method_exists($observer, 'saving')) {
