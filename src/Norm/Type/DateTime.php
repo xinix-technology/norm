@@ -14,4 +14,9 @@ class DateTime extends \DateTime implements \JsonKit\JsonSerializer
     {
         return $this->format('c');
     }
+
+    public function normalize()
+    {
+        return (string) $this;
+    }
 }

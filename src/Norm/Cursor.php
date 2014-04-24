@@ -2,7 +2,9 @@
 
 namespace Norm;
 
+use JsonKit\JsonKit;
 use Norm\Cursor\ICursor;
+use Norm\Model;
 
 class Cursor implements ICursor, \JsonKit\JsonSerializer
 {
@@ -22,9 +24,11 @@ class Cursor implements ICursor, \JsonKit\JsonSerializer
     public function getNext()
     {
         $next = $this->cursor->getNext();
+
         if (isset($next)) {
             return $this->collection->attach($next);
         }
+
         return null;
     }
 
@@ -53,13 +57,34 @@ class Cursor implements ICursor, \JsonKit\JsonSerializer
         return $this->cursor->rewind();
     }
 
-    public function toArray()
+    public function toArray($normalize = false)
     {
         $result = array();
+
         foreach ($this as $key => $value) {
+            if ($value instanceof Model) {
+                $value = $value->toArray();
+            }
+
+            if ($normalize) {
+                $value = $this->normalize($value);
+            }
+
             $result[] = $value;
         }
+
         return $result;
+    }
+
+    public function normalize(array $object)
+    {
+        foreach ($object as $key => $value) {
+            if (is_object($value)) {
+                $object[$key] = $value->normalize();
+            }
+        }
+
+        return $object;
     }
 
     public function limit($num)
@@ -96,8 +121,13 @@ class Cursor implements ICursor, \JsonKit\JsonSerializer
         return $this->links;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize($normalize = false)
     {
-        return $this->toArray();
+        return $this->toArray($normalize);
+    }
+
+    public function __toString()
+    {
+        return JsonKit::encode($this->toArray(true));
     }
 }
