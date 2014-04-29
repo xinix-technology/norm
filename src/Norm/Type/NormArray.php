@@ -73,4 +73,9 @@ class NormArray implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator
     {
         return $this->attributes;
     }
+
+    public function normalize()
+    {
+        return $this->attributes;
+    }
 }
