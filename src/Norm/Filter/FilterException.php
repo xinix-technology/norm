@@ -73,7 +73,8 @@ class FilterException extends \Bono\Exception\RestException
      */
     public static function factory($context, $message)
     {
-        return (new static($message))->context($context);
+        $o = new static($message);
+        return $o->context($context);
     }
 
     public function __construct($message = '', $code = 0, $exception = null)

@@ -164,7 +164,8 @@ class Filter
         }
 
         if ($this->errors) {
-            throw (new FilterException())->sub($this->errors);
+            $e = new FilterException();
+            throw $e->sub($this->errors);
         }
 
         return $data;
