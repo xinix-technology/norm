@@ -44,6 +44,8 @@ class Reference extends Field
         if ($this['readonly']) {
             if (is_array($this['foreign'])) {
                 $label = $this['foreign'][$value];
+            } elseif (is_callable($this['foreign'])) {
+                $label = $this['foreign']($value);
             } else {
                 $entry = Norm::factory($this['foreign'])->findOne(array($this['foreignKey'] => $value));
                 if (is_callable($this['foreignLabel'])) {
@@ -88,6 +90,8 @@ class Reference extends Field
     {
         if (is_array($this['foreign'])) {
             return $this['foreign'];
+        } elseif (is_callable($this['foreign'])) {
+            return $this['foreign']();
         }
         // FIXME please fix this to adapt options by $this['byCriteria']
         return Norm::factory($this['foreign'])->find();
@@ -108,6 +112,8 @@ class Reference extends Field
 
         if (is_array($this['foreign'])) {
             return $this['foreign'][$value];
+        } elseif (is_callable($this['foreign'])) {
+            return $this['foreign']($value);
         } elseif (is_null($this['foreignKey'])) {
             $model = Norm::factory($this['foreign'])->findOne($value);
         } else {
