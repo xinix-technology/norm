@@ -22,13 +22,16 @@ class DateTime extends Field
 
     public function input($value, $entry = null)
     {
+        $value = $this->prepare($value);
+
         if ($this['readonly']) {
-            return '<span class="field">'.$value.'</span>';
+            return '<span class="field">'.($value ? $value->format('c') : '').'</span>';
         }
         if ($format = $this['inputFormat']) {
             return $format($value, $entry);
         }
-        if ($value) {
+        // FIXME this format is datetime-local format
+        if ($value && !is_string($value)) {
             $value = $value->format("Y-m-d\TH:i");
         }
         return '<input type="datetime-local" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.
