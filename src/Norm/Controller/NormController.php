@@ -210,6 +210,9 @@ class NormController extends RestController
 
     public function schema($schema = null)
     {
+        if (func_num_args() === 0) {
+            return $this->collection->schema();
+        }
         return $this->collection->schema($schema);
     }
 }

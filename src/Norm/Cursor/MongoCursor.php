@@ -22,6 +22,8 @@ class MongoCursor implements ICursor
         $this->collection = $collection;
 
         $this->criteria = $this->prepareCriteria($collection->criteria);
+
+        // var_dump('criteria', $this->criteria);
     }
 
     public function getCursor()
@@ -49,6 +51,52 @@ class MongoCursor implements ICursor
         return $this->cursor;
     }
 
+    public function grammarExpression($key, $value)
+    {
+        if ($key === '!or' || $key === '!and') {
+            $newValue = array();
+            foreach ($value as $v) {
+                $newValue[] = $this->prepareCriteria($v, true);
+            }
+
+            return array('$'.substr($key, 1), $newValue);
+        }
+
+        $splitted = explode('!', $key, 2);
+
+        $field = $splitted[0];
+
+        $schema = $this->collection->schema($field);
+
+        if (strlen($field) > 0 && $field[0] === '$') {
+            $field = '_'.substr($field, 1);
+        }
+
+        $operator = '$eq';
+        if (isset($splitted[1])) {
+            switch ($splitted[1]) {
+                case 'like':
+                    return array($field, array('$regex', new \MongoRegex("/$value/i")));
+                case 'regex':
+                    return array($field, array('$regex', new \MongoRegex($value)));
+                default:
+                    $operator = '$'.$splitted[1];
+                    break;
+            }
+        }
+
+        if ($field === '_id') {
+            return array($field, array($operator => new \MongoId($value)));
+        }
+
+        if (!is_null($schema)) {
+            $value = $schema->prepare($value);
+        }
+        $value = $this->collection->connection->marshall($value);
+
+        return array($field, array($operator => $value));
+    }
+
     public function prepareCriteria($criteria)
     {
         if (empty($criteria)) {
@@ -57,24 +105,12 @@ class MongoCursor implements ICursor
 
         $newCriteria = array();
 
-        if (!empty($criteria['$id'])) {
-            $newCriteria['_id'] = new \MongoId($criteria['$id']);
-            unset($criteria['$id']);
-        }
-
         foreach ($criteria as $key => $value) {
-            $value = $value ?: null;
-            $splitted = explode('!', $key);
-
-            if ($splitted[0][0] == '$') {
-                $splitted[0] = '_'.substr($splitted[0], 1);
+            list($newKey, $newValue) = $this->grammarExpression($key, $value);
+            if (!isset($newCriteria[$newKey])) {
+                $newCriteria[$newKey] = array();
             }
-
-            if (count($splitted) > 1) {
-                $newCriteria[$splitted[0]] = array( '$'.$splitted[1] => $value );
-            } else {
-                $newCriteria[$splitted[0]] = $value;
-            }
+            $newCriteria[$newKey] = array_merge($newCriteria[$newKey], $newValue);
         }
 
         return $newCriteria;

@@ -93,8 +93,6 @@ class MongoConnection extends Connection
     {
         $collectionName = $collection->name;
 
-        $schemes = $collection->schema();
-
         $modified = $this->marshall($model->dump());
 
         if ($model->getId()) {

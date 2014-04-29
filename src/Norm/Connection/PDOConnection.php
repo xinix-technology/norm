@@ -72,7 +72,7 @@ class PDOConnection extends \Norm\Connection {
         }
 
         $collectionName = $collection->name;
-        $schemes = $collection->schema();
+        // $schemes = $collection->schema();
         $data = $this->marshall($model->dump());
         $result = false;
 

@@ -69,7 +69,7 @@ class OCIConnection extends \Norm\Connection {
 
     public function save(Collection $collection, Model $model) {
         $collectionName = $collection->name;
-        $schemes = $collection->schema();
+        // $schemes = $collection->schema();
         $data = $this->marshall($model->dump());
         $result = false;
 

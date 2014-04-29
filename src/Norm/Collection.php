@@ -81,23 +81,25 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
             $this->options['schema'] = array();
         }
 
-        if (is_null($schema)) {
+        if (func_num_args() === 0) {
             return $this->options['schema'];
-        } else {
+        } elseif (is_array($schema)) {
             $this->options['schema'] = $schema;
+        } elseif (empty($schema)) {
+            $this->options['schema'] = array();
+        } elseif (isset($this->options['schema'][$schema])) {
+            return $this->options['schema'][$schema];
         }
     }
 
     public function prepare($key, $value, $schema = null)
     {
         if (is_null($schema)) {
-            $collectionSchema = $this->schema();
-
-            if (!array_key_exists($key, $collectionSchema)) {
+            $schema = $this->schema($key);
+            if (is_null($schema)) {
                 return $value;
                 // throw new \Exception('Cannot prepare data to set. Schema not found for key ['.$key.'].');
             }
-            $schema = $collectionSchema[$key];
         }
         return $schema->prepare($value);
     }
