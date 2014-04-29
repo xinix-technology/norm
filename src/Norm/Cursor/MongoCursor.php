@@ -86,7 +86,11 @@ class MongoCursor implements ICursor
         }
 
         if ($field === '_id') {
-            return array($field, array($operator => new \MongoId($value)));
+            if ($operator === '$eq') {
+                return array($field, new \MongoId($value));
+            } else {
+                return array($field, array($operator => new \MongoId($value)));
+            }
         }
 
         if (!is_null($schema)) {
@@ -94,7 +98,11 @@ class MongoCursor implements ICursor
         }
         $value = $this->collection->connection->marshall($value);
 
-        return array($field, array($operator => $value));
+        if ($operator === '$eq') {
+            return array($field, $value);
+        } else {
+            return array($field, array($operator => $value));
+        }
     }
 
     public function prepareCriteria($criteria)
@@ -107,10 +115,16 @@ class MongoCursor implements ICursor
 
         foreach ($criteria as $key => $value) {
             list($newKey, $newValue) = $this->grammarExpression($key, $value);
-            if (!isset($newCriteria[$newKey])) {
-                $newCriteria[$newKey] = array();
+
+            if (is_array($newValue)) {
+                if (!isset($newCriteria[$newKey])) {
+                    $newCriteria[$newKey] = array();
+                }
+                $newCriteria[$newKey] = array_merge($newCriteria[$newKey], $newValue);
+            } else {
+                $newCriteria[$newKey] = $newValue;
             }
-            $newCriteria[$newKey] = array_merge($newCriteria[$newKey], $newValue);
+
         }
 
         return $newCriteria;
