@@ -43,7 +43,7 @@ class Historical
                     continue;
                 }
 
-                $old = null;
+                $new = null;
                 if (isset($newValues[$key])) {
                     $new = $newValues[$key];
                 }
