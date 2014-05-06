@@ -198,16 +198,6 @@ class NormController extends RestController
         $this->data['ids'] = $id;
     }
 
-    public function getRedirectUri()
-    {
-        $continue = $this->request->get('!continue');
-        if (empty($continue)) {
-            return $this->getBaseUri();
-        } else {
-            return $continue;
-        }
-    }
-
     public function schema($schema = null)
     {
         if (func_num_args() === 0) {
