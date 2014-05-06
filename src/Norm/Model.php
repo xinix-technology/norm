@@ -22,6 +22,10 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     const FETCH_PUBLISHED   = 'FETCH_PUBLISHED';
     const FETCH_HIDDEN      = 'FETCH_HIDDEN';
 
+    const STATE_ATTACHED    = 'STATE_ATTACHED';
+    const STATE_DETACHED    = 'STATE_DETACHED';
+    const STATE_REMOVED     = 'STATE_REMOVED';
+
     /**
      * Collection object of model.
      *
@@ -70,6 +74,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      */
     protected $id = null;
 
+    protected $state = '';
+
     /**
      * Constructor.
      *
@@ -86,8 +92,11 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
         if (isset($attributes['$id'])) {
             $this->id = $attributes['$id'];
-            // FIXME reekoheek $attributes['$id'] should be removed. is it ok?
             unset($attributes['$id']);
+
+            $this->state = static::STATE_ATTACHED;
+        } else {
+            $this->state = static::STATE_DETACHED;
         }
 
         $this->set($attributes);
@@ -354,5 +363,20 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
             return $this->oldAttributes;
         }
         return $this->oldAttributes[$key];
+    }
+
+    public function getState()
+    {
+        return $this->state;
+    }
+
+    public function isNew()
+    {
+        return ($this->state === static::STATE_DETACHED);
+    }
+
+    public function isRemoved()
+    {
+        return ($this->state === static::STATE_REMOVED);
     }
 }

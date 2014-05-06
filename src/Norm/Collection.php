@@ -122,9 +122,10 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
                 'collection' => $this,
             ));
         } else {
-            return new Model($doc, array(
+            $model = new Model($doc, array(
                 'collection' => $this,
             ));
+            return $model;
         }
     }
 
@@ -267,7 +268,9 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
 
         $this->applyHook('saved', $model, $options);
 
+        $this->state = Model::STATE_ATTACHED;
         $this->criteria = null;
+
         return $result;
     }
 
