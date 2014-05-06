@@ -200,7 +200,7 @@ class NormController extends RestController
 
     public function getRedirectUri()
     {
-        $continue = $this->request->get('@continue');
+        $continue = $this->request->get('!continue');
         if (empty($continue)) {
             return $this->getBaseUri();
         } else {
