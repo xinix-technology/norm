@@ -46,7 +46,7 @@ class Reference extends Field
                 $label = $this['foreign'][$value];
             } elseif (is_callable($this['foreign'])) {
                 $label = $this['foreign']($value);
-            } else {
+            } elseif ($entry) {
                 $entry = Norm::factory($this['foreign'])->findOne(array($this['foreignKey'] => $value));
                 if (is_callable($this['foreignLabel'])) {
                     $getLabel = $this['foreignLabel'];
@@ -54,6 +54,8 @@ class Reference extends Field
                 } else {
                     $label = $entry[$this['foreignLabel']];
                 }
+            } else {
+                $label = '';
             }
 
             return '<span class="field">'.$label.'</span>';

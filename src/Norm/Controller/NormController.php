@@ -47,7 +47,10 @@ class NormController extends RestController
 
     public function getLimit()
     {
-        $limit = $this->request->get('!limit') ?: null;
+        $limit = $this->request->get('!limit') ?:
+            isset($this->collection->options['limit'])
+                ? $this->collection->options['limit']
+                : null;
         return $limit;
     }
 
@@ -78,18 +81,22 @@ class NormController extends RestController
                 $model = $this->collection->newInstance();
                 $result = $model->set($entry)->save();
 
-                h('controller.create.success', $this);
-
                 h('notification.info', $this->clazz.' created.');
 
-                // $this->flashNow('info', $this->clazz.' created.');
-                // $this->redirect($this->getRedirectUri());
+                h('controller.create.success', array(
+                    'model' => $model
+                ));
 
+            } catch (\Slim\Exception\Stop $e) {
+                throw $e;
             } catch (\Exception $e) {
 
-                h('controller.create.error', $this);
-
                 h('notification.error', $e);
+
+                h('controller.create.error', array(
+                    'model' => $model,
+                    'error' => $e,
+                ));
 
                 // $this->flashNow('error', $e);
             }
@@ -142,20 +149,21 @@ class NormController extends RestController
                 $model = $this->collection->findOne($id);
                 $model->set($entry)->save();
 
-                h('controller.update.success', $this);
-
                 h('notification.info', $this->clazz.' updated');
 
-                // $this->flashNow('info', $this->clazz.' updated.');
-                // $this->redirect($this->getRedirectUri());
-
+                h('controller.update.success', array(
+                    'model' => $model,
+                ));
+            } catch (\Slim\Exception\Stop $e) {
+                throw $e;
             } catch (\Exception $e) {
-
-                h('controller.update.error', $this);
 
                 h('notification.error', $e);
 
-                // $this->flashNow('error', $e);
+                h('controller.update.error', array(
+                    'error' => $error,
+                    'model' => $model,
+                ));
             }
         }
         $this->data['entry'] = $entry;
@@ -187,12 +195,11 @@ class NormController extends RestController
                 $this->data['entries'][] = $model;
             }
 
-            h('controller.delete.success', $this);
-
             h('notification.info', $this->clazz.' deleted.');
 
-            // $this->flashNow('info', $this->clazz.' deleted.');
-            // $this->redirect($this->getRedirectUri());
+            h('controller.delete.success', array(
+                'models' => $this->data['entries'],
+            ));
         }
 
         $this->data['ids'] = $id;

@@ -370,6 +370,11 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         return $this->state;
     }
 
+    public function setState($state)
+    {
+        $this->state = $state;
+    }
+
     public function isNew()
     {
         return ($this->state === static::STATE_DETACHED);

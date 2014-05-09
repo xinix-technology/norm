@@ -268,7 +268,7 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
 
         $this->applyHook('saved', $model, $options);
 
-        $this->state = Model::STATE_ATTACHED;
+        $model->setState(Model::STATE_ATTACHED);
         $this->criteria = null;
 
         return $result;

@@ -73,12 +73,18 @@ class MongoCursor implements ICursor
         }
 
         $operator = '$eq';
+        $multiValue = false;
         if (isset($splitted[1])) {
             switch ($splitted[1]) {
                 case 'like':
                     return array($field, array('$regex', new \MongoRegex("/$value/i")));
                 case 'regex':
                     return array($field, array('$regex', new \MongoRegex($value)));
+                case 'in':
+                case 'nin':
+                    $operator = '$'.$splitted[1];
+                    $multiValue = true;
+                    break;
                 default:
                     $operator = '$'.$splitted[1];
                     break;
@@ -93,8 +99,17 @@ class MongoCursor implements ICursor
             }
         }
 
-        if (!is_null($schema)) {
-            $value = $schema->prepare($value);
+        if (isset($schema)) {
+            if ($multiValue) {
+                $newValue = array();
+                foreach ($value as $k => $v) {
+                    $newValue[] = $schema->prepare($v);
+                }
+                $value = $newValue;
+            } else {
+                $value = $schema->prepare($value);
+            }
+
         }
         $value = $this->collection->connection->marshall($value);
 
@@ -110,6 +125,7 @@ class MongoCursor implements ICursor
         if (empty($criteria)) {
             return null;
         }
+
 
         $newCriteria = array();
 
