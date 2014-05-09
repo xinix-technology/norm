@@ -47,7 +47,7 @@ namespace Norm\Filter;
  * raise and sub exceptions as array of exceptions raise on the same field name.
  *
  */
-class FilterException extends \Bono\Exception\RestException {
+class FilterException extends \RuntimeException {
 
     /**
      * Database field name where exception raise
