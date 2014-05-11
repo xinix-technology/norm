@@ -84,7 +84,12 @@ class SQLDialect
                 return '(1)';
             }
             return $key . ' ' . $op . ' ('.implode(', ', $fgroup).')';
-        } else {
+        } elseif($op == 'like'){
+            $this->expressionCounter++;
+            $data['f'.$this->expressionCounter] = '%'.$value.'%';
+            return $key . ' ' . $op . ' :f' . $this->expressionCounter;
+        }
+        else {
             $this->expressionCounter++;
             $data['f'.$this->expressionCounter] = $value;
             return $key . ' ' . $op . ' :f' . $this->expressionCounter;
