@@ -42,23 +42,23 @@ class Reference extends Field
         }
 
         if ($this['readonly']) {
+
             if (is_array($this['foreign'])) {
                 $label = $this['foreign'][$value];
             } elseif (is_callable($this['foreign'])) {
                 $label = $this['foreign']($value);
-            } elseif ($entry) {
-                $entry = Norm::factory($this['foreign'])->findOne(array($this['foreignKey'] => $value));
-                if (is_callable($this['foreignLabel'])) {
-                    $getLabel = $this['foreignLabel'];
-                    $label = $getLabel($entry);
-                } else {
-                    $label = $entry[$this['foreignLabel']];
-                }
             } else {
-                $label = '';
+                $foreignEntry = Norm::factory($this['foreign'])->findOne(array($this['foreignKey'] => $value));
+
+                if (is_string($this['foreignLabel'])) {
+                    $label = $foreignEntry[$this['foreignLabel']];
+                } elseif (is_callable($this['foreignLabel'])) {
+                    $getLabel = $this['foreignLabel'];
+                    $label = $getLabel($foreignEntry);
+                }
             }
 
-            return '<span class="field">'.$label.'</span>';
+            return '<span class="field">'.@$label.'</span>';
         }
 
         $template = $app->theme->resolve('_schema/reference');
