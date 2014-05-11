@@ -64,7 +64,7 @@ class SQLDialect
             case 'lt':
                 $op = '<';
                 break;
-            case 'lt':
+            case 'lte':
                 $op = '<=';
                 break;
         }
