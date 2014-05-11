@@ -103,11 +103,17 @@ class MongoCursor implements ICursor
             if ($multiValue) {
                 $newValue = array();
                 foreach ($value as $k => $v) {
-                    $newValue[] = $schema->prepare($v);
+                    // FIXME ini quickfix buat query norm array seperti mongo
+                    if (!$schema instanceof \Norm\Schema\NormArray) {
+                        $newValue[] = $schema->prepare($v);
+                    }
                 }
                 $value = $newValue;
             } else {
-                $value = $schema->prepare($value);
+                // FIXME ini quickfix buat query norm array seperti mongo
+                if (!$schema instanceof \Norm\Schema\NormArray) {
+                    $value = $schema->prepare($value);
+                }
             }
 
         }
@@ -125,7 +131,6 @@ class MongoCursor implements ICursor
         if (empty($criteria)) {
             return null;
         }
-
 
         $newCriteria = array();
 
