@@ -63,14 +63,20 @@ class Cursor implements ICursor, JsonSerializer
         return $result;
     }
 
-    public function limit($num)
+    public function limit($num = null)
     {
+        if (func_num_args() === 0) {
+            return $this->cursor->limit();
+        }
         $this->cursor->limit($num);
         return $this;
     }
 
-    public function sort(array $fields)
+    public function sort(array $fields = array())
     {
+        if (func_num_args() === 0) {
+            return $this->cursor->sort();
+        }
         $this->cursor->sort($fields);
         return $this;
     }
@@ -86,8 +92,11 @@ class Cursor implements ICursor, JsonSerializer
         return $this;
     }
 
-    public function skip($num)
+    public function skip($num = null)
     {
+        if (func_num_args() === 0) {
+            return $this->cursor->skip();
+        }
         $this->cursor->skip($num);
         return $this;
     }

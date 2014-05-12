@@ -181,14 +181,20 @@ class MongoCursor implements ICursor
         $this->getCursor()->rewind();
     }
 
-    public function limit($num)
+    public function limit($num = null)
     {
-        $this->limit = $num;
+        if (func_num_args() === 0) {
+            return $this->limit;
+        }
+        $this->limit = (int) $num;
         return $this;
     }
 
-    public function sort(array $fields)
+    public function sort(array $fields = array())
     {
+        if (func_num_args() === 0) {
+            return $this->sort;
+        }
         $this->sort = $fields;
         return $this;
     }
@@ -215,9 +221,12 @@ class MongoCursor implements ICursor
         return $this;
     }
 
-    public function skip($num)
+    public function skip($num = null)
     {
-        $this->skip = $num;
+        if (func_num_args() === 0) {
+            return $this->skip;
+        }
+        $this->skip = (int) $num;
         return $this;
     }
 }

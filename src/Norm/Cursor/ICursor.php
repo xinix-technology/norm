@@ -16,13 +16,13 @@ interface ICursor extends \Iterator
 
     public function rewind();
 
-    public function limit($num);
+    public function limit($num = null);
 
-    public function sort(array $fields);
+    public function sort(array $fields = array());
 
-    public function count();
+    public function count($force = true);
 
     public function match($q);
 
-    public function skip($num);
+    public function skip($num = null);
 }
