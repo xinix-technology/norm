@@ -31,7 +31,7 @@ class DateTime extends Field
     public function presetReadonly($value, $entry = null)
     {
         $value = $this->prepare($value);
-        return '<span class="field">'.($value ? $value->format('c') : '').'</span>';
+        return '<span class="field">'.($value ? $value->format('c') : '&nbsp;').'</span>';
     }
 
     // DEPRECATED replaced by Field::render

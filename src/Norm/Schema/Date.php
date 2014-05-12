@@ -24,7 +24,7 @@ class Date extends DateTime
             $value->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
         }
 
-        return '<span class="field">'.($value ? $value->format('Y-m-d') : '').'</span>';
+        return '<span class="field">'.($value ? $value->format('Y-m-d') : '&nbsp;').'</span>';
     }
 
     // DEPRECATED replaced by Field::render

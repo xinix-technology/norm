@@ -183,7 +183,10 @@ abstract class Field implements \ArrayAccess
 
     public function presetInput($value, $entry = null)
     {
-        return '<input type="text" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.l($this['label']).
+        if (!empty($value)) {
+            $value = htmlentities($value);
+        }
+        return '<input type="text" name="'.$this['name'].'" value="'.$value.'" placeholder="'.l($this['label']).
             '" autocomplete="off" />';
     }
 
