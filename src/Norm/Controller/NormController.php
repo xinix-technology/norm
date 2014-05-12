@@ -144,6 +144,7 @@ class NormController extends RestController
         }
 
         if ($this->request->isPost() || $this->request->isPut()) {
+
             try {
                 $entry = array_merge($entry, $this->request->post());
                 $model = $this->collection->findOne($id);
