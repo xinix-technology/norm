@@ -19,8 +19,13 @@ class Boolean extends Field
         ';
     }
 
-    public function presetReadonly($value, $entry = null)
+    public function presetPlain($value, $entry = null)
     {
         return $value ? 'True' : 'False';
+    }
+
+    public function presetReadonly($value, $entry = null)
+    {
+        return '<span class="field">'.$this->presetPlain($value, $entry).'</span>';
     }
 }
