@@ -2,12 +2,15 @@
 
 namespace Norm\Schema;
 
-class Boolean extends Field {
-    public function input($value, $entry = NULL) {
-        if ($this['readonly']) {
-            return parent::input($value ? 'True' : 'False', $entry);
-        }
+class Boolean extends Field
+{
+    public function prepare($value)
+    {
+        return (boolean) $value;
+    }
 
+    public function presetInput($value, $entry = null)
+    {
         return '
             <select name="'.$this['name'].'">
                 <option value="0" '.(!$value ? 'selected' : '').'>False</option>
@@ -16,11 +19,8 @@ class Boolean extends Field {
         ';
     }
 
-    public function cell($value, $entry = NULL) {
+    public function presetReadonly($value, $entry = null)
+    {
         return $value ? 'True' : 'False';
-    }
-
-    public function prepare($value) {
-        return (boolean) $value;
     }
 }

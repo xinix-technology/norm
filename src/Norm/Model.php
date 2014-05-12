@@ -384,4 +384,14 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     {
         return ($this->state === static::STATE_REMOVED);
     }
+
+    public function render($key, $preset = 'plain')
+    {
+        $value = $this[$key];
+        $schema = $this->collection->schema($key);
+        if (isset($schema)) {
+            return $schema->render($preset, $value);
+        }
+        return $value;
+    }
 }

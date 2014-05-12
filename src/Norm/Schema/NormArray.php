@@ -2,6 +2,8 @@
 
 namespace Norm\Schema;
 
+use \Norm\Type\NormArray as TypeArray;
+
 class NormArray extends Field
 {
 
@@ -9,27 +11,43 @@ class NormArray extends Field
     {
 
         if (empty($value)) {
-            return new \Norm\Type\NormArray();
-        }
-
-        if (is_string($value)) {
+            return new TypeArray();
+        } elseif ($value instanceof TypeArray) {
+            return $value;
+        } elseif (is_string($value)) {
             $value = json_decode($value);
         }
 
-        return new \Norm\Type\NormArray($value);
+        return new TypeArray($value);
     }
 
-    public function input($value, $entry = null)
+    public function presetReadonly($value, $entry = null)
     {
-        $texts = array();
-        if ($value) {
-            if ($value instanceof \Norm\Type\NormArray) {
-                $value = $value->toArray();
-            }
-            $value = implode(',', $value);
+        $value = $this->prepare($value);
+        if (isset($value)) {
+            // TODO this checking should available on JsonKit
+            // if (substr(phpversion(), 0, 3) === '5.3') {
+            //     $value = json_encode($value->toArray(), JSON_PRETTY_PRINT);
+            // } else {
+            $value = json_encode($value->toArray());
+            // }
         }
 
+        return parent::presetReadonly($value, $entry);
+    }
 
-        return parent::input($value, $entry);
+    public function presetInput($value, $entry = null)
+    {
+        $value = $this->prepare($value);
+        if (isset($value)) {
+            // TODO this checking should available on JsonKit
+            // if (substr(phpversion(), 0, 3) === '5.3') {
+            //     $value = json_encode($value->toArray(), JSON_PRETTY_PRINT);
+            // } else {
+            $value = json_encode($value->toArray());
+            // }
+        }
+
+        return '<textarea name="'.$this['name'].'">'.$value.'</textarea>';
     }
 }

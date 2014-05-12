@@ -2,16 +2,7 @@
 
 namespace Norm\Type;
 
-class Object implements \JsonKit\JsonSerializer
+class Object extends Collection
 {
-    public function __construct($attributes)
-    {
-        // FIXME unimplemented yet!
-        throw new \Exception('Unimplemented yet!');
-    }
 
-    public function jsonSerialize()
-    {
-        throw new \Exception('Unimplemented yet!');
-    }
 }

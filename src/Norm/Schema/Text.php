@@ -4,19 +4,22 @@ namespace Norm\Schema;
 
 class Text extends String
 {
-    public function input($value, $entry = null)
+
+    public function presetReadonly($value, $entry = null)
     {
-        if ($this['readonly']) {
-            return parent::input(nl2br($value), $entry);
-        }
-        return '<textarea name="'.$this['name'].'">'.(@$value).'</textarea>';
+        return parent::presetReadonly(nl2br($value), $entry);
     }
 
-    public function cell($value, $entry = null)
+    public function presetInput($value, $entry = null)
     {
-        if ($this->has('cellFormat') && $format = $this['cellFormat']) {
-            return $format($value, $entry);
-        }
-        return substr($value, 0, 75).'...';
+        return '<textarea name="'.$this['name'].'">'.$value.'</textarea>';
     }
+
+    // public function cell($value, $entry = null)
+    // {
+    //     if ($this->has('cellFormat') && $format = $this['cellFormat']) {
+    //         return $format($value, $entry);
+    //     }
+    //     return substr($value, 0, 75).'...';
+    // }
 }

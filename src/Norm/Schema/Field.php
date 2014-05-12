@@ -14,6 +14,8 @@ abstract class Field implements \ArrayAccess
 
     protected $filter = array();
 
+    protected $presets = array();
+
     /**
      * Get new instance of field schema
      *
@@ -54,6 +56,27 @@ abstract class Field implements \ArrayAccess
     public function prepare($value)
     {
         return $value;
+    }
+
+    public function preset($name, $callable = null)
+    {
+        if (is_null($callable)) {
+            $name = $name ?: 'plain';
+
+            if (isset($this->presets[$name])) {
+                return $this->presets[$name];
+            }
+
+            $method = 'preset'.strtoupper($name[0]).substr($name, 1);
+
+            if (method_exists($this, $method)) {
+                return array($this, $method);
+            } else {
+                return array($this, 'plain');
+            }
+        }
+        $this->presets[$name] = $callable;
+        return $this;
     }
 
     public function filter()
@@ -122,49 +145,65 @@ abstract class Field implements \ArrayAccess
         unset($this->attributes[$offset]);
     }
 
-    public function label()
+    public function label($plain = false)
     {
-        return '<label>'.l($this['label']).($this['filter-required'] ? '*' : '').'</label>';
+
+        $label = l($this['label']);
+        if ($plain) {
+            return $plain;
+        }
+        return '<label>'.$label.($this['filter-required'] ? '*' : '').'</label>';
     }
 
-    public function input($value, $entry = null)
-    {
-        if ($this['readonly']) {
-            if ($format = $this['inputFormat']) {
-                return $format($value, $entry, $this);
-            } else {
-                return '<span class="field">'.$value.'</span>';
-            }
-        }
-        if ($format = $this['inputFormat']) {
-            return $format($value, $entry, $this);
-        }
-        $classes = '';
-
-        return '<input type="text" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.l($this['label']).
-            '" autocomplete="off" class="'.$classes.'" />';
-    }
-
-    public function cell($value, $entry = null)
-    {
-        if ($this->has('cellFormat') && $format = $this['cellFormat']) {
-            return $format($value, $entry, $this);
-        }
-        return $value;
-    }
 
     public function toJSON($value)
     {
         return $value;
     }
 
-    public function cellRaw($value)
+    public function render($preset, $value, $entry = null)
+    {
+        // force to render readonly preset if you want to render readonly input
+        if ($preset === 'input' && $this['readonly']) {
+            $preset = 'readonly';
+        }
+        $fn = $this->preset($preset);
+        return $fn($value, $entry);
+    }
+
+    public function presetPlain($value, $entry = null)
     {
         return $value;
     }
 
-    public function getInputInRaw($value)
+    public function presetReadonly($value, $entry = null)
     {
-        return '<span class="field">'.$value.'</span>';
+        return "<span class=\"field\">".($value ?: '&nbsp;')."</span>";
     }
+
+    public function presetInput($value, $entry = null)
+    {
+        return '<input type="text" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.l($this['label']).
+            '" autocomplete="off" />';
+    }
+
+    // DEPRECATED method: input, cell, cellRaw, getInputInRaw replaced with render with preset
+
+    // public function cell($value, $entry = null)
+    // {
+    //     if ($this->has('cellFormat') && $format = $this['cellFormat']) {
+    //         return $format($value, $entry, $this);
+    //     }
+    //     return $value;
+    // }
+    //
+    // public function cellRaw($value)
+    // {
+    //     return $value;
+    // }
+
+    // public function getInputInRaw($value)
+    // {
+    //     return '<span class="field">'.$value.'</span>';
+    // }
 }

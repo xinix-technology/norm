@@ -8,9 +8,9 @@ class DateTime extends Field
     {
         if (empty($value)) {
             return null;
-        }
-
-        if ($value instanceof \DateTime) {
+        } elseif ($value instanceof \Norm\Type\DateTime) {
+            return $value;
+        } elseif ($value instanceof \DateTime) {
             $t = $value->format('c');
         } elseif (is_string($value)) {
             $t = date('c', strtotime($value));
@@ -20,29 +20,26 @@ class DateTime extends Field
         return new \Norm\Type\DateTime($t);
     }
 
-    public function input($value, $entry = null)
+    public function presetInput($value, $entry = null)
     {
         $value = $this->prepare($value);
-
-        if ($this['readonly']) {
-            return '<span class="field">'.($value ? $value->format('c') : '').'</span>';
-        }
-        if ($format = $this['inputFormat']) {
-            return $format($value, $entry);
-        }
-        // FIXME this format is datetime-local format
-        if ($value && !is_string($value)) {
-            $value = $value->format("Y-m-d\TH:i");
-        }
-        return '<input type="datetime-local" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.
+        return '<input type="datetime-local" name="'.$this['name'].'" value="'.
+            ($value ? $value->format("Y-m-d\TH:i") : '').'" placeholder="'.
             $this['label'].'" autocomplete="off" />';
     }
 
-    public function cell($value, $entry = null)
+    public function presetReadonly($value, $entry = null)
     {
-        if ($this->has('cellFormat') && $format = $this['cellFormat']) {
-            return $format($value, $entry);
-        }
-        return $value->format('Y-m-d H:i:s a');
+        $value = $this->prepare($value);
+        return '<span class="field">'.($value ? $value->format('c') : '').'</span>';
     }
+
+    // DEPRECATED replaced by Field::render
+    // public function cell($value, $entry = null)
+    // {
+    //     if ($this->has('cellFormat') && $format = $this['cellFormat']) {
+    //         return $format($value, $entry);
+    //     }
+    //     return $value->format('Y-m-d H:i:s a');
+    // }
 }

@@ -5,37 +5,34 @@ namespace Norm\Schema;
 class Date extends DateTime
 {
 
-    public function input($value, $entry = null)
+    public function presetInput($value, $entry = null)
     {
-        if (is_string($value)) {
-            $value = new \Norm\Type\DateTime(date('c', strtotime($value)));
-        }
-
+        $value = $this->prepare($value);
         if ($value) {
             $value->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
         }
 
-        if ($this['readonly']) {
-            return '<span class="field">'.(($value) ? $value->format('Y-m-d') : '').'</span>';
-        }
-
-        if ($format = $this['inputFormat']) {
-            return $format($value, $entry);
-        }
-
-        if ($value) {
-            $value = $value->format('Y-m-d');
-        }
-
-        return '<input type="date" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].
+        return '<input type="date" name="'.$this['name'].'" value="'.($value ? $value->format('Y-m-d') : '').
+            '" placeholder="'.$this['label'].
             '" autocomplete="off" />';
     }
 
-    public function cell($value, $entry = null)
+    public function presetReadonly($value, $entry = null)
     {
-        if ($this->has('cellFormat') && $format = $this['cellFormat']) {
-            return $format($value, $entry);
+        $value = $this->prepare($value);
+        if ($value) {
+            $value->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
         }
-        return $value->format('Y-m-d');
+
+        return '<span class="field">'.($value ? $value->format('Y-m-d') : '').'</span>';
     }
+
+    // DEPRECATED replaced by Field::render
+    // public function cell($value, $entry = null)
+    // {
+    //     if ($this->has('cellFormat') && $format = $this['cellFormat']) {
+    //         return $format($value, $entry);
+    //     }
+    //     return $value->format('Y-m-d');
+    // }
 }
