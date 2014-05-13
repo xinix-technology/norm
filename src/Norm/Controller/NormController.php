@@ -162,7 +162,7 @@ class NormController extends RestController
                 h('notification.error', $e);
 
                 h('controller.update.error', array(
-                    'error' => $error,
+                    'error' => $e,
                     'model' => $model,
                 ));
             }

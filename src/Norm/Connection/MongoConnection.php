@@ -123,6 +123,8 @@ class MongoConnection extends Connection
             return new \MongoDate($object->getTimestamp());
         } elseif ($object instanceof \Norm\Type\NormArray) {
             return $object->toArray();
+        } elseif ($object instanceof \Norm\Type\Object) {
+            return $object->toObject();
         } else {
             return parent::marshall($object);
         }

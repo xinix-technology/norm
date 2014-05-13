@@ -15,7 +15,7 @@ class Object extends Field
         } elseif ($value instanceof TypeObject) {
             return $value;
         } elseif (is_string($value)) {
-            $value = json_decode($value);
+            $value = json_decode($value, true);
         }
 
         return new TypeObject($value);
@@ -29,7 +29,7 @@ class Object extends Field
             // if (substr(phpversion(), 0, 3) === '5.3') {
             //     $value = json_encode($value->toArray(), JSON_PRETTY_PRINT);
             // } else {
-            $value = json_encode($value->toArray());
+            $value = json_encode($value->toObject());
             // }
         }
 
@@ -44,7 +44,7 @@ class Object extends Field
             // if (substr(phpversion(), 0, 3) === '5.3') {
             //     $value = json_encode($value->toArray(), JSON_PRETTY_PRINT);
             // } else {
-            $value = json_encode($value->toArray());
+            $value = json_encode($value->toObject());
             // }
         }
 

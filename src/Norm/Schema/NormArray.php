@@ -15,7 +15,7 @@ class NormArray extends Field
         } elseif ($value instanceof TypeArray) {
             return $value;
         } elseif (is_string($value)) {
-            $value = json_decode($value);
+            $value = json_decode($value, true);
         }
 
         return new TypeArray($value);
