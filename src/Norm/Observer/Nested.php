@@ -2,12 +2,15 @@
 
 namespace Norm\Observer;
 
-class Nested {
-    public function saved($model) {
-        $this->rebuildTree($model->collection, NULL, 0);
+class Nested
+{
+    public function saved($model)
+    {
+        $this->rebuildTree($model->collection, null, 0);
     }
 
-    public function removing($model) {
+    public function removing($model)
+    {
         $collection = $model->collection;
         $entries = $collection->find(array('$lft!gt' => $model['$lft'], '$rgt!lt' => $model['$rgt']));
 
@@ -16,11 +19,13 @@ class Nested {
         }
     }
 
-    public function removed($model) {
-        $this->rebuildTree($model->collection, NULL, 0);
+    public function removed($model)
+    {
+        $this->rebuildTree($model->collection, null, 0);
     }
 
-    protected function rebuildTree($collection, $parent, $left) {
+    protected function rebuildTree($collection, $parent, $left)
+    {
         $right = $left + 1;
 
         // get all children of this node

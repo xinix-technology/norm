@@ -12,11 +12,13 @@ use Norm\Schema\Integer;
 
 require_once('Fixture.php');
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase {
+class ConnectionTest extends \PHPUnit_Framework_TestCase
+{
     private $connection;
 
 
-    public function setUp() {
+    public function setUp()
+    {
         $config = array(
             'norm.databases' => array(
                 'oracle' => array(
@@ -51,10 +53,10 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
             ),
         );
 
-        Norm::init($config['norm.databases'],$config['norm.collections']);
+        Norm::init($config['norm.databases'], $config['norm.collections']);
     }
 
-    // public function testConnection(){
+    // public function testConnection() {
     //     $user = Norm::factory('Users');
     //     $this->assertNotEmpty($user);
     // }
@@ -116,7 +118,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
     //     $this->assertNull($model, 'is null after deleted');
     // }
 
-    // public function testSort(){
+    // public function testSort() {
     //     $collection = Norm::factory('Test');
 
     //     $sortParam = array(
@@ -143,7 +145,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
     //     }
     // }
 
-    // public function testLimit(){
+    // public function testLimit() {
     //     $collection = Norm::factory('Test');
 
     //     $max = 8;
@@ -157,7 +159,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
     //     $this->assertEquals($max, count($data), 'has valid count data.');
     // }
 
-    // public function testSkip(){
+    // public function testSkip() {
     //     $collection = Norm::factory('Test');
 
     //     $s = 10;
@@ -171,7 +173,8 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
     //     $this->assertLessThan($data[0]['rnum'], $s);
     // }
 
-    public function testCount(){
+    public function testCount()
+    {
         $collection = Norm::factory('Test');
 
         $cursor = $collection->find()->count();
@@ -180,11 +183,3 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         exit();
     }
 }
-
-
-
-
-
-
-
-

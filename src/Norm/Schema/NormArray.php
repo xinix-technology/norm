@@ -2,11 +2,13 @@
 
 namespace Norm\Schema;
 
-class NormArray extends Field {
+class NormArray extends Field
+{
 
-    public function prepare($value) {
+    public function prepare($value)
+    {
 
-        if(empty($value)){
+        if (empty($value)) {
             return '';
         }
 
@@ -16,5 +18,4 @@ class NormArray extends Field {
 
         return new \Norm\Type\NormArray($value);
     }
-
 }

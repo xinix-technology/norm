@@ -7,14 +7,16 @@ use Bono\App;
 
 // TODO recheck this implementation later
 // FIXME remove all properties and add attributes by set()
-class Reference extends Field {
+class Reference extends Field
+{
 
     // protected $foreign;
     // protected $foreignLabel;
     // protected $foreignKey;
     // protected $byCriteria;
 
-    public function to($foreign, $foreignKey, $foreignLabel = null) {
+    public function to($foreign, $foreignKey, $foreignLabel = null)
+    {
         $this->set('foreign', $foreign);
         if (is_null($foreignLabel)) {
             $this->set('foreignLabel', $foreignKey);
@@ -30,12 +32,14 @@ class Reference extends Field {
         return $this;
     }
 
-    public function by($byCriteria) {
+    public function by($byCriteria)
+    {
         $this->set('byCriteria', $byCriteria);
         return $this;
     }
 
-    public function input($value, $entry = NULL) {
+    public function input($value, $entry = null)
+    {
         $app = App::getInstance();
 
         $foreign = Norm::factory($this['foreign']);
@@ -73,7 +77,10 @@ class Reference extends Field {
         //     $html = '<select name="'.$this['name'].'"><option value="">---</option>';
 
         //     foreach($entries as $k => $entry) {
-        //         $html .= '<option value="'.$entry[$this['foreignKey']].'" '.($entry[$this['foreignKey']] == $value ? 'selected' : '').'>'.$entry[$this['foreignLabel']].'</option>';
+        //         $html .= '<option value="'.
+        //         $entry[$this['foreignKey']].'" '.
+        //         ($entry[$this['foreignKey']] == $value ? 'selected' : '').'>'.
+        //         $entry[$this['foreignLabel']].'</option>';
         //     }
 
         //     $html .= '</select>';
@@ -83,11 +90,13 @@ class Reference extends Field {
 
     }
 
-    public function getRaw($value) {
+    public function getRaw($value)
+    {
         return $value;
     }
 
-    public function cell($value, $entry = NULL) {
+    public function cell($value, $entry = null)
+    {
         $label = '';
 
         if (empty($value)) {
@@ -113,16 +122,17 @@ class Reference extends Field {
         return $label;
     }
 
-    public function prepare($value) {
+    public function prepare($value)
+    {
         if ($value instanceof \Norm\Model) {
             $value = $value->getId();
         }
 
         if (empty($value)) {
-            $value = NULL;
+            $value = null;
         }
 
-        if(! is_null($this['foreignKey'])) {
+        if (! is_null($this['foreignKey'])) {
             $field = @Norm::factory($this['foreign'])->options['schema'][$this['foreignKey']];
             if ($field) {
                 $value = $field->prepare($value);
@@ -132,7 +142,8 @@ class Reference extends Field {
         return $value;
     }
 
-    public function toJSON($value) {
+    public function toJSON($value)
+    {
         $foreignCollection = Norm::factory($this['foreign']);
 
         if (\Norm\Norm::options('include')) {

@@ -38,7 +38,8 @@ namespace Norm;
 /**
  * Base class for hookable object
  */
-abstract class Hookable {
+abstract class Hookable
+{
     /**
      * @var array
      */

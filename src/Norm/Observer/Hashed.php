@@ -2,33 +2,31 @@
 
 namespace Norm\Observer;
 
-class Hashed {
-    protected $options = array();
+class Hashed
+{
+    protected $options = array(
+        'algo' => PASSWORD_BCRYPT,
+        'options' => array(
+            'cost' => 10
+        ),
+    );
 
-    public function __construct($options = array()) {
-        $this->options = $options;
-
-        $this->options['fields'] = array('password');
-        $this->options['algo'] = PASSWORD_BCRYPT;
-        $this->options['options'] = array('cost' => 10);
-
-        foreach ($options as $key => $option ) {
-            if (is_array($option)) {
-                $this->options[$key] = array_unique(array_merge($this->options[$key], $option));
-            } else {
-                $this->options[$key] = $option;
-            }
-        }
+    public function __construct($options = array())
+    {
+        $this->options = array_merge_recursive($this->options, $options);
     }
 
-    public function saving($model) {
+    public function saving($model)
+    {
         foreach ($this->options['fields'] as $field) {
-            $info = password_get_info($model[$field]);
+            $info = password_get_info($model->get($field));
             if ($info['algo'] == 0) {
                 // needs to be rehashed
-                $model[$field] = password_hash($model[$field], $this->options['algo'], $this->options['options']);
+                $model->set(
+                    $field,
+                    password_hash($model->get($field), $this->options['algo'], $this->options['options'])
+                );
             }
         }
     }
-
 }

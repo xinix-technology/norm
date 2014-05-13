@@ -2,7 +2,8 @@
 
 namespace Norm\Dialect;
 
-class SQLDialect {
+class SQLDialect
+{
 
     protected $connection;
 
@@ -10,21 +11,25 @@ class SQLDialect {
 
     protected $expressionCounter = 0;
 
-    public function __construct($connection) {
+    public function __construct($connection)
+    {
         $this->connection = $connection;
         $this->raw = $connection->getRaw();
     }
 
-    public function listCollections() {
+    public function listCollections()
+    {
         $statement = $this->raw->query('SHOW TABLES');
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function prepareCollection($name) {
+    public function prepareCollection($name)
+    {
         throw new \Exception('Unimplemented yet!');
     }
 
-    public function grammarCreate($name, $schema) {
+    public function grammarCreate($name, $schema)
+    {
         $fieldDefinitions = array();
         foreach ($schema as $field) {
             if ($field instanceof \Norm\Schema\Integer) {
@@ -35,11 +40,13 @@ class SQLDialect {
                 $fieldDefinitions[] = $field['name'].' VARCHAR(255)';
             }
         }
-        $sql = 'CREATE TABLE '.$name.'(id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL, '.implode(', ', $fieldDefinitions).')';
+        $sql = 'CREATE TABLE ' .
+            $name . '(id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL, '.implode(', ', $fieldDefinitions).')';
         return $sql;
     }
 
-    public function grammarExpression($exp, $value, &$data) {
+    public function grammarExpression($exp, $value, &$data)
+    {
 
         $exp = explode('!', $exp);
         $key = $exp[0];
@@ -57,7 +64,7 @@ class SQLDialect {
             case 'lt':
                 $op = '<';
                 break;
-            case 'lt':
+            case 'lte':
                 $op = '<=';
                 break;
         }
@@ -77,20 +84,27 @@ class SQLDialect {
                 return '(1)';
             }
             return $key . ' ' . $op . ' ('.implode(', ', $fgroup).')';
-        } else {
+        } elseif($op == 'like'){
+            $this->expressionCounter++;
+            $data['f'.$this->expressionCounter] = '%'.$value.'%';
+            return $key . ' ' . $op . ' :f' . $this->expressionCounter;
+        }
+        else {
             $this->expressionCounter++;
             $data['f'.$this->expressionCounter] = $value;
             return $key . ' ' . $op . ' :f' . $this->expressionCounter;
         }
     }
 
-    public function execute($sql, $data){
+    public function execute($sql, $data)
+    {
         $statement = $this->raw->prepare($sql);
         $result = $statement->execute($data);
         return $result;
     }
 
-    public function grammarInsert($collectionName, $data){
+    public function grammarInsert($collectionName, $data)
+    {
 
         $fields = array();
         $placeholders = array();
@@ -113,16 +127,19 @@ class SQLDialect {
             $placeholders[] = ':'.$k;
         }
 
-        $sql = 'INSERT INTO ' . $collectionName . '('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).')';
+        $sql = 'INSERT INTO ' .
+            $collectionName . '('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).')';
         return $sql;
     }
 
-    public function insert($collectionName, $data){
+    public function insert($collectionName, $data)
+    {
         $sql = $this->grammarInsert($collectionName, $data);
         return $this->execute($sql, $data);
     }
 
-    public function grammarUpdate($collectionName, $data){
+    public function grammarUpdate($collectionName, $data)
+    {
 
         $sets = array();
         foreach ($data as $key => $value) {
@@ -147,7 +164,8 @@ class SQLDialect {
         return $sql;
     }
 
-    public function update($collectionName, $data){
+    public function update($collectionName, $data)
+    {
         $sql = $this->grammarUpdate($collectionName, $data);
 
         foreach ($data as $key => $value) {
@@ -160,28 +178,3 @@ class SQLDialect {
         return $this->execute($sql, $data);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

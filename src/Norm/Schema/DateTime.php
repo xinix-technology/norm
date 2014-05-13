@@ -2,8 +2,10 @@
 
 namespace Norm\Schema;
 
-class DateTime extends Field {
-    public function prepare($value) {
+class DateTime extends Field
+{
+    public function prepare($value)
+    {
         if (empty($value)) {
             return null;
         }
@@ -18,7 +20,8 @@ class DateTime extends Field {
         return new \Norm\Type\DateTime($t);
     }
 
-    public function input($value, $entry = NULL) {
+    public function input($value, $entry = null)
+    {
         if ($this['readonly']) {
             return '<span class="field">'.$value.'</span>';
         }
@@ -28,10 +31,14 @@ class DateTime extends Field {
         if ($value) {
             $value = $value->format("Y-m-d\TH:i");
         }
-        return '<input type="datetime-local" name="'.$this['name'].'" value="'.(@$value).'" placeholder="'.$this['label'].'" autocomplete="off" />';
+        return '<input type="datetime-local" name="'.
+            $this['name'].'" value="'.
+            (@$value).'" placeholder="'.
+            $this['label'].'" autocomplete="off" />';
     }
 
-    public function cell($value, $entry = NULL) {
+    public function cell($value, $entry = null)
+    {
         if ($this->has('cellFormat') && $format = $this['cellFormat']) {
             return $format($value, $entry);
         }

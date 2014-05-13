@@ -7,67 +7,84 @@ use Norm\Model;
 use Norm\Cursor\OCICursor as Cursor;
 use Norm\Dialect\OracleDialect;
 
-
-class OCIConnection extends \Norm\Connection {
+class OCIConnection extends \Norm\Connection
+{
 
     protected $dialect;
 
-    public function initialize($options) {
+    public function initialize($options)
+    {
 
         $defaultOptions = array(
-            'username' => NULL,
-            'password' => NULL,
-            'dbname' => NULL,
-            'charset' => NULL,
-            'mode' => NULL
+            'username' => null,
+            'password' => null,
+            'dbname' => null,
+            'charset' => null,
+            'mode' => null
         );
 
         $this->options = array_merge($defaultOptions, $options);
-        $this->raw = oci_connect($this->options['username'],$this->options['password'],$this->options['dbname'],$this->options['charset'],$this->options['mode']);
+        $this->raw = oci_connect(
+            $this->options['username'],
+            $this->options['password'],
+            $this->options['dbname'],
+            $this->options['charset'],
+            $this->options['mode']
+        );
+
         $this->prepareInit();
 
         $this->dialect = new OracleDialect($this);
     }
 
-    private function prepareInit(){
-        $stid = oci_parse($this->raw,"ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
+    private function prepareInit()
+    {
+        $stid = oci_parse($this->raw, "ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
         oci_execute($stid);
         oci_free_statement($stid);
 
-        $stid = oci_parse($this->raw,"ALTER SESSION SET NLS_SORT = BINARY_CI");
+        $stid = oci_parse($this->raw, "ALTER SESSION SET NLS_SORT = BINARY_CI");
         oci_execute($stid);
         oci_free_statement($stid);
 
-        $stid = oci_parse($this->raw,"ALTER SESSION SET NLS_COMP = LINGUISTIC");
+        $stid = oci_parse($this->raw, "ALTER SESSION SET NLS_COMP = LINGUISTIC");
         oci_execute($stid);
         oci_free_statement($stid);
     }
 
-    public function listCollections() {
+    public function listCollections()
+    {
         throw new \Exception('Not implemented!');
     }
 
-    public function prepare(Collection $collection, $object) {
-        $object = array_change_key_case($object,CASE_LOWER);
+    public function prepare(Collection $collection, $object)
+    {
+        $object = array_change_key_case($object, CASE_LOWER);
         $newObject = array(
             '$id' => $object['id'],
         );
         foreach ($object as $key => $value) {
-            if ($key === 'id') continue;
+            if ($key === 'id') {
+                continue;
+            }
+
             if ($key[0] === '_') {
                 $key[0] = '$';
             }
+
             $newObject[$key] = $value;
         }
 
         return $newObject;
     }
 
-    public function query(Collection $collection) {
+    public function query(Collection $collection)
+    {
         return new Cursor($collection);
     }
 
-    public function save(Collection $collection, Model $model) {
+    public function save(Collection $collection, Model $model)
+    {
         $collectionName = $collection->name;
         $schemes = $collection->schema();
         $data = $this->marshall($model->dump());
@@ -90,26 +107,28 @@ class OCIConnection extends \Norm\Connection {
         return $result;
     }
 
-    public function remove(Collection $collection, $model) {
+    public function remove(Collection $collection, $model)
+    {
         $collectionName = $collection->name;
         $id = $model->getId();
 
         $sql = 'DELETE FROM '.$collectionName.' WHERE id = :id';
 
-        $stid = oci_parse($this->raw,$sql);
-        oci_bind_by_name($stid, ":id",$id);
+        $stid = oci_parse($this->raw, $sql);
+        oci_bind_by_name($stid, ":id", $id);
         $result = oci_execute($stid);
         oci_free_statement($stid);
 
         return $result;
     }
 
-    public function insert($collectionName, $data){
+    public function insert($collectionName, $data)
+    {
         $id = 0;
         $sql = $this->dialect->grammarInsert($collectionName, $data);
 
-        $stid = oci_parse($this->raw,$sql);
-        oci_bind_by_name($stid, ":id",$id);
+        $stid = oci_parse($this->raw, $sql);
+        oci_bind_by_name($stid, ":id", $id);
 
         foreach ($data as $key => $value) {
             oci_bind_by_name($stid, ":".$key, $data[$key]);
@@ -119,11 +138,12 @@ class OCIConnection extends \Norm\Connection {
         return $id;
     }
 
-    public function update($collectionName, $data){
+    public function update($collectionName, $data)
+    {
         $sql = $this->dialect->grammarUpdate($collectionName, $data);
 
-        $stid = oci_parse($this->raw,$sql);
-        oci_bind_by_name($stid, ":id",$data['id']);
+        $stid = oci_parse($this->raw, $sql);
+        oci_bind_by_name($stid, ":id", $data['id']);
 
         foreach ($data as $key => $value) {
             oci_bind_by_name($stid, ":".$key, $data[$key]);
@@ -134,7 +154,8 @@ class OCIConnection extends \Norm\Connection {
         return $result;
     }
 
-    public function marshall($object) {
+    public function marshall($object)
+    {
         if ($object instanceof \Norm\Type\DateTime) {
             return $object->format('Y-m-d H:i:s');
         } elseif (is_array($object)) {
@@ -156,10 +177,10 @@ class OCIConnection extends \Norm\Connection {
         }
     }
 
-    public function getDialect() {
+    public function getDialect()
+    {
         return $this->dialect;
     }
-
 }
 
 

@@ -2,8 +2,10 @@
 
 namespace Norm\Schema;
 
-class Boolean extends Field {
-    public function input($value, $entry = NULL) {
+class Boolean extends Field
+{
+    public function input($value, $entry = null)
+    {
         if ($this['readonly']) {
             return parent::input($value ? 'True' : 'False', $entry);
         }
@@ -16,11 +18,13 @@ class Boolean extends Field {
         ';
     }
 
-    public function cell($value, $entry = NULL) {
+    public function cell($value, $entry = null)
+    {
         return $value ? 'True' : 'False';
     }
 
-    public function prepare($value) {
+    public function prepare($value)
+    {
         return (boolean) $value;
     }
 }
