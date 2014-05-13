@@ -4,7 +4,7 @@ namespace Norm\Schema;
 
 use \Norm\Type\Object;
 
-class NormArray extends Field
+class Object extends Field
 {
 
     public function prepare($value)
