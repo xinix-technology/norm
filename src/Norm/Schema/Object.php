@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-use \Norm\Type\Object;
+use \Norm\Type\Object as TypeObject;
 
 class Object extends Field
 {
@@ -11,14 +11,14 @@ class Object extends Field
     {
 
         if (empty($value)) {
-            return new Object();
-        } elseif ($value instanceof Object) {
+            return new TypeObject();
+        } elseif ($value instanceof TypeObject) {
             return $value;
         } elseif (is_string($value)) {
             $value = json_decode($value);
         }
 
-        return new Object($value);
+        return new TypeObject($value);
     }
 
     public function presetReadonly($value, $entry = null)
