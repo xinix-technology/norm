@@ -168,7 +168,12 @@ abstract class Field implements \ArrayAccess
             $preset = 'readonly';
         }
         $fn = $this->preset($preset);
-        return $fn($value, $entry);
+
+        if (is_callable($fn)) {
+            return call_user_func($fn, $value, $entry);
+        } else {
+            throw new \Exception('Preset is not a callable');
+        }
     }
 
     public function presetPlain($value, $entry = null)
