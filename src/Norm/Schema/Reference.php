@@ -27,9 +27,12 @@ class Reference extends Field
         return $this;
     }
 
-    public function by($byCriteria)
+    public function by($byCriteria, $bySort = null)
     {
-        $this->set('byCriteria', $byCriteria);
+        $this['byCriteria'] = $byCriteria;
+        if ($bySort) {
+            $this['bySort'] = $bySort;
+        }
         return $this;
     }
 
@@ -40,8 +43,18 @@ class Reference extends Field
         } elseif (is_callable($this['foreign'])) {
             return $this['foreign']();
         }
-        // FIXME please fix this to adapt options by $this['byCriteria']
-        return Norm::factory($this['foreign'])->find();
+
+        if (isset($this['byCriteria'])) {
+            $cursor =  Norm::factory($this['foreign'])->find(val($this['byCriteria']));
+        } else {
+            $cursor =  Norm::factory($this['foreign'])->find();
+        }
+
+        if (isset($this['bySort'])) {
+            $cursor->sort($this['bySort']);
+        }
+
+        return $cursor;
     }
 
     public function prepare($value)

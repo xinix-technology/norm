@@ -79,7 +79,11 @@ abstract class Field implements \ArrayAccess
             $this->formats[$name] = $valueOrCallable;
             return $this;
         } elseif (isset($this->formats[$name])) {
-            return $this->formats[$name];
+            $fn = $this->formats[$name];
+            if (is_callable($fn)) {
+                return call_user_func($fn, $valueOrCallable, $entry);
+            }
+            return $valueOrCallable;
         } else {
             $method = 'format'.strtoupper($name[0]).substr($name, 1);
             if (!method_exists($this, $method)) {
