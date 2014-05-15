@@ -4,6 +4,8 @@ namespace Norm\Type;
 
 abstract class Collection implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator
 {
+    public $clazz = '';
+
     protected $attributes = array();
 
     public function __construct($attributes = null)
@@ -80,5 +82,19 @@ abstract class Collection implements \JsonKit\JsonSerializer, \ArrayAccess, \Ite
     public function toArray()
     {
         return $this->attributes;
+    }
+
+    public function compare($another)
+    {
+        if ($another instanceof Collection) {
+            $another = $another->toArray();
+        }
+        $me = $this->toArray();
+
+        if ($me == $another) {
+            return 0;
+        } else {
+            return 1;
+        }
     }
 }

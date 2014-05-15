@@ -76,6 +76,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     protected $state = '';
 
+    protected $presets = array();
+
     /**
      * Constructor.
      *
@@ -235,8 +237,6 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
             $this->id = $attributes['$id'];
         }
 
-        $this->populateOld();
-
     }
 
     public function prepare($key, $value, $schema = null)
@@ -251,7 +251,16 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      */
     public function save($options = array())
     {
-        return $this->collection->save($this, $options);
+        $result = $this->collection->save($this, $options);
+
+        // if result is true or true like it will change state to attached
+        // and populate old data
+        if ($result) {
+            $this->state = static::STATE_ATTACHED;
+            $this->populateOld();
+        }
+
+        return $result;
     }
 
     /**
@@ -385,13 +394,47 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         return ($this->state === static::STATE_REMOVED);
     }
 
-    public function render($key, $preset = 'plain')
+    public function render($field, $preset = 'plain')
     {
-        $value = $this[$key];
-        $schema = $this->collection->schema($key);
+        $value = $this[$field];
+
+        $fn = $this->preset($field, $preset);
+        if (isset($fn) && is_callable($fn)) {
+            return call_user_func($fn, $value, $this);
+        }
+
+        $schema = $this->schema($field);
         if (isset($schema)) {
             return $schema->render($preset, $value);
         }
         return $value;
+    }
+
+    public function schema($key = null)
+    {
+        if (func_num_args() === 0) {
+            return $this->collection->schema();
+        } else {
+            return $this->collection->schema($key);
+        }
+    }
+
+    public function preset($field, $preset = 'plain', $callable = null)
+    {
+        if (is_null($callable)) {
+
+            if (isset($this->presets[$field][$preset])) {
+                return $this->presets[$field][$preset];
+            }
+            return;
+        }
+
+        if (empty($this->presets[$field])) {
+            $this->presets[$field] = array();
+        }
+
+        $this->presets[$field][$preset] = $callable;
+
+        return $this;
     }
 }

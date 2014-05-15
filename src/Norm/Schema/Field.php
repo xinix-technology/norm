@@ -58,10 +58,9 @@ abstract class Field implements \ArrayAccess
         return $value;
     }
 
-    public function preset($name, $callable = null)
+    public function preset($name = 'plain', $callable = null)
     {
         if (is_null($callable)) {
-            $name = $name ?: 'plain';
 
             if (isset($this->presets[$name])) {
                 return $this->presets[$name];

@@ -73,6 +73,14 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
         if (method_exists($observer, 'searched')) {
             $this->hook('searched', array($observer, 'searched'));
         }
+
+        if (method_exists($observer, 'attaching')) {
+            $this->hook('attaching', array($observer, 'attaching'));
+        }
+
+        if (method_exists($observer, 'attached')) {
+            $this->hook('attached', array($observer, 'attached'));
+        }
     }
 
     public function schema($schema = null)
@@ -115,18 +123,25 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
 
     public function attach($doc)
     {
-        $doc = $this->connection->prepare($this, $doc);
+        $doc = new \Norm\Type\Object($this->connection->prepare($this, $doc));
+        $doc->clazz = $this->clazz;
+
+        $this->applyHook('attaching', $doc);
+
         if (isset($this->options['model'])) {
             $Model = $this->options['model'];
-            return new $Model($doc, array(
+            $model = new $Model($doc->toArray(), array(
                 'collection' => $this,
             ));
         } else {
-            $model = new Model($doc, array(
+            $model = new Model($doc->toArray(), array(
                 'collection' => $this,
             ));
-            return $model;
         }
+
+        $this->applyHook('attached', $model);
+
+        return $model;
     }
 
     public function criteria($criteria = null)
@@ -152,7 +167,7 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
 
         $result = $this->connection->query($this);
 
-        $this->applyHook('searched', $this, $result);
+        $this->applyHook('searched', $result);
 
         $cursor = new Cursor($result, $this);
 
@@ -268,7 +283,6 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
 
         $this->applyHook('saved', $model, $options);
 
-        $model->setState(Model::STATE_ATTACHED);
         $this->criteria = null;
 
         return $result;

@@ -31,7 +31,11 @@ class Cursor implements ICursor, JsonSerializer
 
     public function current()
     {
-        return $this->collection->attach($this->cursor->current());
+        $current = $this->cursor->current();
+        if (isset($current)) {
+            return $this->collection->attach($current);
+        }
+        return null;
     }
 
     public function next()

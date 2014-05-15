@@ -70,6 +70,7 @@ abstract class Hookable {
         if (!isset($this->hooks[$name])) {
             $this->hooks[$name] = array(array());
         }
+
         if (!empty($this->hooks[$name])) {
             // Sort by priority, low to high, if there's more than one priority
             if (count($this->hooks[$name]) > 1) {
@@ -83,6 +84,34 @@ abstract class Hookable {
                 }
             }
         }
+    }
+
+    /**
+     * Invoke hook
+     * @param  string   $name       The hook name
+     * @param  mixed    $filterArg    (Optional) Argument for hooked functions
+     */
+    public function applyFilter($name, $filterArg = null)
+    {
+        if (!isset($this->hooks[$name])) {
+            $this->hooks[$name] = array(array());
+        }
+
+        if (!empty($this->hooks[$name])) {
+            // Sort by priority, low to high, if there's more than one priority
+            if (count($this->hooks[$name]) > 1) {
+                ksort($this->hooks[$name]);
+            }
+            foreach ($this->hooks[$name] as $priority) {
+                if (!empty($priority)) {
+                    foreach ($priority as $callable) {
+                        $filterArg = call_user_func($callable, $filterArg);
+                    }
+                }
+            }
+        }
+
+        return $filterArg;
     }
 
     /**

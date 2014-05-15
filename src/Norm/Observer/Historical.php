@@ -19,6 +19,7 @@ class Historical
             $history->save();
         } else {
             $delta = array();
+
             foreach ($newValues as $key => $value) {
                 if ($key[0] === '$') {
                     continue;
@@ -29,7 +30,11 @@ class Historical
                     $old = $oldValues[$key];
                 }
 
-                if ($value == $old) {
+                if ($value instanceof \Norm\Type\Collection && $value->compare($old) == 0) {
+                    continue;
+                } elseif ($old instanceof \Norm\Type\Collection && $old->compare($value) == 0) {
+                    continue;
+                } elseif ($value == $old) {
                     continue;
                 }
 
@@ -48,7 +53,11 @@ class Historical
                     $new = $newValues[$key];
                 }
 
-                if ($value == $new) {
+                if ($value instanceof \Norm\Type\Collection && $value->compare($new) == 0) {
+                    continue;
+                } elseif ($new instanceof \Norm\Type\Collection && $new->compare($value) == 0) {
+                    continue;
+                } elseif ($value == $new) {
                     continue;
                 }
 
@@ -57,6 +66,7 @@ class Historical
                     'new' => $new,
                 );
             }
+
 
             foreach ($delta as $key => $value) {
                 $histCollection = Norm::factory($model->clazz.'History');
@@ -79,5 +89,12 @@ class Historical
         $history['model_id'] = $model['$id'];
         $history['type'] = 'remove';
         $history->save();
+    }
+
+    public function attached($model)
+    {
+        $model->preset('history', 'plain', function ($value, $entry) {
+            return Norm::factory($entry->clazz.'History')->find(array('model_id' => $entry['$id']));
+        });
     }
 }
