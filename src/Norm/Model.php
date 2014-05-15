@@ -76,7 +76,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     protected $state = '';
 
-    protected $presets = array();
+    protected $formats = array();
 
     /**
      * Constructor.
@@ -86,11 +86,13 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      */
     public function __construct(array $attributes = array(), $options = array())
     {
-        $this->collection = $options['collection'];
+        if (isset($options['collection'])) {
+            $this->collection = $options['collection'];
+            $this->connection = $this->collection->connection;
+            $this->name = $this->collection->name;
+            $this->clazz = $this->collection->clazz;
+        }
 
-        $this->connection = $this->collection->connection;
-        $this->name = $this->collection->name;
-        $this->clazz = $this->collection->clazz;
 
         if (isset($attributes['$id'])) {
             $this->id = $attributes['$id'];
@@ -156,12 +158,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      */
     public function get($key)
     {
-        $getter = 'get_'.$key;
-        if (method_exists($this, $getter)) {
-            return $this->$getter($key);
-        } elseif (isset($this->attributes[$key])) {
-            return $this->attributes[$key];
-        }
+        return isset($this->attributes[$key]) ? $this->attributes[$key] : null;
     }
 
     public function dump()
@@ -193,14 +190,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
                 $this->set($k, $v);
             }
         } else {
-            $value = $this->prepare($key, $value);
-
-            $setter = 'set_'.$key;
-            if (method_exists($this, $setter)) {
-                $this->$setter($key, $value);
-            } else {
-                $this->attributes[$key] = $value;
-            }
+            $this->attributes[$key] = $this->prepare($key, $value);
         }
         return $this;
     }
@@ -241,7 +231,11 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     public function prepare($key, $value, $schema = null)
     {
-        return $this->collection->prepare($key, $value, $schema);
+        if ($this->collection) {
+            return $this->collection->prepare($key, $value, $schema);
+        } else {
+            return $value;
+        }
     }
 
     /**
@@ -374,16 +368,6 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         return $this->oldAttributes[$key];
     }
 
-    public function getState()
-    {
-        return $this->state;
-    }
-
-    public function setState($state)
-    {
-        $this->state = $state;
-    }
-
     public function isNew()
     {
         return ($this->state === static::STATE_DETACHED);
@@ -392,22 +376,6 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     public function isRemoved()
     {
         return ($this->state === static::STATE_REMOVED);
-    }
-
-    public function render($field, $preset = 'plain')
-    {
-        $value = $this[$field];
-
-        $fn = $this->preset($field, $preset);
-        if (isset($fn) && is_callable($fn)) {
-            return call_user_func($fn, $value, $this);
-        }
-
-        $schema = $this->schema($field);
-        if (isset($schema)) {
-            return $schema->render($preset, $value);
-        }
-        return $value;
     }
 
     public function schema($key = null)
@@ -419,22 +387,25 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         }
     }
 
-    public function preset($field, $preset = 'plain', $callable = null)
+    public function format($format, $field, $callable = null)
     {
-        if (is_null($callable)) {
-
-            if (isset($this->presets[$field][$preset])) {
-                return $this->presets[$field][$preset];
+        if (func_num_args() === 3) {
+            if (!isset($this->formats[$field])) {
+                $this->formats[$field] = array();
             }
-            return;
+            $this->formats[$field][$format] = $callable;
+
+            return $this;
+        } elseif (isset($this->formats[$field][$format])) {
+            $fn = $this->formats[$field][$format];
+            return call_user_func($fn, $this[$field], $this);
+        } else {
+            $schema = $this->schema($field);
+            if (isset($schema)) {
+                return $schema->format($format, $this[$field]);
+            }
+
+            return $this[$field];
         }
-
-        if (empty($this->presets[$field])) {
-            $this->presets[$field] = array();
-        }
-
-        $this->presets[$field][$preset] = $callable;
-
-        return $this;
     }
 }

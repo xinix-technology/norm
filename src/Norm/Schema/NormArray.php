@@ -21,7 +21,7 @@ class NormArray extends Field
         return new TypeArray($value);
     }
 
-    public function presetReadonly($value, $entry = null)
+    public function formatReadonly($value, $entry = null)
     {
         $value = $this->prepare($value);
         if (isset($value)) {
@@ -33,10 +33,10 @@ class NormArray extends Field
             // }
         }
 
-        return parent::presetReadonly($value, $entry);
+        return parent::formatReadonly($value, $entry);
     }
 
-    public function presetInput($value, $entry = null)
+    public function formatInput($value, $entry = null)
     {
         $value = $this->prepare($value);
         if (isset($value)) {

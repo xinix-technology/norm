@@ -9,7 +9,7 @@ class Boolean extends Field
         return (boolean) $value;
     }
 
-    public function presetInput($value, $entry = null)
+    public function formatInput($value, $entry = null)
     {
         return '
             <select name="'.$this['name'].'">
@@ -19,13 +19,13 @@ class Boolean extends Field
         ';
     }
 
-    public function presetPlain($value, $entry = null)
+    public function formatPlain($value, $entry = null)
     {
         return $value ? 'True' : 'False';
     }
 
-    public function presetReadonly($value, $entry = null)
+    public function formatReadonly($value, $entry = null)
     {
-        return '<span class="field">'.$this->presetPlain($value, $entry).'</span>';
+        return '<span class="field">'.$this->formatPlain($value, $entry).'</span>';
     }
 }

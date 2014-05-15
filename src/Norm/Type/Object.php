@@ -14,4 +14,10 @@ class Object extends Collection
         }
         return $obj;
     }
+
+    public function has($o)
+    {
+        $attrs = array_values($this->attributes);
+        return in_array($o, $attrs);
+    }
 }

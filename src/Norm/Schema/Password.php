@@ -9,12 +9,12 @@ class Password extends Field
         return '';
     }
 
-    public function presetPlain($value, $entry = null)
+    public function formatPlain($value, $entry = null)
     {
         return '';
     }
 
-    public function presetInput($value, $entry = null)
+    public function formatInput($value, $entry = null)
     {
         return '
             <div class="row">
@@ -25,7 +25,7 @@ class Password extends Field
         ';
     }
 
-    public function presetReadonly($value, $entry = null)
+    public function formatReadonly($value, $entry = null)
     {
         return '<span class="field">*hidden*</span>';
     }

@@ -5,7 +5,7 @@ namespace Norm\Schema;
 class Date extends DateTime
 {
 
-    public function presetInput($value, $entry = null)
+    public function formatInput($value, $entry = null)
     {
         $value = $this->prepare($value);
         if ($value) {
@@ -17,7 +17,7 @@ class Date extends DateTime
             '" autocomplete="off" />';
     }
 
-    public function presetReadonly($value, $entry = null)
+    public function formatReadonly($value, $entry = null)
     {
         $value = $this->prepare($value);
         if ($value) {

@@ -20,7 +20,7 @@ class DateTime extends Field
         return new \Norm\Type\DateTime($t);
     }
 
-    public function presetInput($value, $entry = null)
+    public function formatInput($value, $entry = null)
     {
         $value = $this->prepare($value);
         return '<input type="datetime-local" name="'.$this['name'].'" value="'.
@@ -28,7 +28,7 @@ class DateTime extends Field
             $this['label'].'" autocomplete="off" />';
     }
 
-    public function presetReadonly($value, $entry = null)
+    public function formatReadonly($value, $entry = null)
     {
         $value = $this->prepare($value);
         return '<span class="field">'.($value ? $value->format('c') : '&nbsp;').'</span>';

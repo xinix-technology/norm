@@ -5,12 +5,12 @@ namespace Norm\Schema;
 class Text extends String
 {
 
-    public function presetReadonly($value, $entry = null)
+    public function formatReadonly($value, $entry = null)
     {
-        return parent::presetReadonly(nl2br($value), $entry);
+        return parent::formatReadonly(nl2br($value), $entry);
     }
 
-    public function presetInput($value, $entry = null)
+    public function formatInput($value, $entry = null)
     {
         return '<textarea name="'.$this['name'].'">'.$value.'</textarea>';
     }

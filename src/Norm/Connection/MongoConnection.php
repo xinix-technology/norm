@@ -119,7 +119,7 @@ class MongoConnection extends Connection
 
     public function marshall($object)
     {
-        if ($object instanceof \Norm\Type\DateTime) {
+        if ($object instanceof \DateTime) {
             return new \MongoDate($object->getTimestamp());
         } elseif ($object instanceof \Norm\Type\NormArray) {
             return $object->toArray();

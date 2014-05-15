@@ -44,16 +44,6 @@ abstract class Collection implements \JsonKit\JsonSerializer, \ArrayAccess, \Ite
         unset($this->attributes[$key]);
     }
 
-    public function add($o)
-    {
-        $this->attributes[] = $o;
-    }
-
-    public function has($o)
-    {
-        return in_array($o, $this->attributes);
-    }
-
     public function current()
     {
         return current($this->attributes);

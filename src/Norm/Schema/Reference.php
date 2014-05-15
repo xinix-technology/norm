@@ -81,17 +81,15 @@ class Reference extends Field
         return $value;
     }
 
-    public function render($preset, $value, $entry = null)
+    public function format($name, $valueOrCallable, $entry = null)
     {
-
         if (is_null($this['foreign'])) {
             throw new \Exception('Reference schema should invoke Reference::to()');
         }
-
-        return parent::render($preset, $value, $entry);
+        return parent::format($name, $valueOrCallable, $entry);
     }
 
-    public function presetPlain($value, $entry = null)
+    public function formatPlain($value, $entry = null)
     {
         $value = $this->prepare($value);
 
@@ -114,13 +112,13 @@ class Reference extends Field
         return $label;
     }
 
-    public function presetReadonly($value, $entry = null)
+    public function formatReadonly($value, $entry = null)
     {
-        $label = $this->presetPlain($value, $entry) ?: '&nbsp;';
+        $label = $this->formatPlain($value, $entry) ?: '&nbsp;';
         return '<span class="field">'.$label.'</span>';
     }
 
-    public function presetInput($value, $entry = null)
+    public function formatInput($value, $entry = null)
     {
         $app = App::getInstance();
 

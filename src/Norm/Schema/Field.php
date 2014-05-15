@@ -14,7 +14,7 @@ abstract class Field implements \ArrayAccess
 
     protected $filter = array();
 
-    protected $presets = array();
+    protected $formats = array();
 
     /**
      * Get new instance of field schema
@@ -58,24 +58,35 @@ abstract class Field implements \ArrayAccess
         return $value;
     }
 
-    public function preset($name = 'plain', $callable = null)
+    // public function render($format, $value, $entry = null)
+    // {
+    //     // force to render readonly format if you want to render readonly input
+    //     if ($format === 'input' && $this['readonly']) {
+    //         $format = 'readonly';
+    //     }
+    //     $fn = $this->format($format);
+
+    //     if (is_callable($fn)) {
+    //         return call_user_func($fn, $value, $entry);
+    //     } else {
+    //         throw new \Exception('format is not a callable');
+    //     }
+    // }
+
+    public function format($name, $valueOrCallable, $entry = null)
     {
-        if (is_null($callable)) {
-
-            if (isset($this->presets[$name])) {
-                return $this->presets[$name];
+        if (func_num_args() < 3 && is_callable($valueOrCallable)) {
+            $this->formats[$name] = $valueOrCallable;
+            return $this;
+        } elseif (isset($this->formats[$name])) {
+            return $this->formats[$name];
+        } else {
+            $method = 'format'.strtoupper($name[0]).substr($name, 1);
+            if (!method_exists($this, $method)) {
+                $method = 'formatPlain';
             }
-
-            $method = 'preset'.strtoupper($name[0]).substr($name, 1);
-
-            if (method_exists($this, $method)) {
-                return array($this, $method);
-            } else {
-                return array($this, 'plain');
-            }
+            return call_user_func(array($this, $method), $valueOrCallable, $entry);
         }
-        $this->presets[$name] = $callable;
-        return $this;
     }
 
     public function filter()
@@ -160,32 +171,17 @@ abstract class Field implements \ArrayAccess
         return $value;
     }
 
-    public function render($preset, $value, $entry = null)
-    {
-        // force to render readonly preset if you want to render readonly input
-        if ($preset === 'input' && $this['readonly']) {
-            $preset = 'readonly';
-        }
-        $fn = $this->preset($preset);
-
-        if (is_callable($fn)) {
-            return call_user_func($fn, $value, $entry);
-        } else {
-            throw new \Exception('Preset is not a callable');
-        }
-    }
-
-    public function presetPlain($value, $entry = null)
+    public function formatPlain($value, $entry = null)
     {
         return $value;
     }
 
-    public function presetReadonly($value, $entry = null)
+    public function formatReadonly($value, $entry = null)
     {
         return "<span class=\"field\">".($value ?: '&nbsp;')."</span>";
     }
 
-    public function presetInput($value, $entry = null)
+    public function formatInput($value, $entry = null)
     {
         if (!empty($value)) {
             $value = htmlentities($value);
@@ -194,7 +190,7 @@ abstract class Field implements \ArrayAccess
             '" autocomplete="off" />';
     }
 
-    // DEPRECATED method: input, cell, cellRaw, getInputInRaw replaced with render with preset
+    // DEPRECATED method: input, cell, cellRaw, getInputInRaw replaced with render with format
 
     // public function cell($value, $entry = null)
     // {

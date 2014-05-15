@@ -93,7 +93,7 @@ class Historical
 
     public function attached($model)
     {
-        $model->preset('history', 'plain', function ($value, $entry) {
+        $model->format('plain', 'history', function ($value, $entry) {
             return Norm::factory($entry->clazz.'History')->find(array('model_id' => $entry['$id']));
         });
     }
