@@ -57,17 +57,13 @@ class Cursor implements ICursor, \JsonKit\JsonSerializer
         return $this->cursor->rewind();
     }
 
-    public function toArray($normalize = false)
+    public function toArray($recursive = true)
     {
         $result = array();
 
         foreach ($this as $key => $value) {
-            if ($value instanceof Model) {
+            if ($recursive && $value instanceof Model) {
                 $value = $value->toArray();
-            }
-
-            if ($normalize) {
-                $value = $this->normalize($value);
             }
 
             $result[] = $value;
@@ -76,16 +72,17 @@ class Cursor implements ICursor, \JsonKit\JsonSerializer
         return $result;
     }
 
-    public function normalize(array $object)
-    {
-        foreach ($object as $key => $value) {
-            if (is_object($value)) {
-                $object[$key] = $value->normalize();
-            }
-        }
+    // DEPRECATED
+    // public function normalize(array $object)
+    // {
+    //     foreach ($object as $key => $value) {
+    //         if (is_object($value)) {
+    //             $object[$key] = $value->normalize();
+    //         }
+    //     }
 
-        return $object;
-    }
+    //     return $object;
+    // }
 
     public function limit($num)
     {
@@ -121,9 +118,9 @@ class Cursor implements ICursor, \JsonKit\JsonSerializer
         return $this->links;
     }
 
-    public function jsonSerialize($normalize = false)
+    public function jsonSerialize()
     {
-        return $this->toArray($normalize);
+        return $this->toArray(false);
     }
 
     public function __toString()
