@@ -21,6 +21,8 @@ use \Bono\Helper\URL;
             $entryValue = $entry[$self['foreignKey']];
         endif;
         ?>
-        <option value="<?php echo $entryValue ?>" <?php echo ($entryValue === $value ? 'selected' : '') ?>><?php echo $label ?></option>
+        <option value="<?php echo $entryValue ?>" <?php echo ($entryValue == $value ? 'selected' : '') ?>>
+            <?php echo $label ?>
+        </option>
     <?php endforeach ?>
 </select>

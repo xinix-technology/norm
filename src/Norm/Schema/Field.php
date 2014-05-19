@@ -75,6 +75,9 @@ abstract class Field implements \ArrayAccess
 
     public function format($name, $valueOrCallable, $entry = null)
     {
+        if ($name === 'input' && $this['readonly']) {
+            $name = 'readonly';
+        }
         if (func_num_args() < 3 && is_callable($valueOrCallable)) {
             $this->formats[$name] = $valueOrCallable;
             return $this;
