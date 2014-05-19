@@ -47,7 +47,8 @@ namespace Norm\Filter;
  * raise and sub exceptions as array of exceptions raise on the same field context.
  *
  */
-class FilterException extends \RuntimeException {
+class FilterException extends \RuntimeException
+{
 
     /**
      * Database field context where exception raise
