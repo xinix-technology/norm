@@ -36,13 +36,13 @@ namespace Norm\Cursor;
 
 use Norm\Collection;
 
-
 // FIXME reekoheek: see OCICursor
 /**
  * Wrapper to PDO statement to produce cursor for Norm
  * @author Ganesha <reekoheek@gmail.com>
  */
-class PDOCursor implements ICursor {
+class PDOCursor implements ICursor
+{
 
     // FIXME reekoheek cursor cannot reset statement result to foreach multiple
     // times
@@ -60,11 +60,14 @@ class PDOCursor implements ICursor {
      */
     protected $current;
 
+    protected $limit;
+
     /**
      * Construct cursor for particular statement
      * @param \PDOStatement $statement PDO statement
      */
-    public function __construct(Collection $collection) {
+    public function __construct(Collection $collection)
+    {
         $this->collection = $collection;
 
         $this->criteria = $this->prepareCriteria($collection->criteria ?: array());
@@ -76,7 +79,8 @@ class PDOCursor implements ICursor {
      * Get valid next row if available
      * @return array NULL if not available
      */
-    public function getNext() {
+    public function getNext()
+    {
         if ($this->valid()) {
             return $this->current();
         }
@@ -86,14 +90,16 @@ class PDOCursor implements ICursor {
      * Get current row
      * @return array
      */
-    public function current() {
+    public function current()
+    {
         return $this->current;
     }
 
     /**
      * Move to next row
      */
-    public function next() {
+    public function next()
+    {
         $this->row++;
     }
 
@@ -101,7 +107,8 @@ class PDOCursor implements ICursor {
      * Get current key for row
      * @return int Current row key
      */
-    public function key() {
+    public function key()
+    {
         return $this->row;
     }
 
@@ -109,17 +116,22 @@ class PDOCursor implements ICursor {
      * Check if current row is available
      * @return bool
      */
-    public function valid() {
+    public function valid()
+    {
         $this->current = $this->getStatement()->fetch(\PDO::FETCH_ASSOC);
 
-        $valid = ($this->current !== false);
+        $valid = false;
+        if ($this->current !== false) {
+            $valid = true;
 
-        $this->current = array_change_key_case($this->current, CASE_LOWER);
+            $this->current = array_change_key_case($this->current, CASE_LOWER);
+        }
 
         return $valid;
     }
 
-    public function prepareCriteria($criteria) {
+    public function prepareCriteria($criteria)
+    {
         if (isset($criteria['$id'])) {
             $criteria['id'] = $criteria['$id'];
             unset($criteria['$id']);
@@ -127,7 +139,8 @@ class PDOCursor implements ICursor {
         return $criteria;
     }
 
-    public function getStatement() {
+    public function getStatement()
+    {
         if (is_null($this->statement)) {
 
             $sql = 'SELECT * FROM '. $this->collection->name;
@@ -155,18 +168,21 @@ class PDOCursor implements ICursor {
      * Rewind to the first row
      * Do nothing because PDOStatement cannot be rewinded
      */
-    public function rewind() {
+    public function rewind()
+    {
         // noop
     }
 
-    public function sort(array $fields) {
+    public function sort(array $fields = array())
+    {
         if (!empty($fields)) {
             throw new \Exception('Not implemented yet!');
         }
         return $this;
     }
 
-    public function count($foundOnly = false) {
+    public function count($foundOnly = false)
+    {
 
         $sql = 'SELECT COUNT(1) AS c FROM '. $this->collection->name;
 
@@ -188,4 +204,40 @@ class PDOCursor implements ICursor {
         return $statement->fetch(\PDO::FETCH_OBJ)->c;
     }
 
+    public function limit($num = null)
+    {
+        if (func_num_args() === 0) {
+            return $this->limit;
+        }
+        $this->limit = (int) $num;
+        return $this;
+    }
+
+    public function match($q)
+    {
+        if (is_null($q)) {
+            return $this;
+        }
+
+        throw new \Exception('Unimplemented yet!');
+
+        // $orCriteria = array();
+
+        // $schema = $this->collection->schema();
+        // foreach ($schema as $key => $value) {
+        //     $orCriteria[] = array($key => array('$regex' => new \MongoRegex("/$q/i")));
+        // }
+        // $this->criteria = array('$or' => $orCriteria);
+
+        // return $this;
+    }
+
+    public function skip($num = null)
+    {
+        if (func_num_args() === 0) {
+            return $this->skip;
+        }
+        $this->skip = (int) $num;
+        return $this;
+    }
 }

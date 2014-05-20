@@ -167,7 +167,7 @@ abstract class Field implements \ArrayAccess
 
         $label = l($this['label']);
         if ($plain) {
-            return $plain;
+            return $label;
         }
         return '<label>'.$label.($this['filter-required'] ? '*' : '').'</label>';
     }

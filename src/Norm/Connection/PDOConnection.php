@@ -8,11 +8,13 @@ use \Norm\Cursor\PDOCursor;
 use \Norm\Schema\DateTime;
 use \Norm\Schema\Object;
 
-class PDOConnection extends \Norm\Connection {
+class PDOConnection extends \Norm\Connection
+{
 
     protected $dialect;
 
-    public function initialize($options) {
+    public function initialize($options)
+    {
 
         $this->options = $options;
         if (isset($options['dsn'])) {
@@ -22,7 +24,12 @@ class PDOConnection extends \Norm\Connection {
         } else {
             $dsnArray = array();
             foreach ($options as $key => $value) {
-                if ($key === 'driver' || $key === 'prefix' || $key === 'username' || $key === 'password' || $key === 'name' || $key === 'dialect') {
+                if ($key === 'driver' ||
+                    $key === 'prefix' ||
+                    $key === 'username' ||
+                    $key === 'password' ||
+                    $key === 'name' ||
+                    $key === 'dialect') {
                     continue;
                 }
                 $dsnArray[] = "$key=$value";
@@ -48,7 +55,8 @@ class PDOConnection extends \Norm\Connection {
 
     }
 
-    public function listCollections() {
+    public function listCollections()
+    {
         return $this->dialect->listCollections();
     }
 
@@ -66,7 +74,8 @@ class PDOConnection extends \Norm\Connection {
      * @param  Model      $model      [description]
      * @return bool        if success return true else return false
      */
-    public function save(Collection $collection, Model $model) {
+    public function save(Collection $collection, Model $model)
+    {
         if (!empty($this->options['autocreate'])) {
             $this->dialect->prepareCollection($collection);
         }
@@ -94,7 +103,8 @@ class PDOConnection extends \Norm\Connection {
         return $result;
     }
 
-    public function query(Collection $collection) {
+    public function query(Collection $collection)
+    {
         if (!empty($this->options['autocreate'])) {
             $this->dialect->prepareCollection($collection);
         }
@@ -102,12 +112,15 @@ class PDOConnection extends \Norm\Connection {
         return new PDOCursor($collection);
     }
 
-    public function prepare(Collection $collection, $object) {
+    public function prepare(Collection $collection, $object)
+    {
         $newObject = array(
             '$id' => $object['id'],
         );
         foreach ($object as $key => $value) {
-            if ($key === 'id') continue;
+            if ($key === 'id') {
+                continue;
+            }
             if ($key[0] === '_') {
                 $key[0] = '$';
             }
@@ -117,7 +130,8 @@ class PDOConnection extends \Norm\Connection {
         return $newObject;
     }
 
-    public function remove(Collection $collection, $model) {
+    public function remove(Collection $collection, $model)
+    {
         if (!empty($this->options['autocreate'])) {
             $this->dialect->prepareCollection($collection);
         }
@@ -134,7 +148,8 @@ class PDOConnection extends \Norm\Connection {
         return $result;
     }
 
-    public function getDialect() {
+    public function getDialect()
+    {
         return $this->dialect;
     }
 }
