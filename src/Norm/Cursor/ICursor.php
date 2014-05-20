@@ -2,7 +2,7 @@
 
 namespace Norm\Cursor;
 
-interface ICursor extends \Iterator
+interface ICursor extends \Iterator, \Countable
 {
     public function getNext();
 
@@ -19,8 +19,6 @@ interface ICursor extends \Iterator
     public function limit($num = null);
 
     public function sort(array $fields = array());
-
-    public function count($force = true);
 
     public function match($q);
 

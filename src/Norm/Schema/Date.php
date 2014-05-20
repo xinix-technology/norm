@@ -17,6 +17,12 @@ class Date extends DateTime
             '" autocomplete="off" />';
     }
 
+    public function formatPlain($value, $entry = null)
+    {
+        $value = $this->prepare($value);
+        return ($value ? $value->format('Y-m-d') : null);
+    }
+
     public function formatReadonly($value, $entry = null)
     {
         $value = $this->prepare($value);
