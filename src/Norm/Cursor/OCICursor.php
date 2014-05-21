@@ -97,10 +97,7 @@ class OCICursor extends \Norm\Cursor implements ICursor
             $i = 0;
             foreach ($schema as $key => $value) {
                 if ($value instanceof \Norm\Schema\Reference) {
-                    $foreign = $value['foreign'];
-                    $foreignLabel = $value['foreignLabel'];
-                    $foreignKey = $value['foreignKey'];
-                    $matchOrs[] = $this->getQueryReference($i, $key, $foreign, $foreignLabel, $foreignKey);
+                    $matchOrs[] = $this->getQueryReference($i, $key, $value);
                 } else {
                     $matchOrs[] = $key.' LIKE :f'.$i;
                     $i++;
@@ -194,10 +191,7 @@ class OCICursor extends \Norm\Cursor implements ICursor
             $schema = $this->collection->schema();
             foreach ($schema as $key => $value) {
                 if ($value instanceof \Norm\Schema\Reference) {
-                    $foreign = $value['foreign'];
-                    $foreignLabel = $value['foreignLabel'];
-                    $foreignKey = $value['foreignKey'];
-                    $matchOrs[] = $this->getQueryReference($i, $key, $foreign, $foreignLabel, $foreignKey);
+                    $matchOrs[] = $this->getQueryReference($i, $key, $value);
                 } else {
                     $matchOrs[] = $key.' LIKE :f'.$i;
                     $i++;
@@ -280,18 +274,26 @@ class OCICursor extends \Norm\Cursor implements ICursor
         return $this;
     }
 
-    public function getQueryReference(&$i, $key = '', $foreign = '', $foreignLabel = '', $foreignKey = '')
+    public function getQueryReference(&$i, $key,$schema)
     {
-        $model      = Norm::factory($foreign);
-        $refSchemes = $model->schema();
-        $foreignKey = $foreignKey ?: 'id';
+        // $model      = Norm::factory($foreign);
+        // $refSchemes = $model->schema();
+        
+        $schema['foreignKey'] = $schema['foreignKey'] ?: 'id';
 
-        if ($foreignKey == '$id') {
-            $foreignKey = 'id';
+        if ($schema['foreignKey'] == '$id') {
+            $schema['foreignKey'] = 'id';
         }
 
-        $query = $key .
-            ' IN (SELECT '.$foreignKey.' FROM '.strtolower($foreign).' WHERE '.$foreignLabel.' LIKE :f'.$i.') ';
+        if(!$schema['foreignGroup']){
+            $query = $key .
+            ' IN (SELECT '.$schema['foreignKey'].' FROM '.strtolower($schema['foreign']).' WHERE '.$schema['foreignLabel'].' LIKE :f'.$i.') ';
+        }else{
+            $query = $key .
+            ' IN (SELECT '.$schema['foreignKey'].' FROM '.strtolower($schema['foreign']).' WHERE '.$schema['foreignLabel'].' LIKE :f'.$i.' AND groups =\''.$schema['foreignGroup'].'\') ';
+            
+        }
+        
         $i++;
 
         return $query;
