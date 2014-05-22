@@ -68,6 +68,11 @@ abstract class Connection extends Hookable
         return $this->raw;
     }
 
+    public function setRaw($raw)
+    {
+        $this->raw = $raw;
+    }
+
     public function factory($collectionName)
     {
         if (!isset($this->collections[$collectionName])) {
