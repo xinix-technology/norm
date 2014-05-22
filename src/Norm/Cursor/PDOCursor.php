@@ -147,14 +147,20 @@ class PDOCursor implements ICursor
 
             $wheres = array();
             $data = array();
-            foreach ($this->criteria as $key => $value) {
-                $wheres[] = $a= $this->collection->connection->getDialect()->grammarExpression($key, $value, $data);
-            }
 
+            foreach ($this->criteria as $key => $value) {
+                $wheres[] = $a= $this->collection->connection->getDialect()->grammarExpression(
+                    $key,
+                    $value,
+                    $this->collection,
+                    $data
+                );
+            }
 
             if (count($wheres)) {
                 $sql .= ' WHERE '.implode(' AND ', $wheres);
             }
+
 
             $this->statement = $this->collection->connection->getRaw()->prepare($sql);
 

@@ -82,7 +82,9 @@ class PDOConnection extends \Norm\Connection
 
         $collectionName = $collection->name;
         // $schemes = $collection->schema();
+
         $data = $this->marshall($model->dump());
+
         $result = false;
 
         if (is_null($model->getId())) {
@@ -93,6 +95,7 @@ class PDOConnection extends \Norm\Connection
                 $result = true;
             }
         } else {
+            $data['$id'] = $model->getId();
             $result = $this->dialect->update($collectionName, $data);
 
             if ($result) {
