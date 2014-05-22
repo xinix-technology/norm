@@ -160,12 +160,12 @@ class Norm
             }
         }
 
-        if (isset($config) && isset(static::$collectionConfig['mapping'][$options['name']])) {
-            $config =static::$collectionConfig['mapping'][$options['name']];
-        }
-
         if (!isset($config)) {
-            $config = array();
+            if (isset(static::$collectionConfig['mapping'][$options['name']])) {
+                $config =static::$collectionConfig['mapping'][$options['name']];
+            } else {
+                $config = array();
+            }
         }
 
         $config = array_merge_recursive($defaultConfig, $config);
