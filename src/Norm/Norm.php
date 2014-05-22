@@ -143,9 +143,31 @@ class Norm
             ? static::$collectionConfig['default']
             : array();
 
-        $config = isset(static::$collectionConfig['mapping'][$options['name']])
-            ? static::$collectionConfig['mapping'][$options['name']]
-            : array();
+        $config = null;
+
+        if (isset(static::$collectionConfig['resolvers']) && is_array(static::$collectionConfig['resolvers'])) {
+            foreach (static::$collectionConfig['resolvers'] as $resolver => $resolverOpts) {
+                if (is_string($resolverOpts)) {
+                    $resolver = $resolverOpts;
+                    $resolverOpts = array();
+                }
+
+                $resolver = new $resolver($resolverOpts);
+                $config = $resolver->resolve($options);
+                if (isset($config)) {
+                    break;
+                }
+            }
+        }
+
+        if (isset($config) && isset(static::$collectionConfig['mapping'][$options['name']])) {
+            $config =static::$collectionConfig['mapping'][$options['name']];
+        }
+
+        if (!isset($config)) {
+            $config = array();
+        }
+
         $config = array_merge_recursive($defaultConfig, $config);
 
         $options = array_merge_recursive($config, $options);
