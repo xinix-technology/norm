@@ -88,6 +88,8 @@ class SQLDialect
             $this->expressionCounter++;
             $data['f'.$this->expressionCounter] = '%'.$value.'%';
             return $key . ' ' . $op . ' :f' . $this->expressionCounter;
+        } elseif($op == 'isnull'){
+            return $key . ' is null ';
         }
         else {
             $this->expressionCounter++;
