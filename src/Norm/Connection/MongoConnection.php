@@ -10,7 +10,7 @@ use Norm\Cursor\MongoCursor;
 
 class MongoConnection extends Connection
 {
-    // protected $client;
+    protected $client;
 
     public function initialize($options)
     {
@@ -39,13 +39,14 @@ class MongoConnection extends Connection
             $connectionString = "mongodb://$prefix$hostname:$port/$database";
         }
 
-        $client = new \MongoClient($connectionString);
-        $this->raw = $client->$database;
+        $this->client = new \MongoClient($connectionString);
+        $this->raw = $this->client->$database;
     }
 
-    // public function getClient() {
-    //     return $this->client;
-    // }
+    public function getClient()
+    {
+        return $this->client;
+    }
 
     public function listCollections()
     {
