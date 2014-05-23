@@ -2,7 +2,7 @@
 
 namespace Norm\Type;
 
-abstract class Collection implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator
+abstract class Collection implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator, \Countable
 {
     public $clazz = '';
 
@@ -72,6 +72,11 @@ abstract class Collection implements \JsonKit\JsonSerializer, \ArrayAccess, \Ite
     public function toArray()
     {
         return $this->attributes;
+    }
+
+    public function count()
+    {
+        return count($this->attributes);
     }
 
     public function compare($another)
