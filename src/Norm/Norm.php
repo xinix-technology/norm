@@ -145,27 +145,28 @@ class Norm
 
         $config = null;
 
-        if (isset(static::$collectionConfig['resolvers']) && is_array(static::$collectionConfig['resolvers'])) {
-            foreach (static::$collectionConfig['resolvers'] as $resolver => $resolverOpts) {
-                if (is_string($resolverOpts)) {
-                    $resolver = $resolverOpts;
-                    $resolverOpts = array();
-                }
+        if (isset(static::$collectionConfig['mapping'][$options['name']])) {
+            $config =static::$collectionConfig['mapping'][$options['name']];
+        } else {
+            if (isset(static::$collectionConfig['resolvers']) && is_array(static::$collectionConfig['resolvers'])) {
+                foreach (static::$collectionConfig['resolvers'] as $resolver => $resolverOpts) {
+                    if (is_string($resolverOpts)) {
+                        $resolver = $resolverOpts;
+                        $resolverOpts = array();
+                    }
 
-                $resolver = new $resolver($resolverOpts);
-                $config = $resolver->resolve($options);
-                if (isset($config)) {
-                    break;
+                    $resolver = new $resolver($resolverOpts);
+                    $config = $resolver->resolve($options);
+                    if (isset($config)) {
+                        break;
+                    }
                 }
             }
         }
 
+
         if (!isset($config)) {
-            if (isset(static::$collectionConfig['mapping'][$options['name']])) {
-                $config =static::$collectionConfig['mapping'][$options['name']];
-            } else {
-                $config = array();
-            }
+            $config = array();
         }
 
         $config = array_merge_recursive($defaultConfig, $config);
