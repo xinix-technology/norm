@@ -128,40 +128,57 @@ class Filter
     {
         $this->errors = array();
 
-        foreach ($this->rules as $k => $rule) {
-            foreach ($rule['filter'] as $filterChain) {
-                try {
-                    if (is_string($filterChain)) {
-                        $method = explode(':', $filterChain);
-                        $args = array();
-                        if (isset($method[1])) {
-                            $args = explode(',', $method[1]);
-                        }
-                        $method = $method[0];
+        $rules = null;
+        if (is_null($key)) {
+            $rules = $this->rules;
+        } elseif (isset($this->rules[$key])) {
+            $rules = array(
+                'password' => $this->rules[$key]
+            );
+        }
 
-                        $innerMethodName = 'filter'.strtoupper($method[0]).substr($method, 1);
-                        if (method_exists($this, $innerMethodName)) {
-                            $method = $innerMethodName;
-                            $data[$k] = $this->$method($k, $data[$k], $data, $args);
-                        } elseif (isset(static::$registries[$method])) {
-                            $method = static::$registries[$method];
-                            $data[$k] = $method($k, $data[$k], $data, $args);
-                        } elseif (function_exists($method)) {
-                            $data[$k] = $method($data[$k]);
-                        } else {
-                            throw new \Exception('Filter "'.$filterChain.'" not found.');
+        if (is_array($rules)) {
+            foreach ($rules as $k => $rule) {
+                if (empty($rule['filter'])) {
+                    continue;
+                }
+
+                foreach ($rule['filter'] as $filterChain) {
+                    try {
+                        if (is_string($filterChain)) {
+                            $method = explode(':', $filterChain);
+                            $args = array();
+                            if (isset($method[1])) {
+                                $args = explode(',', $method[1]);
+                            }
+                            $method = $method[0];
+
+
+                            $innerMethodName = 'filter'.strtoupper($method[0]).substr($method, 1);
+                            if (method_exists($this, $innerMethodName)) {
+                                $method = $innerMethodName;
+                                $data[$k] = $this->$method($k, $data[$k], $data, $args);
+                            } elseif (isset(static::$registries[$method]) && is_callable(static::$registries[$method])) {
+                                $method = static::$registries[$method];
+                                $data[$k] = call_user_func($method, $data[$k], $data, $args);
+                            } elseif (function_exists($method)) {
+                                $data[$k] = $method($data[$k]);
+                            } else {
+                                throw new \Exception('Filter "'.$filterChain.'" not found.');
+                            }
+                        } elseif (is_callable($filterChain)) {
+                            $data[$k] = call_user_func($rule, $k, $data[$k], $data, $args);
                         }
-                    } elseif (is_callable($filterChain)) {
-                        $data[$k] = call_user_func($rule, $k, $data[$k], $data, $args);
+                    } catch (SkipException $e) {
+                        break;
+                    } catch (\Exception $e) {
+                        $this->errors[] = $e;
+                        break;
                     }
-                } catch (SkipException $e) {
-                    break;
-                } catch (\Exception $e) {
-                    $this->errors[] = $e;
-                    break;
                 }
             }
         }
+
 
         if ($this->errors) {
             $e = new FilterException();

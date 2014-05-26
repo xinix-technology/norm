@@ -257,6 +257,11 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         return $result;
     }
 
+    public function filter($fieldName = null)
+    {
+        return $this->collection->filter($this, $fieldName);
+    }
+
     /**
      * Remove the model.
      * @return int Status of removal.

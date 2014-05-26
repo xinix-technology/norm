@@ -294,11 +294,11 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
             $this->filter = Filter::fromSchema($this->schema());
         }
 
-        if (is_null($key)) {
-            $this->filter->run($model);
-        } else {
-            throw new \Exception(__METHOD__.' unimplemented selective field filter.');
-        }
+        return $this->filter->run($model, $key);
+        // if (is_null($key)) {
+        // } else {
+        //     throw new \Exception(__METHOD__.' unimplemented selective field filter.');
+        // }
     }
 
     public function remove($model)
