@@ -58,11 +58,15 @@ class Cursor implements ICursor, JsonSerializer
         return $this->cursor->rewind();
     }
 
-    public function toArray()
+    public function toArray($plain = false)
     {
         $result = array();
         foreach ($this as $key => $value) {
-            $result[] = $value;
+            if ($plain) {
+                $result[] = $value->toArray();
+            } else {
+                $result[] = $value;
+            }
         }
         return $result;
     }
