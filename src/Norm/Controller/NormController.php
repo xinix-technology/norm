@@ -81,6 +81,8 @@ class NormController extends RestController
                 $model = $this->collection->newInstance();
                 $result = $model->set($entry)->save();
 
+                $entry = $model;
+
                 h('notification.info', $this->clazz.' created.');
 
                 h('controller.create.success', array(
@@ -149,6 +151,8 @@ class NormController extends RestController
                 $entry = array_merge($entry, $this->request->post());
                 $model = $this->collection->findOne($id);
                 $model->set($entry)->save();
+
+                $entry = $model;
 
                 h('notification.info', $this->clazz.' updated');
 
