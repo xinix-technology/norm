@@ -49,8 +49,13 @@ abstract class Field implements \ArrayAccess
         if (is_null($label)) {
             $label = Inflector::humanize($name);
         }
+
         $this->set('name', $name);
         $this->set('label', $label);
+
+        if (!empty($name) && $name[0] === '$') {
+            $this->set('hidden', true);
+        }
     }
 
     public function prepare($value)
