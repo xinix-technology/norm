@@ -2,6 +2,8 @@
 
 namespace Norm\Schema;
 
+use Norm\Type\Secret as Secret;
+
 class Password extends Field
 {
     public function toJSON($value)
@@ -30,11 +32,21 @@ class Password extends Field
         return '<span class="field">*hidden*</span>';
     }
 
-    public function cell($value, $entry = null)
+    public function prepare($value)
     {
-        if ($this->has('cellFormat')) {
-            return parent::cell($value, $entry);
+
+        if ($value instanceof Secret) {
+            return $value;
+        } else {
+            return new Secret($value);
         }
-        return '*hidden*';
     }
+
+    // public function cell($value, $entry = null)
+    // {
+    //     if ($this->has('cellFormat')) {
+    //         return parent::cell($value, $entry);
+    //     }
+    //     return '*hidden*';
+    // }
 }
