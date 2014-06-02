@@ -84,14 +84,13 @@ class OCICursor extends \Norm\Cursor implements ICursor
         $matchOrs = array();
         $criteria = $this->prepareCriteria($this->criteria);
 
-        if (is_null($this->match)) {
-            $criteria = $this->prepareCriteria($this->criteria);
-            if ($criteria) {
-                foreach ($criteria as $key => $value) {
-                    $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
-                }
+        if ($criteria) {
+            foreach ($criteria as $key => $value) {
+                $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
             }
-        } else {
+        }
+
+        if (!is_null($this->match)) {
             $schema = $this->collection->schema();
 
             $i = 0;
@@ -99,7 +98,7 @@ class OCICursor extends \Norm\Cursor implements ICursor
                 if ($value instanceof \Norm\Schema\Reference) {
                     $matchOrs[] = $this->getQueryReference($i, $key, $value);
                 } else {
-                    $matchOrs[] = $key.' LIKE :f'.$i;
+                    $matchOrs[] = $key.' LIKE :m'.$i;
                     $i++;
                 }
             }
@@ -129,7 +128,7 @@ class OCICursor extends \Norm\Cursor implements ICursor
                 $match = '%'.$this->match.'%';
 
                 foreach ($matchOrs as $key => $value) {
-                    oci_bind_by_name($statement, ':f'.$key, $match);
+                    oci_bind_by_name($statement, ':m'.$key, $match);
                 }
             }
         }
@@ -178,22 +177,25 @@ class OCICursor extends \Norm\Cursor implements ICursor
         $limit = '';
         $query = 'SELECT * FROM '.$this->collection->name;
 
-        if (is_null($this->match)) {
-            $criteria = $this->prepareCriteria($this->criteria);
+        
 
-            if ($criteria) {
-                foreach ($criteria as $key => $value) {
-                    $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
-                }
+        //fixme januar :  match and criteria match
+        $criteria = $this->prepareCriteria($this->criteria);
+
+        if ($criteria) {
+            foreach ($criteria as $key => $value) {
+                $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
             }
-        } else {
+        }
+
+        if (!is_null($this->match)) {
             $i = 0;
             $schema = $this->collection->schema();
             foreach ($schema as $key => $value) {
                 if ($value instanceof \Norm\Schema\Reference) {
                     $matchOrs[] = $this->getQueryReference($i, $key, $value);
                 } else {
-                    $matchOrs[] = $key.' LIKE :f'.$i;
+                    $matchOrs[] = $key.' LIKE :m'.$i;
                     $i++;
                 }
             }
@@ -237,13 +239,16 @@ class OCICursor extends \Norm\Cursor implements ICursor
 
         if ($matchOrs) {
             $match = '%'.$this->match.'%';
-
             foreach ($matchOrs as $key => $value) {
-                oci_bind_by_name($statement, ':f'.$key, $match);
+                oci_bind_by_name($statement, ':m'.$key, $match);
             }
         }
 
         oci_execute($statement);
+
+        // var_dump($query);
+        // var_dump($data);
+
 
         $result = array();
         while ($row = oci_fetch_array($statement, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS)) {
@@ -287,10 +292,10 @@ class OCICursor extends \Norm\Cursor implements ICursor
 
         if(!$schema['foreignGroup']){
             $query = $key .
-            ' IN (SELECT '.$schema['foreignKey'].' FROM '.strtolower($schema['foreign']).' WHERE '.$schema['foreignLabel'].' LIKE :f'.$i.') ';
+            ' IN (SELECT '.$schema['foreignKey'].' FROM '.strtolower($schema['foreign']).' WHERE '.$schema['foreignLabel'].' LIKE :m'.$i.') ';
         }else{
             $query = $key .
-            ' IN (SELECT '.$schema['foreignKey'].' FROM '.strtolower($schema['foreign']).' WHERE '.$schema['foreignLabel'].' LIKE :f'.$i.' AND groups =\''.$schema['foreignGroup'].'\') ';
+            ' IN (SELECT '.$schema['foreignKey'].' FROM '.strtolower($schema['foreign']).' WHERE '.$schema['foreignLabel'].' LIKE :m'.$i.' AND groups =\''.$schema['foreignGroup'].'\') ';
             
         }
         
