@@ -47,10 +47,12 @@ class NormController extends RestController
 
     public function getLimit()
     {
-        $limit = $this->request->get('!limit') ?:
-            isset($this->collection->options['limit'])
-                ? $this->collection->options['limit']
-                : null;
+        $limit = $this->request->get('!limit');
+
+        if (!isset($limit) && isset($this->collection->options['limit'])) {
+            $limit = $this->collection->options['limit'];
+        }
+
         return $limit;
     }
 
