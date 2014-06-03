@@ -208,7 +208,7 @@ class Filter
             unset($data[$key.'_confirmation']);
             throw new SkipException();
         }
-        if ($value !== $data[$key.'_confirmation']) {
+        if ($value.'' !== $data[$key.'_confirmation']) {
             throw FilterException::factory($key, 'Field %s must be confirmed')->args($this->rules[$key]['label']);
         }
         unset($data[$key.'_confirmation']);
