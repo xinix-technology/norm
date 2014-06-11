@@ -284,6 +284,10 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
         $attributes = array();
 
+        if (empty($this->attributes)) {
+            $this->attributes = array();
+        }
+
         if ($fetchType === Model::FETCH_ALL || $fetchType === Model::FETCH_HIDDEN) {
             $attributes['$type'] = $this->clazz;
             $attributes['$id'] = $this->getId();
