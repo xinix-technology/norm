@@ -260,4 +260,12 @@ class Filter
         }
         return $value;
     }
+
+    public function filterEmail($key, $value)
+    {
+        if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+            throw FilterException::factory($key, 'Field %s is not valid email')->args($this->rules[$key]['label']);
+        }
+        return $value;
+    }
 }
