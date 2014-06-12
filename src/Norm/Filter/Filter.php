@@ -157,7 +157,8 @@ class Filter
                             $innerMethodName = 'filter'.strtoupper($method[0]).substr($method, 1);
                             if (method_exists($this, $innerMethodName)) {
                                 $method = $innerMethodName;
-                                $data[$k] = $this->$method($k, $data[$k], $data, $args);
+                                $val = (isset($data[$k])) ? $data[$k] : null;
+                                $data[$k] = $this->$method($k, $val, $data, $args);
                             } elseif (isset(static::$registries[$method]) && is_callable(static::$registries[$method])) {
                                 $method = static::$registries[$method];
                                 $data[$k] = call_user_func($method, $data[$k], $data, $args);
