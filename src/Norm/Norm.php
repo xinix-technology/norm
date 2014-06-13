@@ -155,6 +155,10 @@ class Norm
                         $resolverOpts = array();
                     }
 
+                    if (is_array($resolverOpts)) {
+                        $options = array_merge_recursive($options, $resolverOpts);
+                    }
+
                     $resolver = new $resolver($resolverOpts);
                     $config = $resolver->resolve($options);
                     if (isset($config)) {
