@@ -206,7 +206,7 @@ class NormController extends RestController
             ));
         }
 
-        $this->data['ids'] = $id;
+        // $this->data['ids'] = $id;
     }
 
     public function schema($schema = null)
