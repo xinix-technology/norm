@@ -19,6 +19,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
 
     protected $filter;
 
+    protected $cache;
+
 
     public function __construct(array $options = array())
     {
@@ -41,6 +43,9 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
                 $this->observe($Observer);
             }
         }
+
+        $this->resetCache();
+
     }
 
     public function option($key)
@@ -178,9 +183,33 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
 
     public function findOne($criteria = null)
     {
-        $cursor = $this->find($criteria);
-        $this->criteria = null;
-        return $cursor->getNext();
+        $model = $this->fetchCache($criteria);
+        if (is_null($model)) {
+            $cursor = $this->find($criteria);
+            $this->criteria = null;
+            $model = $cursor->getNext();
+            $this->rememberCache($criteria, $model);
+        }
+        return $model;
+    }
+
+    protected function resetCache()
+    {
+        $this->cache = array();
+    }
+
+    protected function rememberCache($criteria, $model)
+    {
+        $ser = serialize($criteria);
+        $this->cache[$ser] = $model;
+    }
+
+    protected function fetchCache($criteria)
+    {
+        $ser = serialize($criteria);
+        if (isset($this->cache[$ser])) {
+            return $this->cache[$ser];
+        }
     }
 
     // DEPRECATED reekoheek: moved to observer
@@ -280,6 +309,8 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
         $this->applyHook('saving', $model, $options);
 
         $result = $this->connection->save($this, $model);
+
+        $this->resetCache();
 
         $this->applyHook('saved', $model, $options);
 
