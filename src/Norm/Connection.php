@@ -53,9 +53,13 @@ abstract class Connection extends Hookable
         $this->initialize($options);
     }
 
-    public function getOptions()
+    public function option($name = null)
     {
-        return $this->options;
+        if (func_num_args() === 0) {
+            return $this->options;
+        } elseif (isset($this->options[$name])) {
+            return $this->options[$name];
+        }
     }
 
     public function getName()
