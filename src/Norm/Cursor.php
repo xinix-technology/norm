@@ -14,6 +14,8 @@ class Cursor implements ICursor, JsonSerializer
 
     protected $links;
 
+    protected $profiled = false;
+
     public function __construct($cursor, $collection)
     {
         $this->cursor = $cursor;
@@ -22,6 +24,13 @@ class Cursor implements ICursor, JsonSerializer
 
     public function getNext()
     {
+        if (!$this->profiled && $this->collection->connection->option('debug')) {
+            f('profile.add', array(
+                'section' => 'norm',
+                'value' => $this->cursor->getQueryInfo()
+            ));
+            $this->profiled = true;
+        }
         $next = $this->cursor->getNext();
         if (isset($next)) {
             return $this->collection->attach($next);
@@ -31,6 +40,12 @@ class Cursor implements ICursor, JsonSerializer
 
     public function current()
     {
+        if (!$this->profiled && $this->collection->connection->option('debug')) {
+            f('profile.add', array('section' => 'norm', 'value' => array(
+                'q' => $this->cursor->getQueryInfo(),
+            )));
+            $this->profiled = true;
+        }
         $current = $this->cursor->current();
         if (isset($current)) {
             return $this->collection->attach($current);
