@@ -161,7 +161,6 @@ class NormController extends RestController
             } catch (\Slim\Exception\Stop $e) {
                 throw $e;
             } catch (\Exception $e) {
-
                 h('notification.error', $e);
 
                 h('controller.update.error', array(
