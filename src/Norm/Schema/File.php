@@ -8,7 +8,7 @@ class File extends Object
     {
         $app = \App::getInstance();
 
-        if ($app->request->isPost()) {
+        if ($app->request->isPost() && !empty($_FILES)) {
             $fileMeta = $_FILES[$this['name']];
 
             $bucket = trim($this['bucket'], '/');
