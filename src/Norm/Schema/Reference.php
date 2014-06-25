@@ -99,17 +99,23 @@ class Reference extends Field
         if (is_null($this['foreign'])) {
             throw new \Exception('Reference schema should invoke Reference::to()');
         }
-        return parent::format($name, $valueOrCallable, $entry);
+
+        if (func_num_args() === 3) {
+            return parent::format($name, $valueOrCallable, $entry);
+        } else {
+            return parent::format($name, $valueOrCallable);
+        }
     }
 
     public function formatPlain($value, $entry = null)
     {
         $value = $this->prepare($value);
 
-        if (is_null($value)) {
-            $label = '';
-        } elseif (is_array($this['foreign'])) {
-            $label = $this['foreign'][$value];
+        $label = '';
+        if (is_array($this['foreign'])) {
+            if (isset($this['foreign'][$value])) {
+                $label = $this['foreign'][$value];
+            }
         } elseif (is_callable($this['foreign'])) {
             $label = $this['foreign']($value);
         } else {
