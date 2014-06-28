@@ -6,7 +6,7 @@ use \Bono\Helper\URL;
     <?php foreach ($self->findOptions() as $key => $entry): ?>
         <?php
 
-        if (is_string($entry)):
+        if (is_scalar($entry)):
             $label = $entry;
         elseif (is_callable($self['foreignLabel'])):
             $getLabel = $self['foreignLabel'];
@@ -15,7 +15,7 @@ use \Bono\Helper\URL;
             $label = $entry[$self['foreignLabel']];
         endif;
 
-        if (is_string($entry)):
+        if (is_scalar($entry)):
             $entryValue = $key;
         else:
             $entryValue = $entry[$self['foreignKey']];
