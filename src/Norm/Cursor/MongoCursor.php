@@ -233,4 +233,9 @@ class MongoCursor implements ICursor
         $this->skip = (int) $num;
         return $this;
     }
+
+    public function getQueryInfo()
+    {
+        return $this->getCursor()->info();
+    }
 }

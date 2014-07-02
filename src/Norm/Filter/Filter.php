@@ -216,6 +216,14 @@ class Filter
         return $value;
     }
 
+    public function filterIgnoreNull($key, $value, $data)
+    {
+        if ($value == '') {
+            unset($data[$key]);
+            throw new SkipException();
+        }
+    }
+
     public function filterUnique($key, $value, $data, $args = array())
     {
         $clazz = $args[0];

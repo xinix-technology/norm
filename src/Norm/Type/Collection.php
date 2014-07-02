@@ -26,7 +26,9 @@ abstract class Collection implements \JsonKit\JsonSerializer, \ArrayAccess, \Ite
 
     public function offsetGet($key)
     {
-        return $this->attributes[$key];
+        if ($this->offsetExists($key)) {
+            return $this->attributes[$key];
+        }
     }
 
     public function offsetSet($key, $value)

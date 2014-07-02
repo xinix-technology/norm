@@ -60,7 +60,7 @@ abstract class Field implements \ArrayAccess
 
     public function prepare($value)
     {
-        return $value;
+        return filter_var($value, FILTER_SANITIZE_STRING);
     }
 
     // public function render($format, $value, $entry = null)

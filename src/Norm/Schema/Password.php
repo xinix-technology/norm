@@ -34,7 +34,6 @@ class Password extends Field
 
     public function prepare($value)
     {
-
         if ($value instanceof Secret) {
             return $value;
         } else {
