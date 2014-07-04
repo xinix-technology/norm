@@ -1,6 +1,4 @@
-<?php
-
-namespace Norm\Mongo;
+<?php namespace Norm\Mongo;
 
 use Norm\Norm;
 use Norm\Schema\String;
@@ -8,11 +6,12 @@ use Norm\Schema\DateTime;
 use Norm\Schema\Text;
 use Norm\Schema\Integer;
 
-class Fixture {
-
+class Fixture
+{
     protected static $config;
 
-    public static function config($key = '') {
+    public static function config($key = '')
+    {
         if (!isset(static::$config)) {
             static::$config = array(
                 'norm.databases' => array(
@@ -41,6 +40,7 @@ class Fixture {
                 ),
             );
         }
+
         if (empty($key)) {
             return Fixture::$config;
         } else {
@@ -48,7 +48,8 @@ class Fixture {
         }
     }
 
-    public static function init() {
+    public static function init()
+    {
         Norm::reset();
 
         Norm::init(Fixture::config('norm.databases'), Fixture::config('norm.collections'));

@@ -4,11 +4,13 @@ namespace Norm\Mysql;
 
 use Norm\Norm;
 use Norm\Collection;
+use Norm\Cursor;
 use Norm\Model;
+use PHPUnit_Framework_TestCase;
 
 require_once('Fixture.php');
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase {
+class ConnectionTest extends PHPUnit_Framework_TestCase {
     private $connection;
 
     public function setUp() {
@@ -29,10 +31,13 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->assertNotEmpty($result, 'is return not empty');
 
         $model = $collection->findOne(array(
-            '$id' => $model->getId(),
+            'firstName' => 'adoel'
         ));
-        $this->assertEquals($model->get('firstName'), $firstName, 'has valid firstName field.');
-        $this->assertEquals($model->get('lastName'), $lastName, 'has valid lastName field.');
+
+        $this->assertNotNull($model, ' model not null');
+
+        $this->assertEquals($model->get('firstname'), $firstName, 'has valid firstName field.');
+        $this->assertEquals($model->get('lastname'), $lastName, 'has valid lastName field.');
     }
 
     public function testUpdate() {
@@ -40,7 +45,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
 
         $collection = Norm::factory('User');
 
-        $model = $collection->findOne(array( 'firstName' => 'putra' ));
+        $model = $collection->findOne(array('firstName' => 'putra'));
 
         $model->set('lastName', $lastName);
         $result = $model->save();
@@ -51,14 +56,14 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
             '$id' => $model->getId()
         ));
 
-        $this->assertEquals($model->get('lastName'), $lastName, 'has valid lastName field.');
+        $this->assertEquals($model->get('lastname'), $lastName, 'has valid lastName field.');
     }
 
     public function testRemove() {
 
         $collection = Norm::factory('User');
 
-        $model = $collection->findOne(array( 'firstName' => 'putra' ));
+        $model = $collection->findOne(array('firstName' => 'putra'));
         $id = $model->getId();
         $model->remove();
 
@@ -76,8 +81,13 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
 
         $a = $collection->find();
 
+        $this->assertTrue($a instanceof Cursor, 'is instance of Cursor');
+
+        $a = $a->toArray();
+
         $this->assertTrue(is_array($a));
+
         $this->assertEquals(count($a), 1);
-        $this->assertTrue($a[0] instanceof Model, 'is able to get array of Model instances');
+        $this->assertTrue($a[0] instanceof Model, 'is instance of Model');
     }
 }

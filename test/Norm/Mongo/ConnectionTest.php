@@ -5,10 +5,12 @@ namespace Norm\Mongo;
 use Norm\Norm;
 use Norm\Collection;
 use Norm\Model;
+use PHPUnit_Framework_TestCase;
 
 require_once('Fixture.php');
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase {
+class ConnectionTest extends PHPUnit_Framework_TestCase
+{
     private $connection;
 
     public function setUp() {

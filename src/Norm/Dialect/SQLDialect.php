@@ -20,6 +20,7 @@ class SQLDialect
     public function listCollections()
     {
         $statement = $this->raw->query('SHOW TABLES');
+
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -42,6 +43,7 @@ class SQLDialect
         }
         $sql = 'CREATE TABLE '.$name.'(id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL, '.
             implode(', ', $fieldDefinitions).')';
+
         return $sql;
     }
 
@@ -69,6 +71,7 @@ class SQLDialect
                         break;
                 }
             }
+
             return '('.implode(' '.strtoupper(substr($key, 1)).' ', $wheres).')';
         }
 
@@ -121,14 +124,13 @@ class SQLDialect
             }
         }
 
-
-
         $fk = 'f'.$this->expressionCounter++;
         $data[$fk] = $fValue;
-        return $field.' '.$operator.' :'.$fk;
+
+        return "`$field`".' '.$operator.' :'.$fk;
 
         $op = (isset($key[1])) ? $key[1] : '=';
-        switch($op) {
+        switch ($op) {
             case 'ne':
                 $op = '!=';
                 break;
@@ -146,7 +148,6 @@ class SQLDialect
                 break;
         }
 
-
         if ($op == 'in') {
             $fgroup = array();
             foreach ($value as $k => $v) {
@@ -161,11 +162,13 @@ class SQLDialect
             if (empty($fgroup)) {
                 return '(1)';
             }
-            return $key . ' ' . $op . ' ('.implode(', ', $fgroup).')';
+
+            return "`$key`" . ' ' . $op . ' ('.implode(', ', $fgroup).')';
         } else {
             $this->expressionCounter++;
             $data['f'.$this->expressionCounter] = $value;
-            return $key . ' ' . $op . ' :f' . $this->expressionCounter;
+
+            return "`$key`" . ' ' . $op . ' :f' . $this->expressionCounter;
         }
     }
 
@@ -173,6 +176,7 @@ class SQLDialect
     {
         $statement = $this->raw->prepare($sql);
         $result = $statement->execute($data);
+
         return $result;
     }
 
@@ -196,11 +200,11 @@ class SQLDialect
                 $sets[] = $k.' = :'.$k;
             }
 
-            $fields[] = $k;
+            $fields[] = "`$k`";
             $placeholders[] = ':'.$k;
         }
 
-        $sql = 'INSERT INTO '.$collectionName.'('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).')';
+        $sql = 'INSERT INTO `'.$collectionName.'` ('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).')';
 
         return $sql;
     }
@@ -208,6 +212,7 @@ class SQLDialect
     public function insert($collectionName, $data)
     {
         $sql = $this->grammarInsert($collectionName, $data);
+
         return $this->execute($sql, $data);
     }
 
@@ -231,8 +236,7 @@ class SQLDialect
             }
         }
 
-        $sql = 'UPDATE '.$collectionName.' SET '.implode(', ', $sets) . ' WHERE id = :id';
-
+        $sql = 'UPDATE `'.$collectionName.'` SET '.implode(', ', $sets) . ' WHERE id = :id';
 
         return $sql;
     }
