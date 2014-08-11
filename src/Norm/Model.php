@@ -396,9 +396,24 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         }
     }
 
-    public function format($format, $field, $callable = null)
+    public function schemaByIndex($index)
     {
-        if (func_num_args() === 3) {
+        $schema = array_values($this->collection->schema());
+        return @$schema[$index];
+    }
+
+    public function format($format = null, $field = null, $callable = null)
+    {
+        $numArgs = func_num_args();
+        if ($numArgs === 0) {
+            if (isset($this->collection->options['format']) && is_callable($this->collection->options['format'])) {
+                $formatCallable = $this->collection->options['format'];
+                return $formatCallable($this);
+            } else {
+                $schema = $this->schemaByIndex(0);
+                return $schema->format('plain', @$this[$schema['name']], $this) ?: '-- no identifier --';
+            }
+        } elseif ($numArgs === 3) {
             if (!isset($this->formats[$field])) {
                 $this->formats[$field] = array();
             }
