@@ -140,13 +140,19 @@ class NormController extends RestController
             return $this->app->notFound();
         }
 
-        if (isset($entry)) {
-            $entry = $entry->toArray();
-        }
+        // reekoheek: i move this lines to inside of try below
+        // if (isset($entry)) {
+        //     $entry = $entry->toArray();
+        // }
 
         if ($this->request->isPost() || $this->request->isPut()) {
 
             try {
+                // reekoheek: moved from above
+                if (isset($entry)) {
+                    $entry = $entry->toArray();
+                }
+
                 $entry = array_merge($entry, $this->request->post());
                 $model = $this->collection->findOne($id);
                 $model->set($entry)->save();
@@ -162,6 +168,10 @@ class NormController extends RestController
                 throw $e;
             } catch (\Exception $e) {
                 h('notification.error', $e);
+
+                if (empty($model)) {
+                    $model = null;
+                }
 
                 h('controller.update.error', array(
                     'error' => $e,
