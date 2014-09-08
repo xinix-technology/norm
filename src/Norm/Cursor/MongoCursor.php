@@ -77,9 +77,9 @@ class MongoCursor implements ICursor
         if (isset($splitted[1])) {
             switch ($splitted[1]) {
                 case 'like':
-                    return array($field, array('$regex', new \MongoRegex("/$value/i")));
+                    return array($field, array('$regex' => new \MongoRegex("/$value/i")));
                 case 'regex':
-                    return array($field, array('$regex', new \MongoRegex($value)));
+                    return array($field, array('$regex' => new \MongoRegex($value)));
                 case 'in':
                 case 'nin':
                     $operator = '$'.$splitted[1];
@@ -151,6 +151,10 @@ class MongoCursor implements ICursor
             }
 
         }
+
+        // debug purpose only
+        // var_dump($newCriteria);
+        // exit;
 
         return $newCriteria;
     }
