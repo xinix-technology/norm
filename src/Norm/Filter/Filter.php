@@ -159,16 +159,17 @@ class Filter
                                 $method = $innerMethodName;
                                 $val = (isset($data[$k])) ? $data[$k] : null;
                                 $data[$k] = $this->$method($k, $val, $data, $args);
-                            } elseif (isset(static::$registries[$method]) && is_callable(static::$registries[$method])) {
+                            } elseif (isset(static::$registries[$method]) &&
+                                is_callable(static::$registries[$method])) {
                                 $method = static::$registries[$method];
                                 $data[$k] = call_user_func($method, $data[$k], $data, $args);
                             } elseif (function_exists($method)) {
-                                $data[$k] = $method($data[$k]);
+                                $data[$k] = $method($data[$k], $data);
                             } else {
                                 throw new \Exception('Filter "'.$filterChain.'" not found.');
                             }
                         } elseif (is_callable($filterChain)) {
-                            $data[$k] = call_user_func($rule, $k, $data[$k], $data, $args);
+                            $data[$k] = call_user_func($filterChain, $data[$k], $data, array());
                         }
                     } catch (SkipException $e) {
                         break;
@@ -204,10 +205,10 @@ class Filter
 
     public function filterConfirmed($key, $value, $data)
     {
-        if ($value == '') {
+        if (is_null($value) || $value === '') {
             unset($data[$key]);
             unset($data[$key.'_confirmation']);
-            throw new SkipException();
+            return '';
         }
         if ($value.'' !== $data[$key.'_confirmation']) {
             throw FilterException::factory($key, 'Field %s must be confirmed')->args($this->rules[$key]['label']);
@@ -216,16 +217,23 @@ class Filter
         return $value;
     }
 
-    public function filterIgnoreNull($key, $value, $data)
-    {
-        if ($value == '') {
-            unset($data[$key]);
-            throw new SkipException();
-        }
-    }
+    // DEPRECATED
+    // public function filterIgnoreNull($key, $value, $data)
+    // {
+    //     if ($value == '') {
+    //         unset($data[$key]);
+    //         throw new SkipException();
+    //     }
+
+    //     return $value;
+    // }
 
     public function filterUnique($key, $value, $data, $args = array())
     {
+        if (is_null($value) || $value === '') {
+            return '';
+        }
+
         $clazz = $args[0];
         $field = isset($args[1]) ? $args[1] : $key;
         $model = \Norm\Norm::factory($clazz)->findOne(array($field => $value));
@@ -237,6 +245,10 @@ class Filter
 
     public function filterRequiredWith($key, $value, $data, $args = array())
     {
+        if (is_null($value) || $value === '') {
+            return '';
+        }
+
         if (!empty($data[$args[0]]) && (is_null($value) || $value === '')) {
             throw FilterException::factory($key, 'Field %s is required')->args($this->rules[$key]['label']);
         }
@@ -246,6 +258,10 @@ class Filter
 
     public function filterRequiredWithout($key, $value, $data, $args = array())
     {
+        if (is_null($value) || $value === '') {
+            return '';
+        }
+
         if (empty($data[$args[0]]) && (is_null($value) || $value === '')) {
             throw FilterException::factory($key, 'Field %s is required')->args($this->rules[$key]['label']);
         }
@@ -255,6 +271,10 @@ class Filter
 
     public function filterMin($key, $value, $data, $args = array())
     {
+        if (is_null($value) || $value === '') {
+            return '';
+        }
+
         if ($value < $args[0]) {
             throw FilterException::factory($key, 'Field %s less than '.$args[0])->args($this->rules[$key]['label']);
         }
@@ -264,6 +284,10 @@ class Filter
 
     public function filterIp($key, $value)
     {
+        if (is_null($value) || $value === '') {
+            return '';
+        }
+
         if (!empty($value) && !filter_var($value, FILTER_VALIDATE_IP)) {
             throw FilterException::factory($key, 'Field %s is not valid IP Address')->args($this->rules[$key]['label']);
         }
@@ -272,6 +296,10 @@ class Filter
 
     public function filterEmail($key, $value)
     {
+        if (is_null($value) || $value === '') {
+            return '';
+        }
+
         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
             throw FilterException::factory($key, 'Field %s is not valid email')->args($this->rules[$key]['label']);
         }
