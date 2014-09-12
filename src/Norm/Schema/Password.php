@@ -36,6 +36,8 @@ class Password extends Field
     {
         if ($value instanceof Secret) {
             return $value;
+        } elseif (empty($value)) {
+            return null;
         } else {
             return new Secret($value);
         }

@@ -164,7 +164,7 @@ class Filter
                                 $method = static::$registries[$method];
                                 $data[$k] = call_user_func($method, $data[$k], $data, $args);
                             } elseif (function_exists($method)) {
-                                $data[$k] = $method($data[$k], $data);
+                                $data[$k] = $method($data[$k]);
                             } else {
                                 throw new \Exception('Filter "'.$filterChain.'" not found.');
                             }
