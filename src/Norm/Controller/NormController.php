@@ -192,27 +192,45 @@ class NormController extends RestController
                 $single = true;
             }
 
-            $this->data['entries'] = array();
-            foreach ($id as $value) {
-                $model = $this->collection->findOne($value);
+            try {
 
-                if (is_null($model)) {
-                    if ($single) {
-                        $this->app->notFound();
+                $this->data['entries'] = array();
+                foreach ($id as $value) {
+                    $model = $this->collection->findOne($value);
+
+                    if (is_null($model)) {
+                        if ($single) {
+                            $this->app->notFound();
+                        }
+                        continue;
                     }
-                    continue;
+
+                    $model->remove();
+
+                    $this->data['entries'][] = $model;
                 }
 
-                $model->remove();
+                h('notification.info', $this->clazz.' deleted.');
 
-                $this->data['entries'][] = $model;
+                h('controller.delete.success', array(
+                    'models' => $this->data['entries'],
+                ));
+
+            } catch (\Slim\Exception\Stop $e) {
+                throw $e;
+            } catch (\Exception $e) {
+                h('notification.error', $e);
+
+                if (empty($model)) {
+                    $model = null;
+                }
+
+                h('controller.delete.error', array(
+                    'error' => $e,
+                    'model' => $model,
+                ));
             }
 
-            h('notification.info', $this->clazz.' deleted.');
-
-            h('controller.delete.success', array(
-                'models' => $this->data['entries'],
-            ));
         }
 
         // $this->data['ids'] = $id;
