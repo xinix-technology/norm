@@ -63,6 +63,14 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
             $this->hook('saved', array($observer, 'saved'));
         }
 
+        if (method_exists($observer, 'filtering')) {
+            $this->hook('filtering', array($observer, 'filtering'));
+        }
+
+        if (method_exists($observer, 'filtered')) {
+            $this->hook('filtered', array($observer, 'filtered'));
+        }
+
         if (method_exists($observer, 'removing')) {
             $this->hook('removing', array($observer, 'removing'));
         }
@@ -304,6 +312,7 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
     {
         if (!isset($options['filter']) || $options['filter'] === true) {
             $this->filter($model);
+
         }
 
         $this->applyHook('saving', $model, $options);
@@ -325,7 +334,15 @@ class Collection extends Hookable implements \JsonKit\JsonSerializer
             $this->filter = Filter::fromSchema($this->schema());
         }
 
-        return $this->filter->run($model, $key);
+
+        $this->applyHook('filtering', $model, $key);
+
+        $result = $this->filter->run($model, $key);
+
+        $this->applyHook('filtered', $model, $key);
+
+        return $result;
+
         // if (is_null($key)) {
         // } else {
         //     throw new \Exception(__METHOD__.' unimplemented selective field filter.');
