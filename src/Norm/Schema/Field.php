@@ -190,7 +190,7 @@ abstract class Field implements \ArrayAccess
 
     public function formatReadonly($value, $entry = null)
     {
-        return "<span class=\"field\">".($value ?: '&nbsp;')."</span>";
+        return "<span class=\"field\">".($this->formatPlain($value, $entry) ?: '&nbsp;')."</span>";
     }
 
     public function formatInput($value, $entry = null)

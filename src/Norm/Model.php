@@ -163,7 +163,15 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     public function dump()
     {
-        return $this->attributes;
+        $attributes = array();
+        foreach ($this->attributes as $key => $value) {
+            $schema = $this->schema($key);
+            if ($schema['transient']) {
+                continue;
+            }
+            $attributes[$key] = $value;
+        }
+        return $attributes;
     }
 
     public function add($key, $value)
@@ -426,7 +434,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         } else {
             $schema = $this->schema($field);
             if (isset($schema)) {
-                return $schema->format($format, $this[$field]);
+                return $schema->format($format, $this[$field], $this);
             }
 
             return $this[$field];
