@@ -56,26 +56,6 @@ class OCIConnection extends \Norm\Connection
         throw new \Exception('Not implemented!');
     }
 
-    public function prepare(Collection $collection, $object)
-    {
-        $object = array_change_key_case($object, CASE_LOWER);
-        $newObject = array(
-            '$id' => $object['id'],
-        );
-        foreach ($object as $key => $value) {
-            if ($key === 'id') {
-                continue;
-            }
-
-            if ($key[0] === '_') {
-                $key[0] = '$';
-            }
-            $newObject[$key] = $value;
-        }
-
-        return $newObject;
-    }
-
     public function query(Collection $collection)
     {
         return new Cursor($collection);

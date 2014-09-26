@@ -104,9 +104,48 @@ abstract class Connection extends Hookable
         return false;
     }
 
+    /**
+     * Unmarshall single object from data source to associative array. The
+     * unmarshall process is necessary due to different data type provided by
+     * data source. Proper unmarshall will make sure data from data source that
+     * will be consumed by Norm in the accepted form of data.
+     *
+     * @see Norm\Connection::marshall()
+     *
+     * @param  mixed     $object     Object from data source
+     * @return assoc                 Friendly norm data
+     */
+    public function unmarshall($object)
+    {
+        $newObject = array(
+            '$id' => $object['id'],
+        );
+        foreach ($object as $key => $value) {
+            if ($key === 'id') {
+                continue;
+            }
+            if ($key[0] === '_') {
+                $key[0] = '$';
+            }
+            $newObject[$key] = $value;
+        }
+
+        return $newObject;
+    }
+
+    /**
+     * Marshal single object from norm to the proper data accepted by data
+     * source. Sometimes data source expects object to be persisted to it in
+     * specific form, this method will transform associative array from Norm
+     * into this specific form.
+     *
+     * @see Norm\Connection::unmarshall()
+     *
+     * @param  assoc    $object Norm data
+     * @return mixed            Friendly data source object
+     */
     public function marshall($object)
     {
-
         if (is_array($object)) {
             $result = array();
             foreach ($object as $key => $value) {
@@ -132,10 +171,9 @@ abstract class Connection extends Hookable
     }
 
     abstract public function initialize($options);
-    // abstract public function migrate(Collection $collection);
     abstract public function listCollections();
-    abstract public function prepare(Collection $collection, $object);
     abstract public function query(Collection $collection);
     abstract public function save(Collection $collection, Model $model);
     abstract public function remove(Collection $collection, $model);
+    // abstract public function migrate(Collection $collection);
 }

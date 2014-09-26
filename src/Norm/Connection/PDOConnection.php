@@ -115,24 +115,6 @@ class PDOConnection extends \Norm\Connection
         return new PDOCursor($collection);
     }
 
-    public function prepare(Collection $collection, $object)
-    {
-        $newObject = array(
-            '$id' => $object['id'],
-        );
-        foreach ($object as $key => $value) {
-            if ($key === 'id') {
-                continue;
-            }
-            if ($key[0] === '_') {
-                $key[0] = '$';
-            }
-            $newObject[$key] = $value;
-        }
-
-        return $newObject;
-    }
-
     public function remove(Collection $collection, $model)
     {
         if (!empty($this->options['autocreate'])) {

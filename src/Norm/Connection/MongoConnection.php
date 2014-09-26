@@ -60,29 +60,17 @@ class MongoConnection extends Connection
         return $retval;
     }
 
-    // public function migrate(Collection $collection) {
-    //     // noop
-    // }
-
-    public function prepare(Collection $collection, $object)
+    /**
+     * @see Norm\Connection::unmarshall()
+     */
+    public function unmarshall($object)
     {
-        $newObject = array(
-            '$id' => (string) $object['_id'],
-        );
-        foreach ($object as $key => $value) {
-            if ($key === '_id') {
-                continue;
-            }
-            if ($key[0] === '_') {
-                $key[0] = '$';
-            }
-            if ($value instanceof \MongoDate) {
-                $value = new DateTime('@'.$value->sec, new \DateTimeZone(date_default_timezone_get()));
-            }
-            $newObject[$key] = $value;
+        if (isset($object['_id'])) {
+            $object['id'] = $object['_id'];
+            unset($object['_id']);
         }
 
-        return $newObject;
+        return parent::unmarshall($object);
     }
 
     public function query(Collection $collection)
