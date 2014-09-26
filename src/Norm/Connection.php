@@ -117,20 +117,24 @@ abstract class Connection extends Hookable
      */
     public function unmarshall($object)
     {
-        $newObject = array(
-            '$id' => $object['id'],
-        );
-        foreach ($object as $key => $value) {
-            if ($key === 'id') {
-                continue;
+        if (isset($object['id'])) {
+            $newObject = array(
+                '$id' => $this->unmarshall($object['id']),
+            );
+            foreach ($object as $key => $value) {
+                if ($key === 'id') {
+                    continue;
+                }
+                if ($key[0] === '_') {
+                    $key[0] = '$';
+                }
+                $newObject[$key] = $this->unmarshall($value);
             }
-            if ($key[0] === '_') {
-                $key[0] = '$';
-            }
-            $newObject[$key] = $value;
+
+            $object = $newObject;
         }
 
-        return $newObject;
+        return $object;
     }
 
     /**

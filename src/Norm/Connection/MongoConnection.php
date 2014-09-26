@@ -65,12 +65,31 @@ class MongoConnection extends Connection
      */
     public function unmarshall($object)
     {
-        if (isset($object['_id'])) {
+        if ($object instanceof \MongoDate) {
+            $object = new DateTime('@'.$object->sec, new \DateTimeZone(date_default_timezone_get()));
+        } elseif ($object instanceof \MongoId) {
+            $object = (string) $object;
+        } elseif (isset($object['_id'])) {
             $object['id'] = $object['_id'];
             unset($object['_id']);
+            $object = parent::unmarshall($object);
+        } else {
+            $object = parent::unmarshall($object);
         }
+        return $object;
+    }
 
-        return parent::unmarshall($object);
+    public function marshall($object)
+    {
+        if ($object instanceof \DateTime) {
+            return new \MongoDate($object->getTimestamp());
+        } elseif ($object instanceof \Norm\Type\NormArray) {
+            return $object->toArray();
+        } elseif ($object instanceof \Norm\Type\Object) {
+            return $object->toObject();
+        } else {
+            return parent::marshall($object);
+        }
     }
 
     public function query(Collection $collection)
@@ -104,19 +123,6 @@ class MongoConnection extends Connection
         $model->sync($modified);
 
         return $result['ok'];
-    }
-
-    public function marshall($object)
-    {
-        if ($object instanceof \DateTime) {
-            return new \MongoDate($object->getTimestamp());
-        } elseif ($object instanceof \Norm\Type\NormArray) {
-            return $object->toArray();
-        } elseif ($object instanceof \Norm\Type\Object) {
-            return $object->toObject();
-        } else {
-            return parent::marshall($object);
-        }
     }
 
     public function remove(Collection $collection, $model)
