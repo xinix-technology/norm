@@ -163,6 +163,7 @@ abstract class Connection extends Hookable
                 }
             }
             return $result;
+        // FIXME \Norm\Type\XXX should have marshall method
         } elseif ($object instanceof \Norm\Type\DateTime) {
             return $object->format('c');
         } elseif ($object instanceof \Norm\Type\NormArray) {

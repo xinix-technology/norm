@@ -11,11 +11,13 @@ use Norm\Schema\Integer;
 
 require_once('Fixture.php');
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase {
+class ConnectionTest extends \PHPUnit_Framework_TestCase
+{
     private $connection;
 
 
-    public function setUp() {
+    public function setUp()
+    {
         $config = array(
             'norm.databases' => array(
                 'oracle' => array(
@@ -41,7 +43,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
             ),
         );
 
-        Norm::init($config['norm.databases'],$config['norm.collections']);
+        Norm::init($config['norm.databases'], $config['norm.collections']);
     }
 
     // public function testInsert() {
@@ -58,11 +60,11 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
     //     $result = $model->save();
 
     //     $this->assertNotEmpty($result, 'is return not empty');
-        
+
     //     $model = $collection->findOne(array(
     //         'id' => $model->getId()
     //     ));
-        
+
     //     $this->assertEquals($model->get('name'), $name, 'has valid name field.');
     //     $this->assertEquals($model->get('address'), $address, 'has valid address field.');
     //     $this->assertEquals($model->get('country'), $country, 'has valid country field.');
@@ -92,7 +94,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
     //     $model = $collection->findOne(array( 'id' => 5 ));
     //     $id = $model->getId();
     //     $model->remove();
-        
+
     //     $this->assertNull($model->getId(), 'will lost model id after remove.');
 
     //     $model = $collection->findOne(array(
@@ -101,5 +103,4 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
 
     //     $this->assertNull($model, 'is null after deleted');
     // }
-
 }

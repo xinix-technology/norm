@@ -12,11 +12,13 @@ use Norm\Schema\Integer;
 
 require_once('Fixture.php');
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase {
+class ConnectionTest extends \PHPUnit_Framework_TestCase
+{
     private $connection;
 
 
-    public function setUp() {
+    public function setUp()
+    {
         $config = array(
             'norm.databases' => array(
                 'oracle' => array(
@@ -51,7 +53,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
             ),
         );
 
-        Norm::init($config['norm.databases'],$config['norm.collections']);
+        Norm::init($config['norm.databases'], $config['norm.collections']);
     }
 
     // public function testConnection(){
@@ -171,7 +173,8 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
     //     $this->assertLessThan($data[0]['rnum'], $s);
     // }
 
-    public function testCount(){
+    public function testCount()
+    {
         $collection = Norm::factory('Test');
 
         $cursor = $collection->find()->count();
@@ -180,11 +183,3 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         exit();
     }
 }
-
-
-
-
-
-
-
-

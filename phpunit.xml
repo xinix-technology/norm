@@ -5,19 +5,19 @@
             <directory>./test</directory>
         </testsuite>
         <testsuite name="Adapter mongo">
-            <directory>./test/Norm/Mongo</directory>
+            <directory>./test/Norm/Test/Mongo</directory>
         </testsuite>
         <testsuite name="Adapter mysql">
-            <directory>./test/Norm/Mysql</directory>
+            <directory>./test/Norm/Test/Mysql</directory>
         </testsuite>
         <testsuite name="Adapter sqlite">
-            <directory>./test/Norm/Sqlite</directory>
+            <directory>./test/Norm/Test/Sqlite</directory>
         </testsuite>
         <testsuite name="Adapter oracle">
-            <directory>./test/Norm/Oracle</directory>
+            <directory>./test/Norm/Test/Oracle</directory>
         </testsuite>
         <testsuite name="Adapter OCI">
-            <directory>./test/Norm/OCI</directory>
+            <directory>./test/Norm/Test/OCI</directory>
         </testsuite>
     </testsuites>
 </phpunit>
