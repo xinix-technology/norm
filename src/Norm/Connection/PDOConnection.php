@@ -10,13 +10,28 @@ use \Norm\Schema\Object;
 
 class PDOConnection extends \Norm\Connection
 {
+    protected $DIALECT_MAP = array(
+        'mysql' => '\\Norm\\Dialect\\MySQLDialect',
+        'sqlite' => '\\Norm\\Dialect\\SqliteDialect',
+    );
 
+    /**
+     * Dialect to use for database server
+     * @var mixed
+     */
     protected $dialect;
 
-    public function initialize($options)
+    /**
+     * @see Norm\Connection::__construct()
+     */
+    public function __construct(array $options = array())
     {
+        parent::__construct($options);
 
-        $this->options = $options;
+        if (!isset($options['prefix'])) {
+            throw new \Exception('[Norm\PDOConnection] Missing prefix, check your configuration!');
+        }
+
         if (isset($options['dsn'])) {
             $dsn = $options['dsn'];
         } elseif ($options['prefix'] === 'sqlite') {
@@ -48,65 +63,67 @@ class PDOConnection extends \Norm\Connection
 
         if (isset($options['dialect'])) {
             $Dialect = $options['dialect'];
+        } elseif (isset($this->DIALECT_MAP[$options['prefix']])) {
+            $Dialect = $this->DIALECT_MAP[$options['prefix']];
         } else {
-            $Dialect = '\\Norm\\Dialect\\SQLDialect';
+            throw new \Exception('[Norm/PDOConnection] Missing dialect!');
+            // $Dialect = '\\Norm\\Dialect\\SQLDialect';
         }
+
         $this->dialect = new $Dialect($this);
 
     }
 
-    public function listCollections()
+    /**
+     * @see Norm\Connection::persist()
+     */
+    public function persist($collection, array $document)
     {
-        return $this->dialect->listCollections();
+
+        if ($collection instanceof Collection) {
+            $collectionName = $collection->getName();
+        } else {
+            $collectionName = $collection;
+            $collection = static::factory($collection);
+        }
+
+        $this->ddl($collection);
+
+        $marshalledDocument = $this->marshall($document);
+
+        if (isset($document['$id'])) {
+            $marshalledDocument['$id'] = $document['$id'];
+
+            $sql = $this->dialect->grammarUpdate($collectionName, $marshalledDocument);
+
+            $marshalledDocument['id'] = $marshalledDocument['$id'];
+            unset($marshalledDocument['$id']);
+
+            $this->execute($sql, $marshalledDocument);
+        } else {
+            $sql = $this->dialect->grammarInsert($collectionName, $marshalledDocument);
+
+            $id = null;
+
+            $succeed = $this->execute($sql, $marshalledDocument);
+            if ($succeed) {
+                $id = $this->raw->lastInsertId();
+            } else {
+                throw new \Exception('[Norm/PDOConnection] Insert error.');
+            }
+
+            if (!is_null($id)) {
+                $marshalledDocument['id'] = $id;
+            }
+        }
+
+        return $this->unmarshall($marshalledDocument);
     }
-
-    // public function migrate(Collection $collection) {
-    //     if (!$this->hasCollection($collection->name)) {
-    //         $grammarCreate = $this->dialect->grammarCreate($collection->name, $collection->schema);
-
-    //         $this->raw->query($grammarCreate);
-    //     }
-    // }
 
     /**
-     * [save description]
-     * @param  Collection $collection [description]
-     * @param  Model      $model      [description]
-     * @return bool        if success return true else return false
+     * @see Norm\Connection::query()
      */
-    public function save(Collection $collection, Model $model)
-    {
-        if (!empty($this->options['autocreate'])) {
-            $this->dialect->prepareCollection($collection);
-        }
-
-        $collectionName = $collection->name;
-        // $schemes = $collection->schema();
-
-        $data = $this->marshall($model->dump());
-
-        $result = false;
-
-        if (is_null($model->getId())) {
-            $id = $this->dialect->insert($collectionName, $data);
-
-            if ($id) {
-                $model->setId($id);
-                $result = true;
-            }
-        } else {
-            $data['$id'] = $model->getId();
-            $result = $this->dialect->update($collectionName, $data);
-
-            if ($result) {
-                $result = true;
-            }
-        }
-
-        return $result;
-    }
-
-    public function query(Collection $collection)
+    public function query($collection, array $criteria = null)
     {
         if (!empty($this->options['autocreate'])) {
             $this->dialect->prepareCollection($collection);
@@ -115,26 +132,92 @@ class PDOConnection extends \Norm\Connection
         return new PDOCursor($collection);
     }
 
-    public function remove(Collection $collection, $model)
+    /**
+     * @see Norm\Connection::remove()
+     */
+    public function remove($collection, $criteria = null)
     {
-        if (!empty($this->options['autocreate'])) {
-            $this->dialect->prepareCollection($collection);
+        if ($collection instanceof Collection) {
+            $collectionName = $collection->getName();
+        } else {
+            $collectionName = $collection;
+            $collection = static::factory($collection);
         }
 
-        $collectionName = $collection->name;
+        $this->ddl($collection);
 
-        $sql = 'DELETE FROM '.$collectionName.' WHERE id = :id';
+        if (func_num_args() === 1) {
+            $sql = $this->dialect->grammarDelete($collection);
+            $statement = $this->raw->prepare($sql);
+            $result = $statement->execute();
+        } else {
+            throw new \Exception('Unimplemented yet!');
 
-        $statement = $this->getRaw()->prepare($sql);
-        $result = $statement->execute(array(
-            'id' => $model->getId()
-        ));
+            // $sql = "DELETE FROM $collection WHERE id = :id";
+
+            // if ($criteria instanceof \Norm\Model) {
+            //     $criteria = $criteria->getId();
+            // }
+
+            // if (is_string($criteria)) {
+            //     $criteria = array(
+            //         '_id' => new \MongoId($criteria),
+            //     );
+            // } elseif (!is_array($criteria)) {
+            //     throw new \Exception('[Norm/Connection] Cannot remove with specified criteria.
+            //     Criteria must be array, sring, or model');
+            // }
+
+            // $result = $this->raw->$collection->remove($criteria);
+
+            // $statement = $this->getRaw()->prepare($sql);
+            // $result = $statement->execute($params);
+        }
 
         return $result;
     }
 
+    /**
+     * Getter for dialect
+     * @return Norm\Dialect\SQLDialect
+     */
     public function getDialect()
     {
         return $this->dialect;
     }
+
+    /**
+     * DDL runner for collection
+     * @param  Norm\Collection $collection
+     * @return void
+     */
+    public function ddl(Collection $collection)
+    {
+        if (!empty($this->options['autoddl'])) {
+            $sql = $this->dialect->grammarDDL($collection, $this->options['autoddl']);
+
+            // var_dump($sql);
+            // exit;
+            $this->execute($sql);
+        }
+    }
+
+    protected function execute($sql, array $data = array())
+    {
+        $statement = $this->raw->prepare($sql);
+        return $statement->execute($data);
+    }
+
+    // public function listCollections()
+    // {
+    //     return $this->dialect->listCollections();
+    // }
+
+    // public function migrate(Collection $collection) {
+    //     if (!$this->hasCollection($collection->name)) {
+    //         $grammarCreate = $this->dialect->grammarCreate($collection->name, $collection->schema);
+
+    //         $this->raw->query($grammarCreate);
+    //     }
+    // }
 }

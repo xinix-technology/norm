@@ -2,77 +2,159 @@
 
 namespace Norm;
 
-use Norm\Cursor\ICursor;
 use JsonKit\JsonSerializer;
 
-class Cursor implements ICursor, JsonSerializer
+// TODO Adding logging
+abstract class Cursor implements \Iterator, \Countable, JsonSerializer
 {
-
-    protected $cursor;
 
     protected $collection;
 
-    protected $links;
+    protected $connection;
 
-    protected $profiled = false;
+    protected $criteria;
 
-    public function __construct($cursor, $collection)
+    protected $limit;
+
+    protected $skip;
+
+    protected $sorts;
+
+    // protected $links;
+
+    // protected $profiled = false;
+
+    /**
+     * Constructor
+     * @param Norm\Collection   $collection
+     * @param array             $criteria
+     */
+    public function __construct(Collection $collection, array $criteria = array())
     {
-        $this->cursor = $cursor;
         $this->collection = $collection;
+        $this->connection = $collection->getConnection();
+
+        if (is_null($this->connection)) {
+            throw new \Exception('[Norm/Cursor] Collection does not have connection, check your configuration!');
+        }
+
+        $this->criteria = $this->translateCriteria($criteria);
     }
 
+    /**
+     * Getter for collection
+     * @return Norm\Collection
+     */
+    public function getCollection()
+    {
+        return $this->collection;
+    }
+
+    /**
+     * Getter for criteria
+     * @return array
+     */
+    public function getCriteria()
+    {
+        return $this->criteria;
+    }
+
+    /**
+     * Return the next object to which this cursor points, and advance the cursor
+     * @return Norm\Model
+     */
     public function getNext()
     {
-        if (!$this->profiled && $this->collection->connection->option('debug')) {
-            f('profile.add', array(
-                'section' => 'norm',
-                'value' => $this->cursor->getQueryInfo()
-            ));
-            $this->profiled = true;
+        $this->next();
+        return $this->current();
+    }
+
+    /**
+     * Serialize instance to json
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
+    }
+
+
+    /**
+     * When argument specified will set new limit otherwise will return existing limit
+     * @param  integer $limit
+     * @return mixed            When argument specified will return limit otherwise return chainable object
+     */
+    public function limit($limit = 0)
+    {
+        if (func_num_args() === 0) {
+            return $this->limit;
         }
-        $next = $this->cursor->getNext();
-        if (isset($next)) {
-            return $this->collection->attach($next);
+        $this->limit = $limit;
+        return $this;
+    }
+
+    /**
+     * When argument specified will set new skip otherwise will return existing skip
+     * @param  integer $skip
+     * @return mixed            When argument specified will return skip otherwise return chainable object
+     */
+    public function skip($skip = 0)
+    {
+        if (func_num_args() === 0) {
+            return $this->skip;
         }
-        return null;
+        $this->skip = $skip;
+        return $this;
     }
 
-    public function current()
+    /**
+     * When argument specified will set new sorts otherwise will return existing sorts
+     * @param  array  $sorts
+     * @return mixed            When argument specified will return sorts otherwise return chainable object
+     */
+    public function sort(array $sorts = array())
     {
-        if (!$this->profiled && $this->collection->connection->option('debug')) {
-            f('profile.add', array('section' => 'norm', 'value' => array(
-                'q' => $this->cursor->getQueryInfo(),
-            )));
-            $this->profiled = true;
+        if (func_num_args() === 0) {
+            return $this->sorts;
         }
-        $current = $this->cursor->current();
-        if (isset($current)) {
-            return $this->collection->attach($current);
+        $this->sorts = $sorts;
+        return $this;
+    }
+
+    /**
+     * Set query to match on every field exists in schema
+     * Beware this will override criteria
+     *
+     * @param  string $q String to query
+     * @return Norm\Cursor Chainable object
+     */
+    public function match($q)
+    {
+        if (is_null($q)) {
+            return $this;
         }
-        return null;
+
+        $orCriteria = array();
+
+        $schema = $this->collection->schema();
+
+        if (empty($schema)) {
+            throw new \Exception('[Norm\Cursor] Cannot use match for schemaless collection');
+        }
+
+        foreach ($schema as $key => $value) {
+            $orCriteria[] = array($key.'!like' => $q);
+        }
+        $this->criteria = $this->translateCriteria(array('!or' => $orCriteria));
+
+        return $this;
     }
 
-    public function next()
-    {
-        $this->cursor->next();
-    }
-
-    public function key()
-    {
-        return $this->cursor->key();
-    }
-
-    public function valid()
-    {
-        return $this->cursor->valid();
-    }
-
-    public function rewind()
-    {
-        return $this->cursor->rewind();
-    }
-
+    /**
+     * Extract data into array of models.
+     * @param  boolean $plain When true will return array of associative array.
+     * @return array
+     */
     public function toArray($plain = false)
     {
         $result = array();
@@ -80,57 +162,44 @@ class Cursor implements ICursor, JsonSerializer
             if ($plain) {
                 $result[] = $value->toArray();
             } else {
-                $result[] = $value;
+                $result[] = $this->connection->unmarshall($value);
             }
         }
         return $result;
     }
 
-    public function limit($num = null)
-    {
-        if (func_num_args() === 0) {
-            return $this->cursor->limit();
-        }
-        $this->cursor->limit($num);
-        return $this;
-    }
+    /**
+     * Return number of documents available. When foundOnly true will return
+     * found document only
+     * @param  boolean $foundOnly
+     * @return integer
+     */
+    abstract public function count($foundOnly = false);
 
-    public function sort(array $fields = array())
-    {
-        if (func_num_args() === 0) {
-            return $this->cursor->sort();
-        }
-        $this->cursor->sort($fields);
-        return $this;
-    }
+    /**
+     * Translate criteria into accepted criteria for specific system.
+     * @param  array  $criteria Norm criteria
+     * @return mixed            Specific system criteria
+     */
+    abstract public function translateCriteria(array $criteria = array());
 
-    public function count($foundOnly = false)
-    {
-        return $this->cursor->count($foundOnly);
-    }
+    // public function current()
+    // {
+    //     // if (!$this->profiled && $this->collection->option('debug')) {
+    //     //     f('profile.add', array('section' => 'norm', 'value' => array(
+    //     //         'q' => $this->cursor->getQueryInfo(),
+    //     //     )));
+    //     //     $this->profiled = true;
+    //     // }
+    //     $current = $this->cursor->current();
+    //     if (isset($current)) {
+    //         return $this->collection->attach($current);
+    //     }
+    //     return null;
+    // }
 
-    public function match($q)
-    {
-        $this->cursor->match($q);
-        return $this;
-    }
-
-    public function skip($num = null)
-    {
-        if (func_num_args() === 0) {
-            return $this->cursor->skip();
-        }
-        $this->cursor->skip($num);
-        return $this;
-    }
-
-    public function links()
-    {
-        return $this->links;
-    }
-
-    public function jsonSerialize()
-    {
-        return $this->toArray();
-    }
+    // public function links()
+    // {
+    //     return $this->links;
+    // }
 }

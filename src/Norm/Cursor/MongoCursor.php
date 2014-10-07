@@ -2,42 +2,110 @@
 
 namespace Norm\Cursor;
 
-class MongoCursor implements ICursor
+use Norm\Cursor;
+
+class MongoCursor extends Cursor
 {
-
-    protected $collection;
-
-    protected $criteria;
-
-    protected $sort;
-
-    protected $skip;
-
-    protected $limit;
-
     protected $cursor;
 
-    public function __construct($collection = null)
+    /**
+     * @see Norm\Cursor::getNext()
+     */
+    public function getNext()
     {
-        $this->collection = $collection;
+        $next = $this->getCursor()->getNext();
+        return isset($next) ? $this->collection->attach($next) : null;
+    }
 
-        $this->criteria = $this->prepareCriteria($collection->criteria);
+    /**
+     * @see  Norm\Cursor::count()
+     */
+    public function count($foundOnly = false)
+    {
+        return $this->getCursor()->count($foundOnly);
+    }
 
-        // var_dump('criteria', $this->criteria);
+    /**
+     * @see  Norm\Cursor::translateCriteria()
+     */
+    public function translateCriteria(array $criteria = array())
+    {
+        if (empty($criteria)) {
+            return $criteria;
+        }
+
+        $newCriteria = array();
+
+        foreach ($criteria as $key => $value) {
+            list($newKey, $newValue) = $this->grammarExpression($key, $value);
+
+            if (is_array($newValue)) {
+                if (!isset($newCriteria[$newKey])) {
+                    $newCriteria[$newKey] = array();
+                }
+                $newCriteria[$newKey] = array_merge($newCriteria[$newKey], $newValue);
+            } else {
+                $newCriteria[$newKey] = $newValue;
+            }
+
+        }
+
+        return $newCriteria;
+    }
+
+    /**
+     * @see  Norm\Cursor::current()
+     */
+    public function current()
+    {
+        $data = $this->getCursor()->current();
+        return isset($data) ? $this->collection->attach($data) : null;
+    }
+
+    /**
+     * @see  Norm\Cursor::next()
+     */
+    public function next()
+    {
+        $this->getCursor()->next();
+    }
+
+    /**
+     * @see  Norm\Cursor::key()
+     */
+    public function key()
+    {
+        return $this->getCursor()->key();
+    }
+
+    /**
+     * @see  Norm\Cursor::valid()
+     */
+    public function valid()
+    {
+        return $this->getCursor()->valid();
+    }
+
+    /**
+     * @see  Norm\Cursor::rewind()
+     */
+    public function rewind()
+    {
+        $this->getCursor()->rewind();
     }
 
     public function getCursor()
     {
         if (is_null($this->cursor)) {
-            $rawCollection = $this->collection->connection->getRaw()->{$this->collection->name};
+            $rawCollection = $this->connection->getRaw()->{$this->collection->getName()};
 
-            if (isset($this->criteria)) {
-                $this->cursor = $rawCollection->find($this->criteria);
-            } else {
+            if (empty($this->criteria)) {
                 $this->cursor = $rawCollection->find();
+            } else {
+                $this->cursor = $rawCollection->find($this->criteria);
             }
-            if (isset($this->sort)) {
-                $this->cursor->sort($this->sort);
+            if (isset($this->sorts)) {
+                $this->cursor->sort($this->sorts);
             }
             if (isset($this->skip)) {
                 $this->cursor->skip($this->skip);
@@ -54,9 +122,13 @@ class MongoCursor implements ICursor
     public function grammarExpression($key, $value)
     {
         if ($key === '!or' || $key === '!and') {
+            if (!is_array($value)) {
+                throw new \Exception('[Norm/MongoCursor] "!or" and "!and" must have value as array.');
+            }
+
             $newValue = array();
             foreach ($value as $v) {
-                $newValue[] = $this->prepareCriteria($v, true);
+                $newValue[] = $this->translateCriteria($v, true);
             }
 
             return array('$'.substr($key, 1), $newValue);
@@ -104,7 +176,8 @@ class MongoCursor implements ICursor
                 if (!empty($value)) {
                     $newValue = array();
                     foreach ($value as $k => $v) {
-                        // FIXME ini quickfix buat query norm array seperti mongo
+                        // TODO ini quickfix buat query norm array seperti mongo
+                        // kalau ada yang lebih bagus caranya bisa dibenerin
                         if (!$schema instanceof \Norm\Schema\NormArray) {
                             $newValue[] = $schema->prepare($v);
                         }
@@ -114,14 +187,15 @@ class MongoCursor implements ICursor
                     $value = array();
                 }
             } else {
-                // FIXME ini quickfix buat query norm array seperti mongo
+                // TODO ini quickfix buat query norm array seperti mongo
+                // kalau ada yang lebih bagus caranya bisa dibenerin
                 if (!$schema instanceof \Norm\Schema\NormArray) {
                     $value = $schema->prepare($value);
                 }
             }
 
         }
-        $value = $this->collection->connection->marshall($value);
+        $value = $this->connection->marshall($value);
 
         if ($operator === '$eq') {
             return array($field, $value);
@@ -130,116 +204,51 @@ class MongoCursor implements ICursor
         }
     }
 
-    public function prepareCriteria($criteria)
-    {
-        if (empty($criteria)) {
-            return null;
-        }
+    // protected $collection;
 
-        $newCriteria = array();
+    // protected $criteria;
 
-        foreach ($criteria as $key => $value) {
-            list($newKey, $newValue) = $this->grammarExpression($key, $value);
+    // protected $sort;
 
-            if (is_array($newValue)) {
-                if (!isset($newCriteria[$newKey])) {
-                    $newCriteria[$newKey] = array();
-                }
-                $newCriteria[$newKey] = array_merge($newCriteria[$newKey], $newValue);
-            } else {
-                $newCriteria[$newKey] = $newValue;
-            }
+    // protected $skip;
 
-        }
+    // protected $limit;
 
-        // debug purpose only
-        // var_dump($newCriteria);
-        // exit;
+    // public function __construct($collection = null, $criteria = null)
+    // {
+    //     $this->collection = $collection;
+    //     $this->criteria = $this->prepareCriteria($criteria);
+    // }
 
-        return $newCriteria;
-    }
+    // public function limit($num = null)
+    // {
+    //     if (func_num_args() === 0) {
+    //         return $this->limit;
+    //     }
+    //     $this->limit = (int) $num;
+    //     return $this;
+    // }
 
-    public function getNext()
-    {
-        return $this->getCursor()->getNext();
-    }
+    // public function sort(array $fields = array())
+    // {
+    //     if (func_num_args() === 0) {
+    //         return $this->sorts;
+    //     }
+    //     $this->sorts = $fields;
+    //     return $this;
+    // }
 
-    public function current()
-    {
-        return $this->getCursor()->current();
-    }
+    // public function skip($num = null)
+    // {
+    //     if (func_num_args() === 0) {
+    //         return $this->skip;
+    //     }
+    //     $this->skip = (int) $num;
+    //     return $this;
+    // }
 
-    public function next()
-    {
-        $this->getCursor()->next();
-    }
-
-    public function key()
-    {
-        return $this->getCursor()->key();
-    }
-
-    public function valid()
-    {
-        return $this->getCursor()->valid();
-    }
-
-    public function rewind()
-    {
-        $this->getCursor()->rewind();
-    }
-
-    public function limit($num = null)
-    {
-        if (func_num_args() === 0) {
-            return $this->limit;
-        }
-        $this->limit = (int) $num;
-        return $this;
-    }
-
-    public function sort(array $fields = array())
-    {
-        if (func_num_args() === 0) {
-            return $this->sort;
-        }
-        $this->sort = $fields;
-        return $this;
-    }
-
-    public function count($foundOnly = false)
-    {
-        return $this->getCursor()->count($foundOnly);
-    }
-
-    public function match($q)
-    {
-        if (is_null($q)) {
-            return $this;
-        }
-
-        $orCriteria = array();
-
-        $schema = $this->collection->schema();
-        foreach ($schema as $key => $value) {
-            $orCriteria[] = array($key => array('$regex' => new \MongoRegex("/$q/i")));
-        }
-        $this->criteria = array('$or' => $orCriteria);
-
-        return $this;
-    }
-
-    public function skip($num = null)
-    {
-        if (func_num_args() === 0) {
-            return $this->skip;
-        }
-        $this->skip = (int) $num;
-        return $this;
-    }
-
-    public function getQueryInfo()
-    {
-        return $this->getCursor()->info();
-    }
+    // public function getQueryInfo()
+    // {
+    //     return $this->getCursor()->info();
+    // }
 }

@@ -40,68 +40,105 @@ namespace Norm;
  */
 abstract class Connection extends Hookable
 {
+    /**
+     * Options associative array
+     * @var array
+     */
     protected $options;
 
+    /**
+     * Raw object
+     * @var object
+     */
     protected $raw;
 
+    /**
+     * Map of collections
+     * @var array
+     */
     protected $collections = array();
 
-    public function __construct($options)
+    /**
+     * Constructor
+     * @param assoc $options
+     */
+    public function __construct(array $options = array())
     {
-        $this->options = $options;
+        if (empty($options['name'])) {
+            throw new \Exception('[Norm/Connection] Missing name, check your configuration!');
+        }
 
-        $this->initialize($options);
+        $this->options = $options;
     }
 
-    public function option($name = null)
+    /**
+     * Getter/setter of connection options
+     * @param  string $key  Key name identifier to get single option
+     * @return mixed        If no argument specified will get full option
+     */
+    public function option($key = null)
     {
-        if (func_num_args() === 0) {
+        if (func_num_args() ===  0) {
             return $this->options;
-        } elseif (isset($this->options[$name])) {
-            return $this->options[$name];
+        } elseif (isset($this->options[$key])) {
+            return $this->options[$key];
         }
     }
 
+    /**
+     * Getter for connection name
+     * @return string Name of connection
+     */
     public function getName()
     {
         return $this->options['name'];
     }
 
+    /**
+     * Getter for raw-type of connection
+     * @return mixed Raw-type of connection
+     */
     public function getRaw()
     {
         return $this->raw;
     }
 
+    /**
+     * Setter for raw-type of connection
+     * @param mixed $raw New raw connection
+     */
     public function setRaw($raw)
     {
         $this->raw = $raw;
     }
 
-    public function factory($collectionName)
+    /**
+     * Factory to create new collection by its name or instance
+     * @param  string|Norm\Collection   $collection     Collection name or instance
+     * @return Norm\Collection                          Conllection created by factory
+     */
+    public function factory($collection)
     {
-        if (!isset($this->collections[$collectionName])) {
-            $collection = Norm::createCollection(array(
-                'name' => $collectionName,
-                'connection' => $this,
-            ));
+        if ($collection instanceof Collection) {
+            $collectionName = $collection->getName();
+        } else {
+            $collectionName = $collection;
+        }
 
-            $this->applyHook('norm.after.factory', $collection);
+        if (!isset($this->collections[$collectionName])) {
+            if (!($collection instanceof Collection)) {
+                $collection = Norm::createCollection(array(
+                    'name' => $collection,
+                    'connection' => $this,
+                ));
+
+                $this->applyHook('norm.after.factory', $collection);
+            }
 
             $this->collections[$collectionName] = $collection;
         }
 
         return $this->collections[$collectionName];
-    }
-
-    public function hasCollection($name)
-    {
-        $collections = $this->listCollections();
-        foreach ($collections as $key => $collection) {
-            if ($collection === $name) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -118,20 +155,15 @@ abstract class Connection extends Hookable
     public function unmarshall($object)
     {
         if (isset($object['id'])) {
-            $newObject = array(
-                '$id' => $this->unmarshall($object['id']),
-            );
-            foreach ($object as $key => $value) {
-                if ($key === 'id') {
-                    continue;
-                }
-                if ($key[0] === '_') {
-                    $key[0] = '$';
-                }
-                $newObject[$key] = $this->unmarshall($value);
-            }
+            $object['$id'] = $object['id'];
+            unset($object['id']);
+        }
 
-            $object = $newObject;
+        foreach ($object as $key => $value) {
+            if ($key[0] === '_') {
+                $key[0] = '$';
+                $object[$key] = $value;
+            }
         }
 
         return $object;
@@ -163,7 +195,6 @@ abstract class Connection extends Hookable
                 }
             }
             return $result;
-        // FIXME \Norm\Type\XXX should have marshall method
         } elseif ($object instanceof \Norm\Type\DateTime) {
             return $object->format('c');
         } elseif ($object instanceof \Norm\Type\NormArray) {
@@ -175,10 +206,41 @@ abstract class Connection extends Hookable
         }
     }
 
-    abstract public function initialize($options);
-    abstract public function listCollections();
-    abstract public function query(Collection $collection);
-    abstract public function save(Collection $collection, Model $model);
-    abstract public function remove(Collection $collection, $model);
+    /**
+     * Query collection and return suitable cursor
+     * @param  string|Norm\Collection   $collection     Collection name or instance
+     * @param  array                    $criteria       Criteria to query
+     * @return Norm\Cursor
+     */
+    abstract public function query($collection, array $criteria = null);
+
+    /**
+     * Persist specified document with current connection
+     * @param  string|Norm\Collection   $collection     Collection name or instance
+     * @param  array                    $document       Document to persist
+     * @return array                                    Document persisted
+     */
+    abstract public function persist($collection, array $document);
+
+    /**
+     * Remove specified document from current connection
+     * @param  string|Norm\Collection   $collection     Collection name or instance
+     * @param  array|string             $criteria       Criteria to remove or remove all data when this arg is null
+     * @return bool                                     True if succeed or false if failed
+     */
+    abstract public function remove($collection, $criteria = null);
+
+    // abstract public function listCollections();
     // abstract public function migrate(Collection $collection);
+
+    // public function hasCollection($name)
+    // {
+    //     $collections = $this->listCollections();
+    //     foreach ($collections as $key => $collection) {
+    //         if ($collection === $name) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
 }

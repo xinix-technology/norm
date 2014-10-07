@@ -35,121 +35,201 @@
 namespace Norm\Cursor;
 
 use Norm\Collection;
+use Norm\Cursor;
 
-// FIXME reekoheek: see OCICursor
 /**
  * Wrapper to PDO statement to produce cursor for Norm
  * @author Ganesha <reekoheek@gmail.com>
  */
-class PDOCursor implements ICursor
+class PDOCursor extends Cursor
 {
-
-    // FIXME reekoheek cursor cannot reset statement result to foreach multiple
-    // times
-    protected $criteria;
-
-    /**
-     * PDO statement
-     * @var \PDOStatement
-     */
+    protected $buffer = array();
+    protected $next = false;
     protected $statement;
 
-    /**
-     * Single fetch of current row from PDO statement
-     * @var array
-     */
-    protected $current;
-
-    protected $limit;
-
-    /**
-     * Construct cursor for particular statement
-     * @param \PDOStatement $statement PDO statement
-     */
-    public function __construct(Collection $collection)
+    public function count($foundOnly = false)
     {
-        $this->collection = $collection;
 
-        $this->criteria = $this->prepareCriteria($collection->criteria ?: array());
+        $data = array();
 
-        $this->row = 0;
+        $sql = $this->connection->getDialect()->grammarCount($this, $foundOnly, $data);
+
+        // var_dump($sql);
+        // exit;
+
+        $statement = $this->connection->getRaw()->prepare($sql);
+        $statement->execute($data);
+
+        $count = $statement->fetch(\PDO::FETCH_OBJ)->c;
+
+        return intval($count);
     }
 
-    /**
-     * Get valid next row if available
-     * @return array NULL if not available
-     */
-    public function getNext()
-    {
-        if ($this->valid()) {
-            return $this->current();
-        }
-    }
-
-    /**
-     * Get current row
-     * @return array
-     */
-    public function current()
-    {
-        return $this->current;
-    }
-
-    /**
-     * Move to next row
-     */
-    public function next()
-    {
-        $this->row++;
-    }
-
-    /**
-     * Get current key for row
-     * @return int Current row key
-     */
-    public function key()
-    {
-        return $this->row;
-    }
-
-    /**
-     * Check if current row is available
-     * @return bool
-     */
-    public function valid()
-    {
-        $this->current = $this->getStatement()->fetch(\PDO::FETCH_ASSOC);
-
-        $valid = false;
-        if ($this->current !== false) {
-            $valid = true;
-
-            $this->current = array_change_key_case($this->current, CASE_LOWER);
-        }
-
-        return $valid;
-    }
-
-    public function prepareCriteria($criteria)
+    public function translateCriteria(array $criteria = array())
     {
         if (isset($criteria['$id'])) {
             $criteria['id'] = $criteria['$id'];
             unset($criteria['$id']);
         }
+
         return $criteria;
     }
+
+    public function current()
+    {
+        // var_dump(__METHOD__);
+        $current = $this->next[1];
+        return isset($current) ? $this->collection->attach($current) : null;
+    }
+
+    public function next()
+    {
+        // var_dump(__METHOD__);
+        // Try to get the next element in our data buffer.
+        $this->next = each($this->buffer);
+
+        // Past the end of the data buffer
+        if (false === $this->next) {
+            // Fetch the next row of data
+            $row = $this->getStatement()->fetch(\PDO::FETCH_ASSOC);
+
+            // Fetch successful
+            if ($row) {
+                // Add row to data buffer
+                $this->buffer[] = $row;
+            }
+
+
+            $this->next = each($this->buffer);
+        }
+    }
+
+    public function key()
+    {
+        // var_dump(__METHOD__);
+        return $this->next[0];
+    }
+
+    public function valid()
+    {
+        return (false !== $this->next);
+    }
+
+    public function rewind()
+    {
+        // var_dump(__METHOD__);
+        reset($this->buffer);
+        $this->next();
+    }
+
+    // // FIXME reekoheek cursor cannot reset statement result to foreach multiple
+    // // times
+    // protected $criteria;
+
+    // /**
+    //  * PDO statement
+    //  * @var \PDOStatement
+    //  */
+    // protected $statement;
+
+    // /**
+    //  * Single fetch of current row from PDO statement
+    //  * @var array
+    //  */
+    // protected $current;
+
+    // protected $limit;
+
+    // /**
+    //  * Construct cursor for particular statement
+    //  * @param \PDOStatement $statement PDO statement
+    //  */
+    // public function __construct(Collection $collection)
+    // {
+    //     $this->collection = $collection;
+
+    //     $this->criteria = $this->prepareCriteria($collection->getCriteria() ?: array());
+
+    //     $this->row = 0;
+    // }
+
+    // /**
+    //  * Get valid next row if available
+    //  * @return array NULL if not available
+    //  */
+    // public function getNext()
+    // {
+    //     if ($this->valid()) {
+    //         return $this->current();
+    //     }
+    // }
+
+    // /**
+    //  * Get current row
+    //  * @return array
+    //  */
+    // public function current()
+    // {
+    //     return $this->current;
+    // }
+
+    // /**
+    //  * Move to next row
+    //  */
+    // public function next()
+    // {
+    //     $this->row++;
+    // }
+
+    // /**
+    //  * Get current key for row
+    //  * @return int Current row key
+    //  */
+    // public function key()
+    // {
+    //     return $this->row;
+    // }
+
+    // /**
+    //  * Check if current row is available
+    //  * @return bool
+    //  */
+    // public function valid()
+    // {
+    //     $this->current = $this->getStatement()->fetch(\PDO::FETCH_ASSOC);
+
+    //     $valid = false;
+    //     if ($this->current !== false) {
+    //         $valid = true;
+
+    //         $this->current = array_change_key_case($this->current, CASE_LOWER);
+    //     }
+
+    //     return $valid;
+    // }
+
+    // public function prepareCriteria($criteria)
+    // {
+    //     if (isset($criteria['$id'])) {
+    //         $criteria['id'] = $criteria['$id'];
+    //         unset($criteria['$id']);
+    //     }
+    //     return $criteria;
+    // }
 
     public function getStatement()
     {
         if (is_null($this->statement)) {
+            $this->buffer = array();
+            $this->next = false;
 
-            $sql = 'SELECT * FROM '. $this->collection->name;
+            $sql = "SELECT * FROM {$this->collection->getName()}";
 
             $wheres = array();
             $data = array();
 
             foreach ($this->criteria as $key => $value) {
-                $wheres[] = $a= $this->collection->connection->getDialect()->grammarExpression(
+                $wheres[] = $a= $this->connection->getDialect()->grammarExpression(
                     $key,
                     $value,
                     $this->collection,
@@ -157,12 +237,30 @@ class PDOCursor implements ICursor
                 );
             }
 
-            if (count($wheres)) {
+            if (!empty($wheres)) {
                 $sql .= ' WHERE '.implode(' AND ', $wheres);
             }
 
+            if (isset($this->sorts)) {
+                $sorts = array();
+                foreach ($this->sorts as $key => $value) {
+                    if ($value == 1) {
+                        $op = ' ASC';
+                    } else {
+                        $op = ' DESC';
+                    }
+                    $sorts[] = $key.$op;
+                }
+                if (!empty($sorts)) {
+                    $sql .= ' ORDER BY '.implode(',', $sorts);
+                }
+            }
 
-            $this->statement = $this->collection->connection->getRaw()->prepare($sql);
+            if (isset($this->limit) || isset($this->skip)) {
+                $sql .= ' LIMIT '.($this->limit ?: -1).' OFFSET '.($this->skip ?: 0);
+            }
+
+            $this->statement = $this->connection->getRaw()->prepare($sql);
 
             $this->statement->execute($data);
         }
@@ -170,80 +268,57 @@ class PDOCursor implements ICursor
         return $this->statement;
     }
 
-    /**
-     * Rewind to the first row
-     * Do nothing because PDOStatement cannot be rewinded
-     */
-    public function rewind()
-    {
-        // noop
-    }
+    // /**
+    //  * Rewind to the first row
+    //  * Do nothing because PDOStatement cannot be rewinded
+    //  */
+    // public function rewind()
+    // {
+    //     // noop
+    // }
 
-    public function sort(array $fields = array())
-    {
-        if (!empty($fields)) {
-            throw new \Exception('Not implemented yet!');
-        }
-        return $this;
-    }
+    // public function sort(array $fields = array())
+    // {
+    //     if (!empty($fields)) {
+    //         throw new \Exception('Not implemented yet!');
+    //     }
+    //     return $this;
+    // }
 
-    public function count($foundOnly = false)
-    {
+    // public function limit($num = null)
+    // {
+    //     if (func_num_args() === 0) {
+    //         return $this->limit;
+    //     }
+    //     $this->limit = (int) $num;
+    //     return $this;
+    // }
 
-        $sql = 'SELECT COUNT(1) AS c FROM '. $this->collection->name;
+    // public function match($q)
+    // {
+    //     if (is_null($q)) {
+    //         return $this;
+    //     }
 
-        $wheres = array();
-        $data = array();
-        foreach ($this->criteria as $key => $value) {
-            $wheres[] = $this->collection->connection->getDialect()->grammarExpression($key, $value, $data);
-        }
+    //     throw new \Exception(__METHOD__.' unimplemented yet!');
 
+    //     // $orCriteria = array();
 
-        if (count($wheres)) {
-            $sql .= ' WHERE '.implode(' AND ', $wheres);
-        }
+    //     // $schema = $this->collection->schema();
+    //     // foreach ($schema as $key => $value) {
+    //     //     $orCriteria[] = array($key => array('$regex' => new \MongoRegex("/$q/i")));
+    //     // }
+    //     // $this->criteria = array('$or' => $orCriteria);
 
-        $statement = $this->collection->connection->getRaw()->prepare($sql);
+    //     // return $this;
+    // }
 
-        $statement->execute($data);
-
-        return $statement->fetch(\PDO::FETCH_OBJ)->c;
-    }
-
-    public function limit($num = null)
-    {
-        if (func_num_args() === 0) {
-            return $this->limit;
-        }
-        $this->limit = (int) $num;
-        return $this;
-    }
-
-    public function match($q)
-    {
-        if (is_null($q)) {
-            return $this;
-        }
-
-        throw new \Exception('Unimplemented yet!');
-
-        // $orCriteria = array();
-
-        // $schema = $this->collection->schema();
-        // foreach ($schema as $key => $value) {
-        //     $orCriteria[] = array($key => array('$regex' => new \MongoRegex("/$q/i")));
-        // }
-        // $this->criteria = array('$or' => $orCriteria);
-
-        // return $this;
-    }
-
-    public function skip($num = null)
-    {
-        if (func_num_args() === 0) {
-            return $this->skip;
-        }
-        $this->skip = (int) $num;
-        return $this;
-    }
+    // public function skip($num = null)
+    // {
+    //     if (func_num_args() === 0) {
+    //         return $this->skip;
+    //     }
+    //     $this->skip = (int) $num;
+    //     return $this;
+    // }
 }

@@ -88,6 +88,11 @@ class Filter
         }
 
         foreach ($schema as $k => $field) {
+
+            if (is_null($field)) {
+                continue;
+            }
+
             $rules[$k] = array(
                 'label' => $field['label'],
                 'filter' => $field->filter(),

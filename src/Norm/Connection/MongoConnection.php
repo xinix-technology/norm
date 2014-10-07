@@ -10,10 +10,19 @@ use Norm\Cursor\MongoCursor;
 
 class MongoConnection extends Connection
 {
+    /**
+     * MongoDB client object
+     * @var MongoClient
+     */
     protected $client;
 
-    public function initialize($options)
+    /**
+     * @see Norm\Connection
+     */
+    public function __construct($options)
     {
+        parent::__construct($options);
+
         $defaultOptions = array(
             'hostname' => \MongoClient::DEFAULT_HOST,
             'port' => \MongoClient::DEFAULT_PORT,
@@ -29,7 +38,7 @@ class MongoConnection extends Connection
             if (isset($this->options['database'])) {
                 $database = $this->options['database'];
             } else {
-                throw new \Exception('[Norm] Missing database name, check your configuration!');
+                throw new \Exception('[Norm/MongoConnection] Missing database name, check your configuration!');
             }
 
             $prefix = '';
@@ -43,21 +52,87 @@ class MongoConnection extends Connection
         $this->raw = $this->client->$database;
     }
 
+    /**
+     * see Norm\Connection::query()
+     */
+    public function query($collection, array $criteria = array())
+    {
+        return new MongoCursor($this->factory($collection), $criteria);
+    }
+
+    /**
+     * see Norm\Connection::persist()
+     */
+    public function persist($collection, array $document)
+    {
+        if ($collection instanceof Collection) {
+            $collection = $collection->getName();
+        }
+
+        $marshalledDocument = $this->marshall($document);
+
+        $result = false;
+
+        if (isset($document['$id'])) {
+            $criteria = array(
+                '_id' => new \MongoId($document['$id']),
+            );
+            $marshalledDocument = $this->raw->$collection->findAndModify(
+                $criteria,
+                array('$set' => $marshalledDocument),
+                null,
+                array('new' => true)
+            );
+
+        } else {
+            $retval = $this->raw->$collection->insert($marshalledDocument);
+            if (!$retval['ok']) {
+                throw new \Exception($retval['errmsg']);
+            }
+        }
+
+        return $this->unmarshall($marshalledDocument);
+    }
+
+    /**
+     * see Norm\Connection::remove()
+     */
+    public function remove($collection, $criteria = null)
+    {
+        if ($collection instanceof Collection) {
+            $collection = $collection->getName();
+        }
+
+        if (func_num_args() === 1) {
+            $result = $this->raw->$collection->remove();
+        } else {
+            if ($criteria instanceof \Norm\Model) {
+                $criteria = $criteria->getId();
+            }
+
+            if (is_string($criteria)) {
+                $criteria = array(
+                    '_id' => new \MongoId($criteria),
+                );
+            } elseif (!is_array($criteria)) {
+                throw new \Exception('[Norm/Connection] Cannot remove with specified criteria. Criteria must be array, sring, or model');
+            }
+
+            $result = $this->raw->$collection->remove($criteria);
+        }
+
+        if ($result['ok'] != 1) {
+            throw new \Exception($result['errmsg']);
+        }
+    }
+
+    /**
+     * Get MongoDB client
+     * @return MongoClient MongoDB client
+     */
     public function getClient()
     {
         return $this->client;
-    }
-
-    public function listCollections()
-    {
-        $retval = array();
-
-        $collections = $this->raw->listCollections();
-        foreach ($collections as $collection) {
-            $retval[] = $collection->getName();
-        }
-
-        return $retval;
     }
 
     /**
@@ -65,20 +140,31 @@ class MongoConnection extends Connection
      */
     public function unmarshall($object)
     {
-        if ($object instanceof \MongoDate) {
-            $object = new DateTime('@'.$object->sec, new \DateTimeZone(date_default_timezone_get()));
-        } elseif ($object instanceof \MongoId) {
-            $object = (string) $object;
-        } elseif (isset($object['_id'])) {
-            $object['id'] = $object['_id'];
+        if (isset($object['_id'])) {
+            $object['$id'] = (string) $object['_id'];
             unset($object['_id']);
-            $object = parent::unmarshall($object);
-        } else {
-            $object = parent::unmarshall($object);
         }
+
+        foreach ($object as $key => &$value) {
+
+            if ($value instanceof \MongoDate) {
+                $value = new DateTime('@'.$value->sec, new \DateTimeZone(date_default_timezone_get()));
+            } elseif ($value instanceof \MongoId) {
+                $value = (string) $value;
+            }
+
+            if ($key[0] === '_') {
+                $key[0] = '$';
+                $object[$key] = $value;
+            }
+        }
+
         return $object;
     }
 
+    /**
+     * @see Norm\Connection::marshall()
+     */
     public function marshall($object)
     {
         if ($object instanceof \DateTime) {
@@ -92,51 +178,15 @@ class MongoConnection extends Connection
         }
     }
 
-    public function query(Collection $collection)
-    {
-        return new MongoCursor($collection);
-    }
+    // public function listCollections()
+    // {
+    //     $retval = array();
 
-    public function save(Collection $collection, Model $model)
-    {
-        $collectionName = $collection->name;
+    //     $collections = $this->raw->listCollections();
+    //     foreach ($collections as $collection) {
+    //         $retval[] = $collection->getName();
+    //     }
 
-        $modified = $this->marshall($model->dump());
-
-        if ($model->getId()) {
-            $criteria = array(
-                '_id' => new \MongoId($model->getId()),
-            );
-            $modified = $this->raw->$collectionName->findAndModify(
-                $criteria,
-                array('$set' => $modified),
-                null,
-                array('new' => true)
-            );
-            $result['ok'] = 1;
-        } else {
-            $result = $this->raw->$collectionName->insert($modified);
-        }
-
-        $modified = $this->prepare($collection, $modified);
-
-        $model->sync($modified);
-
-        return $result['ok'];
-    }
-
-    public function remove(Collection $collection, $model)
-    {
-        $collectionName = $collection->name;
-
-        if ($model instanceof Model) {
-            $criteria = array(
-                '_id' => new \MongoId($model->getId()),
-            );
-        } else {
-            $criteria = (array) $model;
-        }
-
-        return $this->raw->$collectionName->remove($criteria);
-    }
+    //     return $retval;
+    // }
 }

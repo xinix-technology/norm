@@ -2,8 +2,12 @@
 
 namespace Norm\Dialect;
 
-class SQLDialect
+use Norm\Collection;
+use Norm\Cursor;
+
+abstract class SQLDialect
 {
+    protected $FIELD_MAP;
 
     protected $connection;
 
@@ -11,37 +15,59 @@ class SQLDialect
 
     protected $expressionCounter = 0;
 
+    abstract public function grammarCount(Cursor $cursor, $foundOnly, array &$data = array());
+
     public function __construct($connection)
     {
         $this->connection = $connection;
         $this->raw = $connection->getRaw();
     }
 
-    public function listCollections()
+    public function grammarDDL(Collection $collection, $type = 'create')
     {
-        $statement = $this->raw->query('SHOW TABLES');
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        switch ($type) {
+            case 'create':
+                return $this->grammarCreate($collection->getName(), $collection->schema());
+            default:
+                throw new \Exception(__METHOD__.' with type '.$type.' unimplemented yet');
+        }
     }
 
-    public function prepareCollection($name)
+    public function grammarDelete(Collection $collection, array $criteria = array())
     {
-        throw new \Exception('Unimplemented yet!');
+        if (func_num_args() === 1) {
+            return "DELETE FROM {$collection->getName()}";
+        } else {
+            throw new \Exception(__METHOD__.' unimplemented yet!');
+        }
     }
 
     public function grammarCreate($name, $schema)
     {
         $fieldDefinitions = array();
         foreach ($schema as $field) {
-            if ($field instanceof \Norm\Schema\Integer) {
-                $fieldDefinitions[] = $field['name'].' INTEGER';
-            } elseif ($field instanceof \Norm\Schema\Text) {
-                $fieldDefinitions[] = $field['name'].' TEXT';
-            } else {
-                $fieldDefinitions[] = $field['name'].' VARCHAR(255)';
+            $found = false;
+            foreach ($this->FIELD_MAP as $schemaKey => $schemaValue) {
+                if ($field instanceof $schemaKey) {
+                    $found = true;
+                    $fieldDefinitions[] = $field['name'].' '.$schemaValue;
+                    break;
+                }
+            }
+
+            if (!$found) {
+                $fieldDefinitions[] = $field['name'].' '.$this->FIELD_MAP['Norm\Schema\String'];
             }
         }
-        $sql = 'CREATE TABLE '.$name.'(id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL, '.
-            implode(', ', $fieldDefinitions).')';
+
+        $sql = 'CREATE TABLE IF NOT EXISTS '.$name.'(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL';
+
+        if (empty($fieldDefinitions)) {
+            $sql .= ')';
+        } else {
+            $sql .= ', '.implode(', ', $fieldDefinitions).')';
+        }
+
         return $sql;
     }
 
@@ -91,6 +117,7 @@ class SQLDialect
         if (isset($splitted[1])) {
             switch ($splitted[1]) {
                 case 'like':
+                    $operator = 'LIKE';
                     $fValue = "%$value%";
                     break;
                 case 'lte':
@@ -120,7 +147,6 @@ class SQLDialect
                     // break;
             }
         }
-
 
 
         $fk = 'f'.$this->expressionCounter++;
@@ -169,13 +195,6 @@ class SQLDialect
         }
     }
 
-    public function execute($sql, $data)
-    {
-        $statement = $this->raw->prepare($sql);
-        $result = $statement->execute($data);
-        return $result;
-    }
-
     public function grammarInsert($collectionName, $data)
     {
 
@@ -205,12 +224,6 @@ class SQLDialect
         return $sql;
     }
 
-    public function insert($collectionName, $data)
-    {
-        $sql = $this->grammarInsert($collectionName, $data);
-        return $this->execute($sql, $data);
-    }
-
     public function grammarUpdate($collectionName, $data)
     {
         $sets = array();
@@ -237,14 +250,9 @@ class SQLDialect
         return $sql;
     }
 
-    public function update($collectionName, $data)
-    {
-
-        $sql = $this->grammarUpdate($collectionName, $data);
-
-        $data['id'] = $data['$id'];
-        unset($data['$id']);
-
-        return $this->execute($sql, $data);
-    }
+    // protected function execute($sql, array $data = array())
+    // {
+    //     $statement = $this->raw->prepare($sql);
+    //     return $statement->execute($data);
+    // }
 }

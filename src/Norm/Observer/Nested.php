@@ -15,7 +15,7 @@ class Nested
         $entries = $collection->find(array('$lft!gt' => $model['$lft'], '$rgt!lt' => $model['$rgt']));
 
         foreach ($entries as $entry) {
-            $collection->connection->remove($collection, $entry);
+            $collection->connection->remove($entry);
         }
     }
 
@@ -46,7 +46,7 @@ class Nested
             $model['$lft'] = $left;
             $model['$rgt'] = $right;
             // save without save function to avoid observers
-            $collection->connection->save($collection, $model);
+            $collection->connection->save($model);
         }
 
         // return the right value of this node + 1
