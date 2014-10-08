@@ -394,11 +394,6 @@ class Collection extends Hookable implements JsonSerializer
         }
     }
 
-    // public function migrate()
-    // {
-    //     $this->connection->migrate($this);
-    // }
-
     public function jsonSerialize()
     {
         return $this->clazz;

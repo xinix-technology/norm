@@ -7,23 +7,26 @@ use Norm\Cursor;
 class MemoryCursor extends Cursor
 {
     /**
-     * Data held in memory
+     * Buffer data held in memory
      * @var array
      */
-    protected $data;
+    protected $buffer = array();
+
+    /**
+     * Next record read
+     * @var boolean
+     */
+    protected $next = false;
+
+    protected $isQueried = false;
 
     /**
      * @see Norm\Cursor::current()
      */
     public function current()
     {
-        $this->initializeIfNotReadyYet();
-
-        // echo __METHOD__."\n";
-        $current = current($this->data);
-        $current = $current ? $this->collection->attach($current) : null;
-
-        return $current;
+        $current = $this->next[1];
+        return isset($current) ? $this->collection->attach($current) : null;
     }
 
     /**
@@ -31,82 +34,22 @@ class MemoryCursor extends Cursor
      */
     public function next()
     {
-        $this->initializeIfNotReadyYet();
+        // Try to get the next element in our data buffer.
+        $this->next = each($this->buffer);
 
-        // echo __METHOD__."\n";
-        next($this->data);
-    }
+        // Past the end of the data buffer
+        if (false === $this->next && !$this->isQueried) {
+            $this->isQueried = true;
 
-    /**
-     * @see Norm\Cursor::key()
-     */
-    public function key()
-    {
-        $this->initializeIfNotReadyYet();
-
-        // echo __METHOD__."\n";
-        return key($this->data);
-    }
-
-    /**
-     * @see Norm\Cursor::valid()
-     */
-    public function valid()
-    {
-        $this->initializeIfNotReadyYet();
-
-        // echo __METHOD__."\n";
-        $row = current($this->data);
-        return ($row) ? true : false;
-    }
-
-    /**
-     * @see Norm\Cursor::rewind()
-     */
-    public function rewind()
-    {
-        $this->initializeIfNotReadyYet();
-
-        // echo __METHOD__."\n";
-        reset($this->data);
-    }
-
-    /**
-     * @see Norm\Cursor::count()
-     */
-    public function count($foundOnly = false)
-    {
-        $this->initializeIfNotReadyYet();
-
-        // echo __METHOD__."\n";
-        if ($foundOnly) {
-            throw new \Exception('Unimplemented '.__METHOD__);
-        } else {
-            return count($this->data);
-        }
-    }
-
-    public function translateCriteria(array $criteria = array())
-    {
-        return $criteria;
-    }
-
-    /**
-     * Method to initialize to prepare data if data not ready yet
-     * @return void
-     */
-    protected function initializeIfNotReadyYet()
-    {
-        if (is_null($this->data)) {
             $connection = $this->collection->getConnection();
-            $data = $connection->getCollectionData($this->collection->getName());
+            $buffer = $connection->getCollectionData($this->collection->getName());
 
             if (empty($this->criteria)) {
-                $this->data = $data;
+                $this->buffer = $buffer;
             } else {
-                $this->data = array();
+                $this->buffer = array();
 
-                foreach ($data as $k => $row) {
+                foreach ($buffer as $k => $row) {
                     $match = true;
                     foreach ($this->criteria as $ckey => $cval) {
                         if ($row[$ckey] !== $cval) {
@@ -114,10 +57,56 @@ class MemoryCursor extends Cursor
                         }
                     }
                     if ($match) {
-                        $this->data[] = $row;
+                        $this->buffer[] = $row;
                     }
                 }
             }
+
+            $this->next = each($this->buffer);
         }
+    }
+
+    /**
+     * @see Norm\Cursor::key()
+     */
+    public function key()
+    {
+        return $this->next[0];
+    }
+
+    /**
+     * @see Norm\Cursor::valid()
+     */
+    public function valid()
+    {
+        return (false !== $this->next);
+    }
+
+    /**
+     * @see Norm\Cursor::rewind()
+     */
+    public function rewind()
+    {
+        reset($this->buffer);
+        $this->next();
+    }
+
+    /**
+     * @see Norm\Cursor::count()
+     */
+    public function count($foundOnly = false)
+    {
+        // echo __METHOD__."\n";
+        if ($foundOnly) {
+            throw new \Exception('Unimplemented '.__METHOD__);
+        } else {
+            $this->rewind();
+            return count($this->buffer);
+        }
+    }
+
+    public function translateCriteria(array $criteria = array())
+    {
+        return $criteria;
     }
 }

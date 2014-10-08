@@ -43,8 +43,22 @@ use Norm\Cursor;
  */
 class PDOCursor extends Cursor
 {
+    /**
+     * Buffer cache data
+     * @var array
+     */
     protected $buffer = array();
+
+    /**
+     * Next record read
+     * @var boolean
+     */
     protected $next = false;
+
+    /**
+     * PDO Statement
+     * @var PDOStatement
+     */
     protected $statement;
 
     public function count($foundOnly = false)
@@ -53,9 +67,6 @@ class PDOCursor extends Cursor
         $data = array();
 
         $sql = $this->connection->getDialect()->grammarCount($this, $foundOnly, $data);
-
-        // var_dump($sql);
-        // exit;
 
         $statement = $this->connection->getRaw()->prepare($sql);
         $statement->execute($data);
@@ -77,14 +88,12 @@ class PDOCursor extends Cursor
 
     public function current()
     {
-        // var_dump(__METHOD__);
         $current = $this->next[1];
         return isset($current) ? $this->collection->attach($current) : null;
     }
 
     public function next()
     {
-        // var_dump(__METHOD__);
         // Try to get the next element in our data buffer.
         $this->next = each($this->buffer);
 
@@ -106,7 +115,6 @@ class PDOCursor extends Cursor
 
     public function key()
     {
-        // var_dump(__METHOD__);
         return $this->next[0];
     }
 
@@ -117,7 +125,6 @@ class PDOCursor extends Cursor
 
     public function rewind()
     {
-        // var_dump(__METHOD__);
         reset($this->buffer);
         $this->next();
     }

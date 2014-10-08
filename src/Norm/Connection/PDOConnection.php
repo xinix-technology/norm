@@ -196,8 +196,6 @@ class PDOConnection extends \Norm\Connection
         if (!empty($this->options['autoddl'])) {
             $sql = $this->dialect->grammarDDL($collection, $this->options['autoddl']);
 
-            // var_dump($sql);
-            // exit;
             $this->execute($sql);
         }
     }

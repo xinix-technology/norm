@@ -140,6 +140,7 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
 
         $model =  $this->collection->findOne(array('field_a' => 'a2'));
         $message = 'Collection::findOne() expected return second row';
+
         $this->assertEquals('b2', $model['field_b'], $message);
 
         $model =  $this->collection->findOne(array('field_a' => 'a10'));

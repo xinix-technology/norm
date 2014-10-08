@@ -31,7 +31,7 @@ class MemoryConnection extends Connection
 
         $this->data[$collection] = isset($this->data[$collection]) ? $this->data[$collection] : array();
         // TODO change this to uuidv4
-        $document['id'] = Uuid::uuid1();
+        $document['id'] = Uuid::uuid1().'';
 
         $document = $this->marshall($document);
 

@@ -158,6 +158,7 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
     public function toArray($plain = false)
     {
         $result = array();
+
         foreach ($this as $key => $value) {
             if ($plain) {
                 $result[] = $value->toArray();
@@ -165,6 +166,7 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
                 $result[] = $this->connection->unmarshall($value);
             }
         }
+
         return $result;
     }
 
