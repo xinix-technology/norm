@@ -49,7 +49,9 @@ class MemoryConnection extends Connection
             $collection = $collection->getName();
         }
 
-        if ($criteria instanceof \Norm\Model) {
+        if (func_num_args() === 1) {
+            $this->data[$collection] = array();
+        } elseif ($criteria instanceof \Norm\Model) {
             $id = $criteria->getId();
             $index = -1;
             foreach ($this->data[$collection] as $k => $row) {

@@ -44,10 +44,10 @@ class Reference extends Field
             return $this['foreign']();
         }
 
-        if (isset($this['byCriteria'])) {
-            $cursor =  Norm::factory($this['foreign'])->find(val($this['byCriteria']));
-        } else {
+        if (is_null($this['byCriteria'])) {
             $cursor =  Norm::factory($this['foreign'])->find();
+        } else {
+            $cursor =  Norm::factory($this['foreign'])->find(val($this['byCriteria']));
         }
 
         if (isset($this['bySort'])) {
@@ -68,7 +68,7 @@ class Reference extends Field
         }
 
         if (!is_null($this['foreignKey'])) {
-            $field = @Norm::factory($this['foreign'])->options['schema'][$this['foreignKey']];
+            $field = @Norm::factory($this['foreign'])->schema($this['foreignKey']);
             if ($field) {
                 $value = $field->prepare($value);
             }

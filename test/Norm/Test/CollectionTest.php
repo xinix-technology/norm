@@ -203,4 +203,12 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
         $message = 'Collection::remove() expected to remove one document from collection';
         $this->assertEquals(2, $this->collection->find()->count(), $message);
     }
+
+    public function testRemoveAll()
+    {
+        $this->collection->remove();
+
+        $message = 'Collection::remove() expected to remove one document from collection';
+        $this->assertEquals(0, $this->collection->find()->count(), $message);
+    }
 }

@@ -115,7 +115,7 @@ class MongoConnection extends Connection
                     '_id' => new \MongoId($criteria),
                 );
             } elseif (!is_array($criteria)) {
-                throw new \Exception('[Norm/Connection] Cannot remove with specified criteria. Criteria must be array, sring, or model');
+                throw new \Exception('[Norm/Connection] Cannot remove with specified criteria. Criteria must be array, string, or model');
             }
 
             $result = $this->raw->$collection->remove($criteria);

@@ -68,14 +68,14 @@ class Collection extends Hookable implements JsonSerializer
         }
 
         if (isset($options['observers'])) {
-            foreach ($options['observers'] as $Observer => $options) {
+            foreach ($options['observers'] as $Observer => $observerOptions) {
                 if (is_int($Observer)) {
-                    $Observer = $options;
-                    $options = null;
+                    $Observer = $observerOptions;
+                    $observerOptions = null;
                 }
 
                 if (is_string($Observer)) {
-                    $Observer = new $Observer($options);
+                    $Observer = new $Observer($observerOptions);
                 }
                 $this->observe($Observer);
             }
@@ -309,21 +309,24 @@ class Collection extends Hookable implements JsonSerializer
      * @param  Norm\Model     $model
      * @return void
      */
-    public function remove(Model $model)
+    public function remove(Model $model = null)
     {
-        // avoid remove empty model
-        if (is_null($model)) {
-            return;
+        if (func_num_args() === 0) {
+            $this->connection->remove($this);
+        } else {
+            // avoid remove empty model
+            if (is_null($model)) {
+                throw new \Exception('[Norm/Collection] Cannot remove null model');
+            }
+
+            $this->applyHook('removing', $model);
+            $result = $this->connection->remove($this, $model);
+            if ($result) {
+                $model->reset();
+            }
+
+            $this->applyHook('removed', $model);
         }
-
-        $this->applyHook('removing', $model);
-
-        $result = $this->connection->remove($this, $model);
-        if ($result) {
-            $model->reset();
-        }
-
-        $this->applyHook('removed', $model);
     }
 
     /**

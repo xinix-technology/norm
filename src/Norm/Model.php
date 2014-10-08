@@ -137,7 +137,9 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     public function dump()
     {
-        $attributes = array();
+        $attributes = array(
+            '$id' => $this->id,
+        );
         foreach ($this->attributes as $key => $value) {
             $schema = $this->schema($key);
             if (!empty($schema['transient'])) {
