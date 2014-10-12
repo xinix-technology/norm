@@ -154,6 +154,7 @@ class MongoConnection extends Connection
             }
 
             if ($key[0] === '_') {
+                unset($object[$key]);
                 $key[0] = '$';
                 $object[$key] = $value;
             }

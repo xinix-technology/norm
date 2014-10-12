@@ -16,18 +16,7 @@ abstract class Field implements \ArrayAccess
 
     protected $formats = array();
 
-    /**
-     * Get new instance of field schema
-     *
-     * DEPRECATED Method deprecated and will be replaced by Field::create on 0.2.0
-     * @param  string $name  [description]
-     * @param  [type] $label [description]
-     * @return [type]        [description]
-     */
-    public static function getInstance($name = '', $label = null)
-    {
-        return static::create($name, $label);
-    }
+    protected $reader;
 
     public static function create($name = '', $label = null)
     {
@@ -63,41 +52,46 @@ abstract class Field implements \ArrayAccess
         return filter_var($value, FILTER_SANITIZE_STRING);
     }
 
-    // public function render($format, $value, $entry = null)
-    // {
-    //     // force to render readonly format if you want to render readonly input
-    //     if ($format === 'input' && $this['readonly']) {
-    //         $format = 'readonly';
-    //     }
-    //     $fn = $this->format($format);
+    public function read($valueOrCallable)
+    {
+        if (is_callable($valueOrCallable)) {
+            $this->reader = $valueOrCallable;
+            return $this;
+        } elseif (is_callable($this->reader)) {
+            return call_user_func($this->reader, $valueOrCallable);
+        }
+    }
 
-    //     if (is_callable($fn)) {
-    //         return call_user_func($fn, $value, $entry);
-    //     } else {
-    //         throw new \Exception('format is not a callable');
-    //     }
-    // }
+    public function hasReader()
+    {
+        return $this->reader ? true : false;
+    }
 
     public function format($name, $valueOrCallable, $entry = null)
     {
         if ($name === 'input' && $this['readonly']) {
             $name = 'readonly';
         }
-        if (func_num_args() < 3 && is_callable($valueOrCallable)) {
+
+        // set new format
+        if (func_num_args() === 2 && is_callable($valueOrCallable)) {
             $this->formats[$name] = $valueOrCallable;
             return $this;
-        } elseif (isset($this->formats[$name])) {
+        }
+
+        // extract formatter function
+        if (isset($this->formats[$name])) {
             $fn = $this->formats[$name];
-            if (is_callable($fn)) {
-                return call_user_func($fn, $valueOrCallable, $entry);
-            }
-            return $valueOrCallable;
         } else {
             $method = 'format'.strtoupper($name[0]).substr($name, 1);
-            if (!method_exists($this, $method)) {
-                $method = 'formatPlain';
-            }
-            return call_user_func(array($this, $method), $valueOrCallable, $entry);
+            $fn = array($this, $method);
+        }
+
+        // get formatted value
+        if (is_callable($fn)) {
+            return call_user_func($fn, $valueOrCallable, $entry);
+        } else {
+            throw new \Exception("[Norm/Field] Formatter not found. [$method]");
         }
     }
 
@@ -201,24 +195,4 @@ abstract class Field implements \ArrayAccess
         return '<input type="text" name="'.$this['name'].'" value="'.$value.'" placeholder="'.l($this['label']).
             '" autocomplete="off" />';
     }
-
-    // DEPRECATED method: input, cell, cellRaw, getInputInRaw replaced with render with format
-
-    // public function cell($value, $entry = null)
-    // {
-    //     if ($this->has('cellFormat') && $format = $this['cellFormat']) {
-    //         return $format($value, $entry, $this);
-    //     }
-    //     return $value;
-    // }
-    //
-    // public function cellRaw($value)
-    // {
-    //     return $value;
-    // }
-
-    // public function getInputInRaw($value)
-    // {
-    //     return '<span class="field">'.$value.'</span>';
-    // }
 }

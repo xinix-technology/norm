@@ -34,10 +34,10 @@
 //                 'mapping' => array(
 //                     'Test' => array(
 //                         'schema' => array(
-//                             'id' => Integer::getInstance('id'),
-//                             'name' => String::getInstance('name'),
-//                             'address' => Text::getInstance('address'),
-//                             'country' => String::getInstance('country'),
+//                             'id' => Integer::create('id'),
+//                             'name' => String::create('name'),
+//                             'address' => Text::create('address'),
+//                             'country' => String::create('country'),
 //                         ),
 //                     )
 //                 ),

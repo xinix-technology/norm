@@ -126,56 +126,41 @@ class NormController extends RestController
 
     public function update($id)
     {
-        $found = false;
         try {
             $entry = $this->collection->findOne($id);
-            if (isset($entry)) {
-                $found = true;
-            }
         } catch (\Exception $e) {
-
         }
 
-        if (!$found) {
+        if (is_null($entry)) {
             return $this->app->notFound();
         }
-
-        // reekoheek: i move this lines to inside of try below
-        // if (isset($entry)) {
-        //     $entry = $entry->toArray();
-        // }
 
         if ($this->request->isPost() || $this->request->isPut()) {
 
             try {
-                // reekoheek: moved from above
-                if (isset($entry)) {
-                    $entry = $entry->toArray();
-                }
-
-                $entry = array_merge($entry, $this->request->post());
-                $model = $this->collection->findOne($id);
-                $model->set($entry)->save();
-
-                $entry = $model;
+                $merged = array_merge(
+                    isset($entry) ? $entry->dump() : array(),
+                    $this->request->post() ?: array()
+                );
+                $entry->set($merged)->save();
 
                 h('notification.info', $this->clazz.' updated');
 
                 h('controller.update.success', array(
-                    'model' => $model,
+                    'model' => $entry,
                 ));
             } catch (\Slim\Exception\Stop $e) {
                 throw $e;
             } catch (\Exception $e) {
                 h('notification.error', $e);
 
-                if (empty($model)) {
+                if (empty($entry)) {
                     $model = null;
                 }
 
                 h('controller.update.error', array(
                     'error' => $e,
-                    'model' => $model,
+                    'model' => $entry,
                 ));
             }
         }

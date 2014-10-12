@@ -112,7 +112,9 @@ class Reference extends Field
         $value = $this->prepare($value);
 
         $label = '';
-        if (is_array($this['foreign'])) {
+        if (is_null($value)) {
+            return null;
+        } elseif (is_array($this['foreign'])) {
             if (isset($this['foreign'][$value])) {
                 $label = $this['foreign'][$value];
             }

@@ -83,6 +83,8 @@ class Collection extends Hookable implements JsonSerializer
 
         $this->options = $options;
 
+        $this->applyHook('initialized', $this);
+
         $this->resetCache();
     }
 
@@ -136,20 +138,23 @@ class Collection extends Hookable implements JsonSerializer
      * @param  string $schema
      * @return mixed
      */
-    public function schema($schema = null)
+    public function schema($key = null, $value = null)
     {
         if (!isset($this->options['schema'])) {
             $this->options['schema'] = array();
         }
 
-        if (func_num_args() === 0) {
+        $numArgs = func_num_args();
+        if (0 === $numArgs) {
             return $this->options['schema'];
-        } elseif (is_array($schema)) {
-            $this->options['schema'] = $schema;
-        } elseif (empty($schema)) {
-            $this->options['schema'] = array();
-        } elseif (isset($this->options['schema'][$schema])) {
-            return $this->options['schema'][$schema];
+        } elseif (1 === $numArgs) {
+            if (is_array($key)) {
+                $this->options['schema'] = $key;
+            } else {
+                return isset($this->options['schema'][$key]) ? $this->options['schema'][$key] : null;
+            }
+        } else {
+            $this->options['schema'][$key] = $value;
         }
     }
 
@@ -299,9 +304,10 @@ class Collection extends Hookable implements JsonSerializer
 
         $this->applyHook('saving', $model, $options);
         $modified = $this->connection->persist($this, $model->dump());
+        $model->setId($modified['$id']);
+        $this->applyHook('saved', $model, $options);
         $model->sync($modified);
         $this->resetCache();
-        $this->applyHook('saved', $model, $options);
     }
 
     /**
@@ -375,6 +381,10 @@ class Collection extends Hookable implements JsonSerializer
 
         if (method_exists($observer, 'attached')) {
             $this->hook('attached', array($observer, 'attached'));
+        }
+
+        if (method_exists($observer, 'initialized')) {
+            $this->hook('initialized', array($observer, 'initialized'));
         }
     }
 

@@ -3,12 +3,21 @@
 namespace Norm\Observer;
 
 use \Norm\Norm;
+use \Norm\Schema\NormArray;
 
 class Historical
 {
+    public function initialized($collection)
+    {
+        $schema = NormArray::create('$history')->set('transient', true)->read(function ($model) {
+            return Norm::factory($model->getClass().'History')->find(array('model_id' => $model['$id']))->sort(array('$created_time' => -1))->toArray(true);
+        });
+        $collection->schema('$history', $schema);
+    }
+
     public function saved($model)
     {
-        $histCollection = Norm::factory($model->clazz.'History');
+        $histCollection = Norm::factory($model->getClass().'History');
         $newValues = $model->dump();
         $oldValues = $model->previous();
 
@@ -69,7 +78,7 @@ class Historical
 
 
             foreach ($delta as $key => $value) {
-                $histCollection = Norm::factory($model->clazz.'History');
+                $histCollection = Norm::factory($model->getClass().'History');
                 $history = $histCollection->newInstance();
                 $history['model_id'] = $model['$id'];
                 $history['type'] = 'update';
@@ -83,7 +92,7 @@ class Historical
 
     public function removed($model)
     {
-        $histCollection = Norm::factory($model->clazz.'History');
+        $histCollection = Norm::factory($model->getClass().'History');
 
         $history = $histCollection->newInstance();
         $history['model_id'] = $model['$id'];
@@ -91,10 +100,10 @@ class Historical
         $history->save();
     }
 
-    public function attached($model)
-    {
-        $model->format('plain', 'history', function ($value, $entry) {
-            return Norm::factory($entry->clazz.'History')->find(array('model_id' => $entry['$id']));
-        });
-    }
+    // public function attached($model)
+    // {
+    //     $model->format('plain', 'history', function ($value, $entry) {
+    //         return Norm::factory($entry->getClass().'History')->find(array('model_id' => $entry['$id']));
+    //     });
+    // }
 }

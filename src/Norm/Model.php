@@ -22,8 +22,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     const FETCH_PUBLISHED   = 'FETCH_PUBLISHED';
     const FETCH_HIDDEN      = 'FETCH_HIDDEN';
 
-    const STATE_ATTACHED    = 'STATE_ATTACHED';
     const STATE_DETACHED    = 'STATE_DETACHED';
+    const STATE_ATTACHED    = 'STATE_ATTACHED';
     const STATE_REMOVED     = 'STATE_REMOVED';
 
     /**
@@ -54,8 +54,6 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     protected $id = null;
 
     protected $state = '';
-
-    protected $formats = array();
 
     /**
      * Constructor.
@@ -110,8 +108,6 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     {
         if (!isset($this->id)) {
             $this->id = $givenId;
-            // TODO i dont think we need this
-            // $this->set('$id', $givenId);
         }
         return $this->id;
     }
@@ -132,14 +128,21 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         if ($key === '$id') {
             return $this->getId();
         }
+
+        $schema = $this->schema($key);
+        if (isset($schema) && $schema->hasReader()) {
+            return $schema->read($this);
+        }
         return isset($this->attributes[$key]) ? $this->attributes[$key] : null;
     }
 
     public function dump()
     {
-        $attributes = array(
-            '$id' => $this->id,
-        );
+        $attributes = array();
+        if ($this->id) {
+            $attributes['$id'] = $this->id;
+        }
+
         foreach ($this->attributes as $key => $value) {
             $schema = $this->schema($key);
             if (!empty($schema['transient'])) {
@@ -171,7 +174,9 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     {
         if (is_array($key)) {
             foreach ($key as $k => $v) {
-                $this->set($k, $v);
+                if ($k !== '$id') {
+                    $this->set($k, $v);
+                }
             }
         } elseif ($key === '$id') {
             throw new \Exception('[Norm/Model] Restricting set for $id.');
@@ -203,16 +208,13 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     public function sync($attributes)
     {
         if (isset($attributes['$id'])) {
-            $this->id = $attributes['$id'];
-            unset($attributes['$id']);
-
             $this->state = static::STATE_ATTACHED;
+            $this->id = $attributes['$id'];
         } else {
             $this->state = static::STATE_DETACHED;
         }
 
         $this->set($attributes);
-
         $this->populateOld();
     }
 
@@ -267,7 +269,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         }
 
         if ($fetchType === Model::FETCH_ALL || $fetchType === Model::FETCH_HIDDEN) {
-            $attributes['$type'] = $this->collection->getClass();
+            $attributes['$type'] = $this->getClass();
             $attributes['$id'] = $this->getId();
 
             foreach ($this->attributes as $key => $value) {
@@ -336,12 +338,14 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     protected function populateOld()
     {
-        $this->oldAttributes = array();
-        if (is_array($this->attributes)) {
-            foreach ($this->attributes as $k => $v) {
-                $this->oldAttributes[$k] = $v;
-            }
-        }
+        // use copy on write to populate old original attributes
+        $this->oldAttributes = $this->attributes ?: array();
+        // $this->oldAttributes = array();
+        // if (is_array($this->attributes)) {
+        //     foreach ($this->attributes as $k => $v) {
+        //         $this->oldAttributes[$k] = $v;
+        //     }
+        // }
     }
 
     public function previous($key = null)
@@ -377,34 +381,43 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         return @$schema[$index];
     }
 
-    public function format($format = null, $field = null, $callable = null)
+    public function format($field = null, $format = null)
     {
         $numArgs = func_num_args();
         if ($numArgs === 0) {
-            if (isset($this->collection->options['format']) && is_callable($this->collection->options['format'])) {
-                $formatCallable = $this->collection->options['format'];
-                return $formatCallable($this);
+            $formatter = $this->collection->option('format');
+            if (is_callable($formatter)) {
+                return $formatter($this);
+            }
+
+            $schema = $this->schemaByIndex(0);
+            if (!is_null($schema)) {
+                return (isset($this[$schema['name']])) ? val($this[$schema['name']]) : null;
             } else {
-                $schema = $this->schemaByIndex(0);
-                return $schema->format('plain', @$this[$schema['name']], $this) ?: '-- no identifier --';
+                return '-- no formatter and schema --';
             }
-        } elseif ($numArgs === 3) {
-            if (!isset($this->formats[$field])) {
-                $this->formats[$field] = array();
-            }
-            $this->formats[$field][$format] = $callable;
-
-            return $this;
-        } elseif (isset($this->formats[$field][$format])) {
-            $fn = $this->formats[$field][$format];
-            return call_user_func($fn, $this[$field], $this);
+        // } elseif (isset($this->formats[$field][$format])) {
+        //     $fn = $this->formats[$field][$format];
+        //     return call_user_func($fn, $this[$field], $this);
         } else {
+            $format = $format ?: 'plain';
+
             $schema = $this->schema($field);
-            if (isset($schema)) {
-                return $schema->format($format, $this[$field], $this);
+
+
+            // TODO return value if no formatter or just throw exception?
+            if (is_null($schema)) {
+                throw new \Exception("[Norm/Model] No formatter [$format] for field [$field].");
+            } else {
+                $value = isset($this[$field]) ? val($this[$field]) : null;
+                return $schema->format($format, $value, $this);
             }
 
-            return $this[$field];
         }
+    }
+
+    public function getClass()
+    {
+        return $this->collection->getClass();
     }
 }

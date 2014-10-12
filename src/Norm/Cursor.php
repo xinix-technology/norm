@@ -117,7 +117,15 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
         if (func_num_args() === 0) {
             return $this->sorts;
         }
-        $this->sorts = $sorts;
+
+        $this->sorts = array();
+        foreach ($sorts as $key => $value) {
+            if ($key[0] === '$') {
+                $key[0] = '_';
+            }
+
+            $this->sorts[$key] = $value;
+        }
         return $this;
     }
 

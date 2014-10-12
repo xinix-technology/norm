@@ -6,12 +6,12 @@ class Nested
 {
     public function saved($model)
     {
-        $this->rebuildTree($model->collection, null, 0);
+        $this->rebuildTree($model->getCollection(), null, 0);
     }
 
     public function removing($model)
     {
-        $collection = $model->collection;
+        $collection = $model->getCollection();
         $entries = $collection->find(array('$lft!gt' => $model['$lft'], '$rgt!lt' => $model['$rgt']));
 
         foreach ($entries as $entry) {
@@ -21,7 +21,7 @@ class Nested
 
     public function removed($model)
     {
-        $this->rebuildTree($model->collection, null, 0);
+        $this->rebuildTree($model->getCollection(), null, 0);
     }
 
     protected function rebuildTree($collection, $parent, $left)

@@ -45,9 +45,9 @@
 //                 'mapping' => array(
 //                     'Test' => array(
 //                         'schema' => array(
-//                             'name' => String::getInstance('name'),
-//                             'address' => Text::getInstance('address'),
-//                             'country' => String::getInstance('country')
+//                             'name' => String::create('name'),
+//                             'address' => Text::create('address'),
+//                             'country' => String::create('country')
 //                         ),
 //                     )
 //                 ),
