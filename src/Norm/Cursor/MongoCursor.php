@@ -2,6 +2,7 @@
 
 namespace Norm\Cursor;
 
+use MongoId;
 use Norm\Cursor;
 
 class MongoCursor extends Cursor
@@ -165,9 +166,9 @@ class MongoCursor extends Cursor
 
         if ($field === '_id') {
             if ($operator === '$eq') {
-                return array($field, new \MongoId($value));
+                return array($field, new MongoId($value));
             } else {
-                return array($field, array($operator => new \MongoId($value)));
+                return array($field, array($operator => new MongoId($value)));
             }
         }
 
