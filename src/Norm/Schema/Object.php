@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-use \Norm\Type\Object as TypeObject;
+use Norm\Type\Object as TypeObject;
 
 class Object extends Field
 {

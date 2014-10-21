@@ -70,7 +70,7 @@ abstract class AbstractConnectionTest extends \PHPUnit_Framework_TestCase
     {
         $collection = $this->connection->factory('TestCollection');
         $msg = 'Connection::factory() expected to result Collection instance';
-        $this->assertInstanceOf('\\Norm\\Collection', $collection, $msg);
+        $this->assertInstanceOf('Norm\\Collection', $collection, $msg);
     }
 
     public function testUnmarshall()

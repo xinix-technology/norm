@@ -23,7 +23,7 @@
 //         $config = array(
 //             'norm.databases' => array(
 //                 'oracle' => array(
-//                     'driver' => '\\Norm\\Connection\\OCIConnection',
+//                     'driver' => 'Norm\\Connection\\OCIConnection',
 //                     'dbname' => '//192.168.1.10:1521/xinix',
 //                     'username' => 'jams',
 //                     'password' => 'password'
@@ -31,15 +31,15 @@
 //             ),
 //             // 'norm.databases' => array(
 //             //     'mongo' => array(
-//             //         'driver' => '\\Norm\\Connection\\MongoConnection',
+//             //         'driver' => 'Norm\\Connection\\MongoConnection',
 //             //         'database' => 'jams',
 //             //     ),
 //             // ),
 //             'norm.collections' => array(
 //                 'default' => array(
 //                     'observers' => array(
-//                         '\\Norm\\Observer\\Ownership' => array(),
-//                         '\\Norm\\Observer\\Timestampable' => array(),
+//                         'Norm\\Observer\\Ownership' => array(),
+//                         'Norm\\Observer\\Timestampable' => array(),
 //                     ),
 //                 ),
 //                 'mapping' => array(

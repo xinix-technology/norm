@@ -2,8 +2,8 @@
 
 namespace Norm\Observer;
 
-use \Norm\Norm;
-use \Norm\Schema\NormArray;
+use Norm\Norm;
+use Norm\Schema\NormArray;
 
 class Historical
 {

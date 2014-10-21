@@ -67,6 +67,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
             $this->collection = $options['collection'];
         }
 
+        $this->reset();
         $this->sync($attributes);
     }
 
@@ -211,6 +212,11 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
             $this->state = static::STATE_ATTACHED;
             $this->id = $attributes['$id'];
         } else {
+            foreach ($this->schema() as $key => $field) {
+                if ($field->has('default')) {
+                    $attributes[$key] = $field['default'];
+                }
+            }
             $this->state = static::STATE_DETACHED;
         }
 
@@ -377,7 +383,10 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     public function schemaByIndex($index)
     {
-        $schema = array_values($this->collection->schema());
+        $schema = array();
+        foreach ($this->collection->schema() as $value) {
+            $schema[] = $value;
+        }
         return @$schema[$index];
     }
 
@@ -403,7 +412,6 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
             $format = $format ?: 'plain';
 
             $schema = $this->schema($field);
-
 
             // TODO return value if no formatter or just throw exception?
             if (is_null($schema)) {

@@ -57,7 +57,7 @@ namespace Norm\Provider;
  * array (
  *     'norm.connections' => array (
  *         'mongo' => array (
- *             'driver' => '\\\\Norm\\\\Connection\\\\MongoConnection',
+ *             'driver' => 'Norm\\\\Connection\\\\MongoConnection',
  *             'database' => 'mydatabase'
  *         )
  *     )
@@ -112,12 +112,12 @@ class NormProvider extends \Bono\Provider\Provider
 
         $controllerConfig = $this->app->config('bono.controllers');
         if (!isset($controllerConfig['default'])) {
-            $controllerConfig['default'] = '\\Norm\\Controller\\NormController';
+            $controllerConfig['default'] = 'Norm\\Controller\\NormController';
         }
         $this->app->config('bono.controllers', $controllerConfig);
 
-        if (! class_exists('\\Norm')) {
-            class_alias('\\Norm\\Norm', 'Norm');
+        if (! class_exists('Norm')) {
+            class_alias('Norm\\Norm', 'Norm');
         }
 
         $d = explode(DIRECTORY_SEPARATOR.'src', __DIR__);

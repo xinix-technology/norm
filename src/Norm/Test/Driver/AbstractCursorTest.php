@@ -87,7 +87,7 @@ abstract class AbstractCursorTest extends \PHPUnit_Framework_TestCase
         $model = $cursor->getNext();
 
         $message = 'Cursor::getNext() expected return instance of model';
-        $this->assertInstanceOf('\\Norm\\Model', $model, $message);
+        $this->assertInstanceOf('Norm\\Model', $model, $message);
 
         $cursor = new $CursorClazz($this->collection, array('first_name' => '*ghost*'));
         $model = $cursor->getNext();
@@ -211,7 +211,7 @@ abstract class AbstractCursorTest extends \PHPUnit_Framework_TestCase
 
         $message = 'Cursor::toArray() expected return array of models';
         $this->assertTrue(is_array($arr), $message);
-        $this->assertInstanceOf('\\Norm\\Model', $arr[0], $message);
+        $this->assertInstanceOf('Norm\\Model', $arr[0], $message);
 
         $cursor = new $CursorClazz($this->collection);
         $arr = $cursor->toArray(true);
@@ -259,7 +259,7 @@ abstract class AbstractCursorTest extends \PHPUnit_Framework_TestCase
 
         $cursor->next();
         $model = $cursor->current();
-        $this->assertInstanceOf('\\Norm\\Model', $model, 'Cursor::current() will return model after next()');
+        $this->assertInstanceOf('Norm\\Model', $model, 'Cursor::current() will return model after next()');
 
         $model2 = $cursor->current();
         $this->assertEquals($model2, $model, 'Cursor::current() will return the same model');
@@ -275,7 +275,7 @@ abstract class AbstractCursorTest extends \PHPUnit_Framework_TestCase
         $afterNext = $cursor->current();
 
         $this->assertNull($beforeNext, 'Cursor::next() will move cursor to the first document');
-        $this->assertInstanceOf('\\Norm\\Model', $afterNext, 'Cursor::next() will move cursor to the first document');
+        $this->assertInstanceOf('Norm\\Model', $afterNext, 'Cursor::next() will move cursor to the first document');
     }
 
     public function testKey()

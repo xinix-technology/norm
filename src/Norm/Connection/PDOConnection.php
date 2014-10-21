@@ -2,17 +2,17 @@
 
 namespace Norm\Connection;
 
-use \Norm\Collection;
-use \Norm\Model;
-use \Norm\Cursor\PDOCursor;
-use \Norm\Schema\DateTime;
-use \Norm\Schema\Object;
+use Norm\Collection;
+use Norm\Model;
+use Norm\Cursor\PDOCursor;
+use Norm\Schema\DateTime;
+use Norm\Schema\Object;
 
 class PDOConnection extends \Norm\Connection
 {
     protected $DIALECT_MAP = array(
-        'mysql' => '\\Norm\\Dialect\\MySQLDialect',
-        'sqlite' => '\\Norm\\Dialect\\SqliteDialect',
+        'mysql' => 'Norm\\Dialect\\MySQLDialect',
+        'sqlite' => 'Norm\\Dialect\\SqliteDialect',
     );
 
     /**
@@ -67,7 +67,7 @@ class PDOConnection extends \Norm\Connection
             $Dialect = $this->DIALECT_MAP[$options['prefix']];
         } else {
             throw new \Exception('[Norm/PDOConnection] Missing dialect!');
-            // $Dialect = '\\Norm\\Dialect\\SQLDialect';
+            // $Dialect = 'Norm\\Dialect\\SQLDialect';
         }
 
         $this->dialect = new $Dialect($this);

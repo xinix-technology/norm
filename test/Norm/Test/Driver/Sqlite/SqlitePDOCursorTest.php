@@ -7,7 +7,7 @@ use Norm\Connection\PDOConnection;
 
 class SqlitePDOCursorTest extends AbstractCursorTest
 {
-    protected $cursorClazz = '\\Norm\\Cursor\\PDOCursor';
+    protected $cursorClazz = 'Norm\\Cursor\\PDOCursor';
 
     protected $connection;
 

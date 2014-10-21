@@ -8,9 +8,9 @@ use Norm\Collection;
 
 class MongoConnectionTest extends AbstractConnectionTest
 {
-    protected $clazz = '\\Norm\\Connection\\MongoConnection';
+    protected $clazz = 'Norm\\Connection\\MongoConnection';
 
-    protected $cursorClazz = '\\Norm\\Cursor\\MongoCursor';
+    protected $cursorClazz = 'Norm\\Cursor\\MongoCursor';
 
     public function getConnection()
     {
@@ -88,7 +88,7 @@ class MongoConnectionTest extends AbstractConnectionTest
 
         $message = 'Connection::unmarshall() expected the instanceof ' +
             '\MongoDate converted to \Norm\Type\DateTime.';
-        $this->assertInstanceOf('\\Norm\\Type\\DateTime', $result['field_date'], $message);
+        $this->assertInstanceOf('Norm\\Type\\DateTime', $result['field_date'], $message);
     }
 
     public function testMarshall()

@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-use \ROH\Util\Inflector;
+use ROH\Util\Inflector;
 use Norm\Filter\Filter;
 
 abstract class Field implements \ArrayAccess
@@ -170,7 +170,6 @@ abstract class Field implements \ArrayAccess
         }
         return '<label>'.$label.($this['filter-required'] ? '*' : '').'</label>';
     }
-
 
     public function toJSON($value)
     {

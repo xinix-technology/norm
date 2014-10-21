@@ -6,9 +6,9 @@ use Norm\Test\Driver\AbstractConnectionTest;
 
 class MySqlPDOConnectionTest extends AbstractConnectionTest
 {
-    protected $clazz = '\\Norm\\Connection\\PDOConnection';
+    protected $clazz = 'Norm\\Connection\\PDOConnection';
 
-    protected $cursorClazz = '\\Norm\\Cursor\\PDOCursor';
+    protected $cursorClazz = 'Norm\\Cursor\\PDOCursor';
 
     public function getConnection()
     {

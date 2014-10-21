@@ -4,6 +4,7 @@ namespace Norm\Test;
 
 use Norm\Collection;
 use Norm\Connection\MemoryConnection;
+use Norm\Schema\String;
 
 class CollectionTest extends \PHPUnit_Framework_TestCase
 {
@@ -15,21 +16,9 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $stubFieldSchema = $this->getMockBuilder('\\Norm\\Schema\\Field')
-            ->setConstructorArgs(array('field_b'))
-            ->getMock();
-
-        $stubFieldSchema->expects($this->any())
-            ->method('prepare')
-            ->will($this->returnArgument(0));
-
-        $stubFieldSchema->expects($this->any())
-            ->method('filter')
-            ->will($this->returnValue(array('trim', 'required')));
-
         $this->schema = array(
-            'field_a' => null,
-            'field_b' => $stubFieldSchema,
+            'field_a' => String::create('field_a'),
+            'field_b' => String::create('field_b')->filter('trim'),
         );
 
         $this->connection = new MemoryConnection(array(
@@ -89,7 +78,7 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
         $schema = $this->collection->schema();
 
         $message = 'Collection::schema() expected return array of schema if no key specified';
-        $this->assertArrayHasKey('field_a', $schema, $message);
+        $this->assertNotNull(@$schema['field_a'], $message);
 
         $schema = $this->collection->schema('field_b');
 

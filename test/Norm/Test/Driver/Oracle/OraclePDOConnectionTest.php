@@ -22,12 +22,12 @@
 //         $config = array(
 //             'norm.databases' => array(
 //                 'oracle' => array(
-//                     'driver' => '\\Norm\\Connection\\PDOConnection',
+//                     'driver' => 'Norm\\Connection\\PDOConnection',
 //                     'prefix' => 'oci',
 //                     'dbname' => '//192.168.1.128:1521/orcl',
 //                     'username' => 'proddgipr',
 //                     'password' => 'proddgipr',
-//                     'dialect' => '\\Norm\\Dialect\\OracleDialect'
+//                     'dialect' => 'Norm\\Dialect\\OracleDialect'
 //                 )
 //             ),
 //             'norm.collections' => array(

@@ -12,6 +12,6 @@ class Text extends String
 
     public function formatInput($value, $entry = null)
     {
-        return '<textarea name="'.$this['name'].'">'.$value.'</textarea>';
+        return '<textarea name="'.$this['name'].'" placeholder="'.$this['label'].'">'.$value.'</textarea>';
     }
 }

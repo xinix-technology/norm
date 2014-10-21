@@ -1,5 +1,5 @@
 <?php
-use \Bono\Helper\URL;
+use Bono\Helper\URL;
 ?>
 <select name="<?php echo $self['name'] ?>" data-value="<?php echo @$value ?>">
     <option value="">---</option>

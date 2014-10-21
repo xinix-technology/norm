@@ -41,7 +41,7 @@ class Reference extends Field
         if (is_array($this['foreign'])) {
             return $this['foreign'];
         } elseif (is_callable($this['foreign'])) {
-            return $this['foreign']();
+            return val($this['foreign']) ?: array();
         }
 
         if (is_null($this['byCriteria'])) {
@@ -67,7 +67,7 @@ class Reference extends Field
             $value = null;
         }
 
-        if (!is_null($this['foreignKey'])) {
+        if (is_string($this['foreign']) && !is_null($this['foreignKey'])) {
             $field = @Norm::factory($this['foreign'])->schema($this['foreignKey']);
             if ($field) {
                 $value = $field->prepare($value);

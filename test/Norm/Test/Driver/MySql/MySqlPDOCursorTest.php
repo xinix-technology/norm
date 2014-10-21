@@ -7,7 +7,7 @@ use Norm\Connection\PDOConnection;
 
 class MySqlPDOCursorTest extends AbstractCursorTest
 {
-    protected $cursorClazz = '\\Norm\\Cursor\\PDOCursor';
+    protected $cursorClazz = 'Norm\\Cursor\\PDOCursor';
 
     protected $connection;
 

@@ -2,8 +2,8 @@
 
 namespace Norm\Controller;
 
-use \Bono\Controller\RestController;
-use \Norm\Norm;
+use Norm\Norm;
+use Bono\Controller\RestController;
 
 class NormController extends RestController
 {
@@ -75,20 +75,16 @@ class NormController extends RestController
 
     public function create()
     {
-        $entry = $this->getCriteria();
+        $entry = $this->collection->newInstance()->set($this->getCriteria());
 
         if ($this->request->isPost()) {
             try {
-                $entry = array_merge($entry, $this->request->post());
-                $model = $this->collection->newInstance();
-                $result = $model->set($entry)->save();
-
-                $entry = $model;
+                $result = $entry->set($this->request->post())->save();
 
                 h('notification.info', $this->clazz.' created.');
 
                 h('controller.create.success', array(
-                    'model' => $model
+                    'model' => $entry
                 ));
 
             } catch (\Slim\Exception\Stop $e) {
@@ -98,7 +94,7 @@ class NormController extends RestController
                 h('notification.error', $e);
 
                 h('controller.create.error', array(
-                    'model' => $model,
+                    'model' => $entry,
                     'error' => $e,
                 ));
 
@@ -221,6 +217,9 @@ class NormController extends RestController
         // $this->data['ids'] = $id;
     }
 
+    /**
+     * @see Bono\Controller\RestController
+     */
     public function schema($schema = null)
     {
         if (func_num_args() === 0) {

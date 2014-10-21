@@ -8,7 +8,7 @@ use Norm\Cursor\MongoCursor;
 
 class MongoCursorTest extends AbstractCursorTest
 {
-    protected $cursorClazz = '\\Norm\\Cursor\\MongoCursor';
+    protected $cursorClazz = 'Norm\\Cursor\\MongoCursor';
 
     protected $connection;
 

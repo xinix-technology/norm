@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-use \Norm\Type\NormArray as TypeArray;
+use Norm\Type\NormArray as TypeArray;
 
 class NormArray extends Field
 {

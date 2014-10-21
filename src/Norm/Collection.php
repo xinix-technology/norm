@@ -2,12 +2,12 @@
 
 namespace Norm;
 
-use ROH\Util\Inflector;
 use Norm\Model;
 use Norm\Cursor;
 use Norm\Filter\Filter;
 use Norm\Type\Object;
-use \JsonKit\JsonSerializer;
+use ROH\Util\Inflector;
+use JsonKit\JsonSerializer;
 
 class Collection extends Hookable implements JsonSerializer
 {
@@ -28,6 +28,12 @@ class Collection extends Hookable implements JsonSerializer
      * @var Norm\Connection
      */
     protected $connection;
+
+    /**
+     * Schema
+     * @var Norm\Type\Object
+     */
+    protected $schema;
 
     /**
      * Collection options
@@ -79,6 +85,13 @@ class Collection extends Hookable implements JsonSerializer
                 }
                 $this->observe($Observer);
             }
+        }
+
+        if (isset($options['schema'])) {
+            $this->schema = new Object($options['schema']);
+            unset($options['schema']);
+        } else {
+            $this->schema = new Object();
         }
 
         $this->options = $options;
@@ -140,21 +153,17 @@ class Collection extends Hookable implements JsonSerializer
      */
     public function schema($key = null, $value = null)
     {
-        if (!isset($this->options['schema'])) {
-            $this->options['schema'] = array();
-        }
-
         $numArgs = func_num_args();
         if (0 === $numArgs) {
-            return $this->options['schema'];
+            return $this->schema;
         } elseif (1 === $numArgs) {
             if (is_array($key)) {
-                $this->options['schema'] = $key;
-            } else {
-                return isset($this->options['schema'][$key]) ? $this->options['schema'][$key] : null;
+                $this->schema = new Object($key);
+            } elseif ($this->schema->offsetExists($key)) {
+                return $this->schema[$key];
             }
         } else {
-            $this->options['schema'][$key] = $value;
+            $this->schema[$key] = $value;
         }
     }
 
