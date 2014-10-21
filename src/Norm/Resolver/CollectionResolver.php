@@ -12,7 +12,7 @@ class CollectionResolver
     );
 
     public function __construct($options) {
-        $this->options = array_merge($this->options, $options);
+        $this->options = array_merge($this->options, $options ?: array());
     }
 
     public function resolve($options)
