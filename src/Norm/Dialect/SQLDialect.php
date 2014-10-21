@@ -71,6 +71,11 @@ abstract class SQLDialect
         return $sql;
     }
 
+    public function grammarEscape($value)
+    {
+        return $value;
+    }
+
     public function grammarExpression($key, $value, $collection, &$data)
     {
 
@@ -152,7 +157,7 @@ abstract class SQLDialect
         $fk = 'f'.$this->expressionCounter++;
         $data[$fk] = $fValue;
 
-        return "`$field`".' '.$operator.' :'.$fk;
+        return $this->grammarEscape($field).' '.$operator.' :'.$fk;
 
         $op = (isset($key[1])) ? $key[1] : '=';
         switch ($op) {
@@ -188,12 +193,12 @@ abstract class SQLDialect
                 return '(1)';
             }
 
-            return "`$key`" . ' ' . $op . ' ('.implode(', ', $fgroup).')';
+            return $this->grammarEscape($key) . ' ' . $op . ' ('.implode(', ', $fgroup).')';
         } else {
             $this->expressionCounter++;
             $data['f'.$this->expressionCounter] = $value;
 
-            return "`$key`" . ' ' . $op . ' :f' . $this->expressionCounter;
+            return $this->grammarEscape($key) . ' ' . $op . ' :f' . $this->expressionCounter;
         }
     }
 
@@ -217,11 +222,11 @@ abstract class SQLDialect
                 $sets[] = $k.' = :'.$k;
             }
 
-            $fields[] = "`$k`";
+            $fields[] = $this->grammarEscape($k);
             $placeholders[] = ':'.$k;
         }
 
-        $sql = 'INSERT INTO `'.$collectionName.'` ('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).')';
+        $sql = 'INSERT INTO '.$this->grammarEscape($collectionName).' ('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).')';
 
         return $sql;
     }
@@ -246,7 +251,7 @@ abstract class SQLDialect
             }
         }
 
-        $sql = 'UPDATE `'.$collectionName.'` SET '.implode(', ', $sets) . ' WHERE id = :id';
+        $sql = 'UPDATE '.$this->grammarEscape($field).' SET '.implode(', ', $sets) . ' WHERE id = :id';
 
         return $sql;
     }
