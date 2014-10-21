@@ -95,6 +95,7 @@ abstract class SQLDialect
                         break;
                 }
             }
+
             return '('.implode(' '.strtoupper(substr($key, 1)).' ', $wheres).')';
         }
 
@@ -148,13 +149,13 @@ abstract class SQLDialect
             }
         }
 
-
         $fk = 'f'.$this->expressionCounter++;
         $data[$fk] = $fValue;
-        return $field.' '.$operator.' :'.$fk;
+
+        return "`$field`".' '.$operator.' :'.$fk;
 
         $op = (isset($key[1])) ? $key[1] : '=';
-        switch($op) {
+        switch ($op) {
             case 'ne':
                 $op = '!=';
                 break;
@@ -172,7 +173,6 @@ abstract class SQLDialect
                 break;
         }
 
-
         if ($op == 'in') {
             $fgroup = array();
             foreach ($value as $k => $v) {
@@ -187,11 +187,13 @@ abstract class SQLDialect
             if (empty($fgroup)) {
                 return '(1)';
             }
-            return $key . ' ' . $op . ' ('.implode(', ', $fgroup).')';
+
+            return "`$key`" . ' ' . $op . ' ('.implode(', ', $fgroup).')';
         } else {
             $this->expressionCounter++;
             $data['f'.$this->expressionCounter] = $value;
-            return $key . ' ' . $op . ' :f' . $this->expressionCounter;
+
+            return "`$key`" . ' ' . $op . ' :f' . $this->expressionCounter;
         }
     }
 
@@ -215,11 +217,11 @@ abstract class SQLDialect
                 $sets[] = $k.' = :'.$k;
             }
 
-            $fields[] = $k;
+            $fields[] = "`$k`";
             $placeholders[] = ':'.$k;
         }
 
-        $sql = 'INSERT INTO '.$collectionName.'('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).')';
+        $sql = 'INSERT INTO `'.$collectionName.'` ('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).')';
 
         return $sql;
     }
@@ -244,15 +246,8 @@ abstract class SQLDialect
             }
         }
 
-        $sql = 'UPDATE '.$collectionName.' SET '.implode(', ', $sets) . ' WHERE id = :id';
-
+        $sql = 'UPDATE `'.$collectionName.'` SET '.implode(', ', $sets) . ' WHERE id = :id';
 
         return $sql;
     }
-
-    // protected function execute($sql, array $data = array())
-    // {
-    //     $statement = $this->raw->prepare($sql);
-    //     return $statement->execute($data);
-    // }
 }

@@ -155,6 +155,7 @@ class Norm
                         $resolverOpts = array();
                     }
 
+
                     $resolver = new $resolver($resolverOpts);
                     $config = $resolver->resolve($options);
                     if (isset($config)) {

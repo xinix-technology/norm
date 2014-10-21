@@ -2,6 +2,8 @@
 
 namespace Norm\Resolver;
 
+use Bono\App;
+
 class CollectionResolver
 {
 
@@ -15,7 +17,7 @@ class CollectionResolver
 
     public function resolve($options)
     {
-        $app = \App::getInstance();
+        $app = App::getInstance();
 
         $configPath = null;
 
