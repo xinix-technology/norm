@@ -33,6 +33,7 @@ class NormController extends RestController
     public function getSort()
     {
         $sorts = $get = $this->request->get('!sort') ?: array();
+
         foreach ($sorts as $key => &$value) {
             $value = (int) $value;
         }
@@ -49,8 +50,8 @@ class NormController extends RestController
     {
         $limit = $this->request->get('!limit');
 
-        if (!isset($limit) && isset($this->collection->options['limit'])) {
-            $limit = $this->collection->options['limit'];
+        if (is_null($limit) && !is_null($this->collection->option('limit'))) {
+            $limit = $this->collection->option('limit');
         }
 
         return $limit;
