@@ -70,7 +70,13 @@ class Reference extends Field
         return $cursor;
     }
 
-    public function optionLabel($entry) {
+    public function optionValue($entry)
+    {
+        return is_scalar($entry) ? $entry : $entry[$this['foreignKey']];
+    }
+
+    public function optionLabel($entry)
+    {
         if (is_scalar($entry)) {
             $label = $entry;
         } elseif (is_callable($this['foreignLabel'])) {
