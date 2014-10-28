@@ -4,6 +4,7 @@ namespace Norm\Controller;
 
 use Norm\Norm;
 use Bono\Controller\RestController;
+use ROH\Util\Inflector;
 
 class NormController extends RestController
 {
@@ -21,12 +22,17 @@ class NormController extends RestController
     {
         $gets = $this->request->get();
 
-        $criteria = array();
+        if (empty($this->routeData)) {
+            $criteria = array();
+        } else {
+            $criteria = $this->routeData;
+        }
         foreach ($gets as $key => $value) {
             if ($key[0] !== '!') {
                 $criteria[$key] = $value;
             }
         }
+
         return $criteria;
     }
 
@@ -227,5 +233,11 @@ class NormController extends RestController
             return $this->collection->schema();
         }
         return $this->collection->schema($schema);
+    }
+
+    public function routeModel($key) {
+        $Clazz = Inflector::classify($key);
+        $collection = Norm::factory($this->schema('merchant')->get('foreign'));
+        return $collection->findOne($this->routeData($key));
     }
 }
