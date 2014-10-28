@@ -3,6 +3,7 @@
 namespace Norm\Schema;
 
 use Norm\Norm;
+use Norm\Model;
 use Bono\App;
 
 class Reference extends Field
@@ -36,8 +37,20 @@ class Reference extends Field
         return $this;
     }
 
+    /**
+     * [findOptions description]
+     * @return [type] [description]
+     *
+     * @deprecated use Reference::optionData() instead.
+     *
+     */
     public function findOptions()
     {
+        trigger_error(__METHOD__.' is deprecated.', E_USER_DEPRECATED);
+        return $this->optionData();
+    }
+
+    public function optionData() {
         if (is_array($this['foreign'])) {
             return $this['foreign'];
         } elseif (is_callable($this['foreign'])) {
@@ -55,6 +68,19 @@ class Reference extends Field
         }
 
         return $cursor;
+    }
+
+    public function optionLabel($entry) {
+        if (is_scalar($entry)) {
+            $label = $entry;
+        } elseif (is_callable($this['foreignLabel'])) {
+            $getLabel = $this['foreignLabel'];
+            $label = $getLabel($entry);
+        } else {
+            $label = $entry[$this['foreignLabel']];
+        }
+
+        return $label;
     }
 
     public function prepare($value)
@@ -149,60 +175,6 @@ class Reference extends Field
             'self' => $this,
             'value' => $value,
             'entry' => $entry,
-            // 'foreignName' => $foreign->name,
-            'criteria' => $this['byCriteria'],
         ));
-
-        // if ($template) {
-        // } else {
-        //     $html = '<select name="'.$this['name'].'"><option value="">---</option>';
-
-        //     foreach($entries as $k => $entry) {
-        //         $html .= '<option value="'.$entry[$this['foreignKey']].'" '
-        //          .($entry[$this['foreignKey']] == $value ? 'selected' : '').'>'.$entry[$this['foreignLabel']]
-        //          .'</option>';
-        //     }
-
-        //     $html .= '</select>';
-
-        //     return $html;
-        // }
-
     }
-
-    // public function getRaw($value)
-    // {
-    //     return $value;
-    // }
-
-    // public function cell($value, $entry = null)
-    // {
-    //     $label = '';
-
-    //     if (empty($value)) {
-    //         return '';
-    //     }
-
-    //     if (is_array($this['foreign'])) {
-    //         return $this['foreign'][$value];
-    //     } elseif (is_callable($this['foreign'])) {
-    //         return $this['foreign']($value);
-    //     } elseif (is_null($this['foreignKey'])) {
-    //         $model = Norm::factory($this['foreign'])->findOne($value);
-    //     } else {
-    //         $criteria = array($this['foreignKey'] => $value);
-    //         $model = Norm::factory($this['foreign'])->findOne($criteria);
-    //     }
-
-    //     if (is_callable($this['foreignLabel'])) {
-    //         $getLabel = $this['foreignLabel'];
-    //         $label = $getLabel($model);
-    //     } else {
-    //         if ($model) {
-    //             $label = $model->get($this['foreignLabel']);
-    //         }
-    //     }
-
-    //     return $label;
-    // }
 }

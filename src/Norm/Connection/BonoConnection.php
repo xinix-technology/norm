@@ -55,7 +55,6 @@ class BonoConnection extends Connection
 
             if (!empty($sorts)) {
                 foreach ($sorts as $key => $value) {
-                    # code...
                     $query["!sort[$key]"] = $value;
                 }
             }
