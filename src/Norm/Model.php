@@ -395,15 +395,27 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         $numArgs = func_num_args();
         if ($numArgs === 0) {
             $formatter = $this->collection->option('format');
-            if (is_callable($formatter)) {
-                return $formatter($this);
-            }
 
-            $schema = $this->schemaByIndex(0);
-            if (!is_null($schema)) {
-                return (isset($this[$schema['name']])) ? val($this[$schema['name']]) : null;
+            if (is_null($formatter)) {
+                $schema = $this->schemaByIndex(0);
+                if (!is_null($schema)) {
+                    return (isset($this[$schema['name']])) ? val($this[$schema['name']]) : null;
+                } else {
+                    return '-- no formatter and schema --';
+                }
             } else {
-                return '-- no formatter and schema --';
+                if ($formatter instanceof \Closure) {
+                    return $formatter($this);
+                } elseif (is_string($formatter)) {
+
+                    $result = preg_replace_callback('/{(\w+)}/', function($matches) {
+                        return $this->format($matches[1]);
+                    }, $formatter);
+
+                    return $result;
+                } else {
+                    throw new \Exception('Unknown format for Model formatter.');
+                }
             }
         // } elseif (isset($this->formats[$field][$format])) {
         //     $fn = $this->formats[$field][$format];
