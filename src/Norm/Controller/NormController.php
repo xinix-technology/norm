@@ -11,6 +11,8 @@ class NormController extends RestController
 
     protected $collection;
 
+    protected $routeModels = array();
+
     public function __construct($app, $uri)
     {
         parent::__construct($app, $uri);
@@ -236,8 +238,12 @@ class NormController extends RestController
     }
 
     public function routeModel($key) {
-        $Clazz = Inflector::classify($key);
-        $collection = Norm::factory($this->schema('merchant')->get('foreign'));
-        return $collection->findOne($this->routeData($key));
+        if (!isset($this->routeModels[$key])) {
+            $Clazz = Inflector::classify($key);
+            $collection = Norm::factory($this->schema('merchant')->get('foreign'));
+            $this->routeModels[$key] = $collection->findOne($this->routeData($key));
+        }
+
+        return $this->routeModels[$key];
     }
 }
