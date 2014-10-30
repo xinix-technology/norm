@@ -70,16 +70,20 @@ class Reference extends Field
         return $cursor;
     }
 
-    public function optionValue($entry)
+    public function optionValue($key, $entry)
     {
-        return is_scalar($entry) ? $entry : $entry[$this['foreignKey']];
+        if (is_scalar($entry)) {
+            return $key;
+        } else {
+            return $entry[$this['foreignKey']]; 
+        }
     }
 
-    public function optionLabel($entry)
+    public function optionLabel($key, $entry)
     {
         if (is_scalar($entry)) {
             $label = $entry;
-        } elseif (is_callable($this['foreignLabel'])) {
+        } elseif ($this['foreignLabel'] instanceof \Closure) {
             $getLabel = $this['foreignLabel'];
             $label = $getLabel($entry);
         } else {
@@ -176,6 +180,7 @@ class Reference extends Field
         $app = App::getInstance();
 
         $template = $app->theme->resolve('_schema/reference');
+
 
         return $app->theme->partial($template, array(
             'self' => $this,
