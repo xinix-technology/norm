@@ -4,7 +4,7 @@ namespace Norm\Type;
 
 abstract class Collection implements \JsonKit\JsonSerializer, \ArrayAccess, \Iterator, \Countable
 {
-    public $clazz = '';
+    protected $clazz;
 
     protected $attributes = array();
 

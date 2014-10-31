@@ -169,20 +169,9 @@ class Reference extends Field
         return $label;
     }
 
-    public function formatReadonly($value, $entry = null)
-    {
-        $label = $this->formatPlain($value, $entry) ?: '&nbsp;';
-        return '<span class="field">'.$label.'</span>';
-    }
-
     public function formatInput($value, $entry = null)
     {
-        $app = App::getInstance();
-
-        $template = $app->theme->resolve('_schema/reference');
-
-
-        return $app->theme->partial($template, array(
+        return $this->render('_schema/reference/input', array(
             'self' => $this,
             'value' => $value,
             'entry' => $entry,

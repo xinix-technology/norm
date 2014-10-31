@@ -194,4 +194,15 @@ abstract class Field implements \ArrayAccess
         return '<input type="text" name="'.$this['name'].'" value="'.$value.'" placeholder="'.l($this['label']).
             '" autocomplete="off" />';
     }
+
+    public function render($template, array $context = array())
+    {
+        $app = \Bono\App::getInstance();
+
+        $context['self'] = $this;
+
+        $template = $app->theme->resolve($template);
+
+        return $app->theme->partial($template, $context);
+    }
 }

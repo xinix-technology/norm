@@ -11,21 +11,14 @@ class Boolean extends Field
 
     public function formatInput($value, $entry = null)
     {
-        return '
-            <select name="'.$this['name'].'">
-                <option value="0" '.(!$value ? 'selected' : '').'>False</option>
-                <option value="1" '.($value ? 'selected' : '').'>True</option>
-            </select>
-        ';
+        return $this->render('_schema/boolean/input', array(
+            'value' => $value,
+            'entry' => $entry,
+        ));
     }
 
     public function formatPlain($value, $entry = null)
     {
         return $value ? 'True' : 'False';
-    }
-
-    public function formatReadonly($value, $entry = null)
-    {
-        return '<span class="field">'.$this->formatPlain($value, $entry).'</span>';
     }
 }

@@ -26,11 +26,11 @@ class NormArray extends Field
         $value = $this->prepare($value);
         if (isset($value)) {
             // TODO this checking should available on JsonKit
-            // if (substr(phpversion(), 0, 3) === '5.3') {
-            //     $value = json_encode($value->toArray(), JSON_PRETTY_PRINT);
-            // } else {
-            $value = json_encode($value->toArray());
-            // }
+            if (substr(phpversion(), 0, 3) > '5.3') {
+                $value = json_encode($value->toArray(), JSON_PRETTY_PRINT);
+            } else {
+                $value = json_encode($value->toArray());
+            }
         }
 
         return $value;
@@ -39,5 +39,10 @@ class NormArray extends Field
     public function formatInput($value, $entry = null)
     {
         return '<textarea name="'.$this['name'].'">'.$this->formatPlain($value, $entry).'</textarea>';
+    }
+
+    public function formatReadonly($value, $entry = null)
+    {
+        return "<span class=\"field\"><pre style=\"margin:0\">".($this->formatPlain($value, $entry) ?: '&nbsp;')."</pre></span>";
     }
 }
