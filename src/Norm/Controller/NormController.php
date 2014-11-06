@@ -35,7 +35,15 @@ class NormController extends RestController
             }
         }
 
+        $criteria = array_merge($criteria,$this->getOr());
+        
         return $criteria;
+    }
+
+
+    public function getOr(){
+        $or = $this->request->get('!or') ? array("!or" => $this->request->get('!or')): array();
+        return $or;
     }
 
     public function getSort()
