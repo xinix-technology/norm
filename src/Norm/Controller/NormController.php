@@ -248,7 +248,10 @@ class NormController extends RestController
     public function routeModel($key) {
         if (!isset($this->routeModels[$key])) {
             $Clazz = Inflector::classify($key);
-            $collection = Norm::factory($this->schema('merchant')->get('foreign'));
+            
+            $collection = Norm::factory($this->schema($key)->get('foreign'));
+
+            
             $this->routeModels[$key] = $collection->findOne($this->routeData($key));
         }
 
