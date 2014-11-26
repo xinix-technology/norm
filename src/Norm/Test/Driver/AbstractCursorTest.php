@@ -316,4 +316,12 @@ abstract class AbstractCursorTest extends \PHPUnit_Framework_TestCase
         $model = $cursor->current();
         $this->assertEquals('putra', $model['first_name'], 'Cursor::rewind() will reset cursor');
     }
+
+    public function testDistinct()
+    {
+        $CursorClazz = $this->cursorClazz;
+        $cursor = new $CursorClazz($this->collection);
+
+        throw new \Exception('Unfinished yet!');
+    }
 }

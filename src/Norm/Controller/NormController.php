@@ -114,8 +114,6 @@ class NormController extends RestController
                     'model' => $entry,
                     'error' => $e,
                 ));
-
-                // $this->flashNow('error', $e);
             }
 
         }
@@ -233,8 +231,6 @@ class NormController extends RestController
             }
 
         }
-
-        // $this->data['ids'] = $id;
     }
 
     /**

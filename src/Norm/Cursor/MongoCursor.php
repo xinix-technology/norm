@@ -205,51 +205,8 @@ class MongoCursor extends Cursor
         }
     }
 
-    // protected $collection;
-
-    // protected $criteria;
-
-    // protected $sort;
-
-    // protected $skip;
-
-    // protected $limit;
-
-    // public function __construct($collection = null, $criteria = null)
-    // {
-    //     $this->collection = $collection;
-    //     $this->criteria = $this->prepareCriteria($criteria);
-    // }
-
-    // public function limit($num = null)
-    // {
-    //     if (func_num_args() === 0) {
-    //         return $this->limit;
-    //     }
-    //     $this->limit = (int) $num;
-    //     return $this;
-    // }
-
-    // public function sort(array $fields = array())
-    // {
-    //     if (func_num_args() === 0) {
-    //         return $this->sorts;
-    //     }
-    //     $this->sorts = $fields;
-    //     return $this;
-    // }
-
-    // public function skip($num = null)
-    // {
-    //     if (func_num_args() === 0) {
-    //         return $this->skip;
-    //     }
-    //     $this->skip = (int) $num;
-    //     return $this;
-    // }
-
-    // public function getQueryInfo()
-    // {
-    //     return $this->getCursor()->info();
-    // }
+    // implemented later
+    public function distinct($key) {
+        throw new \Exception('Unimplemented yet!');
+    }
 }
