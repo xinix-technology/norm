@@ -193,23 +193,10 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
      */
     abstract public function translateCriteria(array $criteria = array());
 
-    // public function current()
-    // {
-    //     // if (!$this->profiled && $this->collection->option('debug')) {
-    //     //     f('profile.add', array('section' => 'norm', 'value' => array(
-    //     //         'q' => $this->cursor->getQueryInfo(),
-    //     //     )));
-    //     //     $this->profiled = true;
-    //     // }
-    //     $current = $this->cursor->current();
-    //     if (isset($current)) {
-    //         return $this->collection->attach($current);
-    //     }
-    //     return null;
-    // }
-
-    // public function links()
-    // {
-    //     return $this->links;
-    // }
+    /**
+     * Get specific distinct key from cursor result
+     * @param  string $key
+     * @return array
+     */
+    abstract public function distinct($key);
 }

@@ -36,7 +36,7 @@ class NormController extends RestController
         }
 
         $criteria = array_merge($criteria,$this->getOr());
-        
+
         return $criteria;
     }
 
@@ -127,7 +127,10 @@ class NormController extends RestController
     {
         $found = false;
 
-        $this->data['entry'] = $entry = $this->collection->findOne($id);
+        try {
+            $this->data['entry'] = $entry = $this->collection->findOne($id);
+        } catch (\Exception $e) {
+        }
         if (isset($entry)) {
             $found = true;
         }
@@ -248,10 +251,10 @@ class NormController extends RestController
     public function routeModel($key) {
         if (!isset($this->routeModels[$key])) {
             $Clazz = Inflector::classify($key);
-            
+
             $collection = Norm::factory($this->schema($key)->get('foreign'));
 
-            
+
             $this->routeModels[$key] = $collection->findOne($this->routeData($key));
         }
 
