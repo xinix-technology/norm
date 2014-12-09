@@ -20,6 +20,10 @@ class Date extends DateTime
     public function formatPlain($value, $entry = null)
     {
         $value = $this->prepare($value);
+        if ($value) {
+            $value->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
+        }
+
         return ($value ? $value->format('Y-m-d') : null);
     }
 

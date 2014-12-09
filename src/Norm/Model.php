@@ -2,6 +2,8 @@
 
 namespace Norm;
 
+use Norm\Norm;
+
 /**
  * Norm\Model
  *
@@ -322,7 +324,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      */
     public function jsonSerialize()
     {
-        if (!\Norm\Norm::options('include')) {
+        if (!Norm::options('include')) {
             return $this->toArray();
         }
 

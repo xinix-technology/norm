@@ -75,7 +75,7 @@ class Reference extends Field
         if (is_scalar($entry)) {
             return $key;
         } else {
-            return $entry[$this['foreignKey']]; 
+            return $entry[$this['foreignKey']];
         }
     }
 
@@ -117,7 +117,7 @@ class Reference extends Field
     {
         $foreignCollection = Norm::factory($this['foreign']);
 
-        if (\Norm\Norm::options('include')) {
+        if (Norm::options('include')) {
             $foreignKey = $this['foreignKey'];
 
             if (is_null($foreignKey)) {

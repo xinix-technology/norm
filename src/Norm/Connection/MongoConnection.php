@@ -148,7 +148,7 @@ class MongoConnection extends Connection
         foreach ($object as $key => &$value) {
 
             if ($value instanceof \MongoDate) {
-                $value = new DateTime('@'.$value->sec, new \DateTimeZone(date_default_timezone_get()));
+                $value = new DateTime('@'.$value->sec);
             } elseif ($value instanceof \MongoId) {
                 $value = (string) $value;
             }
