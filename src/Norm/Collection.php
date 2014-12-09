@@ -305,16 +305,23 @@ class Collection extends Hookable implements JsonSerializer
      */
     public function save(Model $model, $options = array())
     {
-        $options = array_merge(array( 'filter' => true ), $options);
+        $options = array_merge(array(
+            'filter' => true,
+            'observer' => true,
+        ), $options);
 
         if ($options['filter']) {
             $this->filter($model);
         }
 
-        $this->applyHook('saving', $model, $options);
+        if ($options['observer']) {
+            $this->applyHook('saving', $model, $options);
+        }
         $modified = $this->connection->persist($this, $model->dump());
         $model->setId($modified['$id']);
-        $this->applyHook('saved', $model, $options);
+        if ($options['observer']) {
+            $this->applyHook('saved', $model, $options);
+        }
         $model->sync($modified);
         $this->resetCache();
     }
