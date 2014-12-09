@@ -35,6 +35,8 @@
  */
 namespace Norm\Provider;
 
+use Norm\Norm;
+
 /**
  * Norm provider for Bono web application framework
  *
@@ -91,6 +93,18 @@ class NormProvider extends \Bono\Provider\Provider
      */
     public function initialize()
     {
+        $app = $this->app;
+
+        $include = $app->request->get('!include');
+        if (!empty($include)) {
+            Norm::options('include', true);
+        }
+
+        $tz = $app->request->get('!tz');
+        if (!empty($tz)) {
+            Norm::options('tz', $tz);
+        }
+
         if (!isset($this->options['datasources'])) {
             $this->options['datasources'] = $this->app->config('norm.datasources');
         }
@@ -108,7 +122,7 @@ class NormProvider extends \Bono\Provider\Provider
             $this->options['collections'] = $this->app->config('norm.collections');
         }
 
-        \Norm\Norm::init($this->options['datasources'], $this->options['collections']);
+        Norm::init($this->options['datasources'], $this->options['collections']);
 
         $controllerConfig = $this->app->config('bono.controllers');
         if (!isset($controllerConfig['default'])) {
