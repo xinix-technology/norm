@@ -46,7 +46,7 @@ class Nested
             $model['$lft'] = $left;
             $model['$rgt'] = $right;
             // save without save function to avoid observers
-            $collection->connection->save($model);
+            $collection->save($model, array('observer' => false));
         }
 
         // return the right value of this node + 1
