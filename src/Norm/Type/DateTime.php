@@ -2,6 +2,8 @@
 
 namespace Norm\Type;
 
+use Norm\Norm;
+
 class DateTime extends \DateTime implements \JsonKit\JsonSerializer
 {
     public function localFormat($format)
@@ -19,11 +21,17 @@ class DateTime extends \DateTime implements \JsonKit\JsonSerializer
 
     public function jsonSerialize()
     {
+        if ($tz = Norm::options('tz')) {
+            $this->setTimezone(new \DateTimeZone($tz));
+        }
         return $this->format('c');
     }
 
     public function __toString()
     {
+        if ($tz = Norm::options('tz')) {
+            $this->setTimezone(new \DateTimeZone($tz));
+        }
         return $this->format('c');
     }
 }
