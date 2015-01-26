@@ -224,7 +224,7 @@ class PDOCursor extends Cursor
     //     return $criteria;
     // }
 
-    public function getStatement($type)
+    public function getStatement($type = null)
     {
         if (is_null($this->statement)) {
             $this->buffer = array();
