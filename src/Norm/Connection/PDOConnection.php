@@ -125,11 +125,13 @@ class PDOConnection extends \Norm\Connection
      */
     public function query($collection, array $criteria = null)
     {
+        $collection = $this->factory($collection);
+
         if (!empty($this->options['autocreate'])) {
-            $this->dialect->prepareCollection($collection);
+            $this->dialect->prepareCollection($collection, $criteria);
         }
 
-        return new PDOCursor($collection);
+        return new PDOCursor($collection, $criteria);
     }
 
     /**

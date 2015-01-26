@@ -328,4 +328,9 @@ class PDOCursor extends Cursor
     //     $this->skip = (int) $num;
     //     return $this;
     // }
+
+    public function distinct($key)
+    {
+        // n00p
+    }
 }
