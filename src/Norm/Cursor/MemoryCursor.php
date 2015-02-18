@@ -109,4 +109,9 @@ class MemoryCursor extends Cursor
     {
         return $criteria;
     }
+
+    public function distinct($key)
+    {
+        throw new \Exception('Unimplemented '.__METHOD__);
+    }
 }
