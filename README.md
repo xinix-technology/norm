@@ -5,6 +5,8 @@ NORM is (N)ot ORM
 [![Download](http://img.shields.io/packagist/dm/xinix-technology/norm.svg?style=flat-square)](https://github.com/xinix-technology/norm)
 [![Version](http://img.shields.io/packagist/v/xinix-technology/norm.svg?style=flat-square)](https://github.com/xinix-technology/norm)
 
+![Norm](https://raw.githubusercontent.com/xinix-technology/norm/master/img/logo.png "Norm")
+
 The goal of this library is to make an ORM framework as intermediate layer for
 various data store, such as PDO, PHP-MongoDB, etc.
 
