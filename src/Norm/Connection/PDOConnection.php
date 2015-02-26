@@ -1,12 +1,12 @@
-<?php
-
-namespace Norm\Connection;
+<?php namespace Norm\Connection;
 
 use Norm\Collection;
 use Norm\Model;
 use Norm\Cursor\PDOCursor;
 use Norm\Schema\DateTime;
 use Norm\Schema\Object;
+use Exception;
+use PDO;
 
 class PDOConnection extends \Norm\Connection
 {
@@ -29,7 +29,7 @@ class PDOConnection extends \Norm\Connection
         parent::__construct($options);
 
         if (!isset($options['prefix'])) {
-            throw new \Exception('[Norm\PDOConnection] Missing prefix, check your configuration!');
+            throw new Exception('[Norm\PDOConnection] Missing prefix, check your configuration!');
         }
 
         if (isset($options['dsn'])) {
@@ -53,20 +53,20 @@ class PDOConnection extends \Norm\Connection
         }
 
         if (isset($options['username'])) {
-            $this->raw = new \PDO($dsn, $options['username'], $options['password']);
+            $this->raw = new PDO($dsn, $options['username'], $options['password']);
         } else {
-            $this->raw = new \PDO($dsn);
+            $this->raw = new PDO($dsn);
         }
 
-        $this->raw->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $this->raw->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+        $this->raw->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->raw->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
 
         if (isset($options['dialect'])) {
             $Dialect = $options['dialect'];
         } elseif (isset($this->DIALECT_MAP[$options['prefix']])) {
             $Dialect = $this->DIALECT_MAP[$options['prefix']];
         } else {
-            throw new \Exception('[Norm/PDOConnection] Missing dialect!');
+            throw new Exception('[Norm/PDOConnection] Missing dialect!');
             // $Dialect = 'Norm\\Dialect\\SQLDialect';
         }
 
@@ -93,23 +93,21 @@ class PDOConnection extends \Norm\Connection
 
         if (isset($document['$id'])) {
             $marshalledDocument['$id'] = $document['$id'];
-
             $sql = $this->dialect->grammarUpdate($collectionName, $marshalledDocument);
-
             $marshalledDocument['id'] = $marshalledDocument['$id'];
+
             unset($marshalledDocument['$id']);
 
             $this->execute($sql, $marshalledDocument);
         } else {
             $sql = $this->dialect->grammarInsert($collectionName, $marshalledDocument);
-
             $id = null;
-
             $succeed = $this->execute($sql, $marshalledDocument);
+
             if ($succeed) {
                 $id = $this->raw->lastInsertId();
             } else {
-                throw new \Exception('[Norm/PDOConnection] Insert error.');
+                throw new Exception('[Norm/PDOConnection] Insert error.');
             }
 
             if (!is_null($id)) {
@@ -153,27 +151,14 @@ class PDOConnection extends \Norm\Connection
             $statement = $this->raw->prepare($sql);
             $result = $statement->execute();
         } else {
-            throw new \Exception('Unimplemented yet!');
+            $sql = "DELETE FROM $collection WHERE id = :id";
 
-            // $sql = "DELETE FROM $collection WHERE id = :id";
-
-            // if ($criteria instanceof \Norm\Model) {
-            //     $criteria = $criteria->getId();
-            // }
-
-            // if (is_string($criteria)) {
-            //     $criteria = array(
-            //         '_id' => new \MongoId($criteria),
-            //     );
-            // } elseif (!is_array($criteria)) {
-            //     throw new \Exception('[Norm/Connection] Cannot remove with specified criteria.
-            //     Criteria must be array, sring, or model');
-            // }
-
-            // $result = $this->raw->$collection->remove($criteria);
-
-            // $statement = $this->getRaw()->prepare($sql);
-            // $result = $statement->execute($params);
+            if ($criteria instanceof Model) {
+                $statement = $this->getRaw()->prepare($sql);
+                $result = $statement->execute(array(':id' => $criteria->getId()));
+            } else {
+                throw new Exception('Unimplemented yet!');
+            }
         }
 
         return $result;
@@ -205,6 +190,7 @@ class PDOConnection extends \Norm\Connection
     protected function execute($sql, array $data = array())
     {
         $statement = $this->raw->prepare($sql);
+
         return $statement->execute($data);
     }
 
