@@ -151,7 +151,7 @@ class PDOConnection extends \Norm\Connection
             $statement = $this->raw->prepare($sql);
             $result = $statement->execute();
         } else {
-            $sql = "DELETE FROM $collection WHERE id = :id";
+            $sql = "DELETE FROM $collectionName WHERE id = :id";
 
             if ($criteria instanceof Model) {
                 $statement = $this->getRaw()->prepare($sql);
