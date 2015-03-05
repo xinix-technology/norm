@@ -87,6 +87,12 @@ class FlatFileCursor extends Cursor
     {
         if (is_null($this->rows)) {
             $this->execute();
+        } else if (! $foundOnly) {
+            $this->limit = null;
+            $this->skip = null;
+            $this->criteria = null;
+
+            $this->execute();
         }
 
         return count($this->rows);
