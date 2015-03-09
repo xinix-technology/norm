@@ -33,7 +33,7 @@ abstract class Field implements \ArrayAccess
         return new $Field($name, $label);
     }
 
-    public function __construct($name, $label = null)
+    public function __construct($name = null, $label = null)
     {
         if (is_null($label)) {
             $label = Inflector::humanize($name);
