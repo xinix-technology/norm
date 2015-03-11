@@ -66,7 +66,7 @@ class FlatFileConnection extends Connection
             $collectionName = $collection->getName();
         } else {
             $collectionName = $collection;
-            $collection = static::factory($collection);
+            $collection     = static::factory($collection);
         }
 
         if (! isset($document['$id'])) {
@@ -126,6 +126,7 @@ class FlatFileConnection extends Connection
 
     /**
      * Getter for specific data for collection
+     *
      * @return array
      */
     public function getCollectionData($collection, $criteria = null)
@@ -144,8 +145,8 @@ class FlatFileConnection extends Connection
             while (false !== ($entry = readdir($handle))) {
                 if (! in_array($entry, array('.', '..'))) {
                     if (is_readable($pathToFile = $this->dbPath.'/'.$collection.'/'.$entry)) {
-                        $match = true;
-                        $raw = file_get_contents($pathToFile);
+                        $match   = true;
+                        $raw     = file_get_contents($pathToFile);
                         $content = json_decode($raw, true);
 
                         if (! is_null($criteria) and ! empty($criteria)) {
@@ -156,7 +157,9 @@ class FlatFileConnection extends Connection
                                     $match = false;
                                 }
                             } else {
-                                if (empty(array_intersect_assoc($content, $criteria))) {
+                                $intersection = array_intersect_assoc($content, $criteria);
+
+                                if (empty($intersection)) {
                                     $match = false;
                                 }
                             }
