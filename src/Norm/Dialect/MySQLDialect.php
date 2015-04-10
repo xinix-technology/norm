@@ -27,7 +27,7 @@ class MySQLDialect extends SQLDialect
         $wheres = array();
 
         foreach ($cursor->getCriteria() as $key => $value) {
-            $wheres[] = $this->collection->connection->getDialect()->grammarExpression($key, $value, $data);
+            $wheres[] = $this->grammarExpression($key, $value, $cursor->getCollection(),$data);
         }
 
         if (count($wheres)) {
@@ -36,13 +36,13 @@ class MySQLDialect extends SQLDialect
 
         if ($foundOnly) {
 
-            $sorts = $cursor->sort();
+            // $sorts = $cursor->sort();
             $limit = $cursor->limit();
             $skip = $cursor->skip();
 
-            if (isset($sorts)) {
-                throw new \Exception(__FILE__.':'.__LINE__.' unimplemented yet!');
-            }
+            // if (isset($sorts)) {
+            //     throw new \Exception(__FILE__.':'.__LINE__.' unimplemented yet!');
+            // }
 
             if (isset($limit) || isset($skip)) {
                 $sql .= ' LIMIT '.($limit ?: 1000000000).' OFFSET '.($skip ?: 0);

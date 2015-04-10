@@ -251,7 +251,7 @@ abstract class SQLDialect
             }
         }
 
-        $sql = 'UPDATE '.$this->grammarEscape($field).' SET '.implode(', ', $sets) . ' WHERE id = :id';
+        $sql = 'UPDATE '.$this->grammarEscape($collectionName).' SET '.implode(', ', $sets) . ' WHERE id = :id';
 
         return $sql;
     }
