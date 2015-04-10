@@ -5,7 +5,7 @@ namespace Norm\Schema;
 use ROH\Util\Inflector;
 use Norm\Filter\Filter;
 
-abstract class Field implements \ArrayAccess
+abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
 {
 
     static protected $instances = array();
@@ -109,7 +109,7 @@ abstract class Field implements \ArrayAccess
 
                     $baseF = explode(':', trim($f));
                     $baseF = $baseF[0];
-                    $this['filter-'.$baseF] = true;
+                    $this['filter'.strtoupper($baseF[0]).substr($baseF, 1)] = true;
 
                     $this->filter[] = $f;
                 }
@@ -168,7 +168,7 @@ abstract class Field implements \ArrayAccess
         if ($plain) {
             return $label;
         }
-        return '<label>'.$label.($this['filter-required'] ? '*' : '').'</label>';
+        return '<label>'.$label.($this['filterRequired'] ? '*' : '').'</label>';
     }
 
     public function toJSON($value)
@@ -204,5 +204,35 @@ abstract class Field implements \ArrayAccess
         $template = $app->theme->resolve($template);
 
         return $app->theme->partial($template, $context);
+    }
+
+    public function current()
+    {
+        return current($this->attributes);
+    }
+
+    public function next()
+    {
+        return next($this->attributes);
+    }
+
+    public function key()
+    {
+        return key($this->attributes);
+    }
+
+    public function valid()
+    {
+        return $this->current();
+    }
+
+    public function rewind()
+    {
+        return reset($this->attributes);
+    }
+
+    public function jsonSerialize()
+    {
+        return $this->attributes;
     }
 }
