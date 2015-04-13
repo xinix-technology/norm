@@ -20,6 +20,13 @@ class NormController extends RestController
         $this->collection = Norm::factory($this->clazz);
     }
 
+    public function mapRoute()
+    {
+        parent::mapRoute();
+
+        $this->map('/null/schema', 'getSchema')->via('GET');
+    }
+
     public function getCriteria()
     {
         $gets = $this->request->get();
@@ -96,7 +103,7 @@ class NormController extends RestController
 
         if ($this->request->isPost()) {
             try {
-                $result = $entry->set($this->request->post())->save();
+                $result = $entry->set($this->request->getBody())->save();
 
                 h('notification.info', $this->clazz.' created.');
 
@@ -150,11 +157,10 @@ class NormController extends RestController
         }
 
         if ($this->request->isPost() || $this->request->isPut()) {
-
             try {
                 $merged = array_merge(
                     isset($entry) ? $entry->dump() : array(),
-                    $this->request->post() ?: array()
+                    $this->request->getBody() ?: array()
                 );
                 $entry->set($merged)->save();
 
@@ -242,6 +248,25 @@ class NormController extends RestController
             return $this->collection->schema();
         }
         return $this->collection->schema($schema);
+    }
+
+    public function getSchema()
+    {
+        $schema = $this->schema();
+        $this->data['schema'] = $schema;
+        // foreach ($schema as $key => $value) {
+        //     $entry = array(
+        //         'class' => get_class($value)
+        //     );
+
+        //     foreach ($value as $attrKey => $attrValue) {
+        //         $entry[$attrKey] = $attrValue;
+        //     }
+
+        //     $this->data['schema'][$key] = $entry;
+        // }
+        // var_dump($schema);
+        // exit;
     }
 
     public function routeModel($key) {
