@@ -74,7 +74,7 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
         }
 
         // set new format
-        if (func_num_args() === 2 && is_callable($valueOrCallable)) {
+        if (func_num_args() === 2 && $valueOrCallable instanceof \Closure) {
             $this->formats[$name] = $valueOrCallable;
             return $this;
         }
