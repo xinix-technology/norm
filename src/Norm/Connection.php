@@ -1,65 +1,40 @@
-<?php
-
-/**
- * Norm - (not) ORM Framework
- *
- * MIT LICENSE
- *
- * Copyright (c) 2013 PT Sagara Xinix Solusitama
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * @author      Ganesha <reekoheek@gmail.com>
- * @copyright   2013 PT Sagara Xinix Solusitama
- * @link        http://xinix.co.id/products/norm
- * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
- * @package     Norm
- *
- */
-namespace Norm;
+<?php namespace Norm;
 
 /**
  * Base class for connection instance
+ *
+ * @author      Ganesha <reekoheek@gmail.com>
+ * @copyright   2013 PT Sagara Xinix Solusitama
+ * @link        http://xinix.co.id/products/norm Norm
+ * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
+ * @package     Norm
  */
 abstract class Connection extends Hookable
 {
     /**
      * Options associative array
+     *
      * @var array
      */
     protected $options;
 
     /**
      * Raw object
+     *
      * @var object
      */
     protected $raw;
 
     /**
      * Map of collections
+     *
      * @var array
      */
     protected $collections = array();
 
     /**
      * Constructor
+     *
      * @param assoc $options
      */
     public function __construct(array $options = array())
@@ -73,8 +48,10 @@ abstract class Connection extends Hookable
 
     /**
      * Getter/setter of connection options
-     * @param  string $key  Key name identifier to get single option
-     * @return mixed        If no argument specified will get full option
+     *
+     * @param string $key Key name identifier to get single option
+     *
+     * @return mixed If no argument specified will get full option
      */
     public function option($key = null)
     {
@@ -87,6 +64,7 @@ abstract class Connection extends Hookable
 
     /**
      * Getter for connection name
+     *
      * @return string Name of connection
      */
     public function getName()
@@ -96,6 +74,7 @@ abstract class Connection extends Hookable
 
     /**
      * Getter for raw-type of connection
+     *
      * @return mixed Raw-type of connection
      */
     public function getRaw()
@@ -105,6 +84,7 @@ abstract class Connection extends Hookable
 
     /**
      * Setter for raw-type of connection
+     *
      * @param mixed $raw New raw connection
      */
     public function setRaw($raw)
@@ -114,8 +94,10 @@ abstract class Connection extends Hookable
 
     /**
      * Factory to create new collection by its name or instance
-     * @param  string|Norm\Collection   $collection     Collection name or instance
-     * @return Norm\Collection                          Conllection created by factory
+     *
+     * @param string|Norm\Collection $collection Collection name or instance
+     *
+     * @return Norm\Collection Conllection created by factory
      */
     public function factory($collection)
     {
@@ -142,15 +124,13 @@ abstract class Connection extends Hookable
     }
 
     /**
-     * Unmarshall single object from data source to associative array. The
-     * unmarshall process is necessary due to different data type provided by
-     * data source. Proper unmarshall will make sure data from data source that
-     * will be consumed by Norm in the accepted form of data.
+     * Unmarshall single object from data source to associative array. The unmarshall process is necessary due to different data type provided by data source. Proper unmarshall will make sure data from data source that will be consumed by Norm in the accepted form of data.
      *
      * @see Norm\Connection::marshall()
      *
-     * @param  mixed     $object     Object from data source
-     * @return assoc                 Friendly norm data
+     * @param mixed $object Object from data source
+     *
+     * @return assoc Friendly norm data
      */
     public function unmarshall($object)
     {
@@ -170,25 +150,25 @@ abstract class Connection extends Hookable
     }
 
     /**
-     * Marshal single object from norm to the proper data accepted by data
-     * source. Sometimes data source expects object to be persisted to it in
-     * specific form, this method will transform associative array from Norm
-     * into this specific form.
+     * Marshal single object from norm to the proper data accepted by data source. Sometimes data source expects object to be persisted to it in specific form, this method will transform associative array from Norm into this specific form.
      *
-     * @see Norm\Connection::unmarshall()
+     * @see \Norm\Connection::unmarshall()
      *
-     * @param  assoc    $object Norm data
-     * @return mixed            Friendly data source object
+     * @param mixed $object Norm data
+     *
+     * @return mixed Friendly data source object
      */
     public function marshall($object)
     {
         if (is_array($object)) {
             $result = array();
+
             foreach ($object as $key => $value) {
                 if ($key[0] === '$') {
                     if ($key === '$id' || $key === '$type') {
                         continue;
                     }
+
                     $result['_'.substr($key, 1)] = $this->marshall($value);
                 } else {
                     $result[$key] = $this->marshall($value);
@@ -208,39 +188,30 @@ abstract class Connection extends Hookable
 
     /**
      * Query collection and return suitable cursor
-     * @param  string|Norm\Collection   $collection     Collection name or instance
-     * @param  array                    $criteria       Criteria to query
+     *
+     * @param string|\Norm\Collection $collection Collection name or instance
+     * @param array                   $criteria   Criteria to query
+     *
      * @return Norm\Cursor
      */
     abstract public function query($collection, array $criteria = null);
 
     /**
      * Persist specified document with current connection
-     * @param  string|Norm\Collection   $collection     Collection name or instance
-     * @param  array                    $document       Document to persist
-     * @return array                                    Document persisted
+     *
+     * @param string|\Norm\Collection $collection Collection name or instance
+     * @param array                   $document   Document to persist
+     *
+     * @return array Document persisted
      */
     abstract public function persist($collection, array $document);
 
     /**
      * Remove specified document from current connection
-     * @param  string|Norm\Collection   $collection     Collection name or instance
-     * @param  array|string             $criteria       Criteria to remove or remove all data when this arg is null
-     * @return bool                                     True if succeed or false if failed
+     * @param string|\Norm\Collection $collection Collection name or instance
+     * @param array|string            $criteria   Criteria to remove or remove all data when this arg is null
+     *
+     * @return bool True if succeed or false if failed
      */
     abstract public function remove($collection, $criteria = null);
-
-    // abstract public function listCollections();
-    // abstract public function migrate(Collection $collection);
-
-    // public function hasCollection($name)
-    // {
-    //     $collections = $this->listCollections();
-    //     foreach ($collections as $key => $collection) {
-    //         if ($collection === $name) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
 }

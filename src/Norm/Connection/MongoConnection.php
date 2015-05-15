@@ -1,32 +1,47 @@
-<?php
+<?php namespace Norm\Connection;
 
-namespace Norm\Connection;
-
+use MongoId;
+use DateTime;
+use Exception;
+use MongoDate;
+use Norm\Model;
+use MongoClient;
 use Norm\Connection;
 use Norm\Collection;
-use Norm\Model;
-use Norm\Type\DateTime;
+use Norm\Type\Object;
+use Norm\Type\DateTime as NormDateTime;
+use Norm\Type\NormArray;
 use Norm\Cursor\MongoCursor;
 
+/**
+ * Mongo Connection.
+ *
+ * @author    Ganesha <reekoheek@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
 class MongoConnection extends Connection
 {
     /**
      * MongoDB client object
-     * @var MongoClient
+     *
+     * @var \MongoClient
      */
     protected $client;
 
     /**
-     * @see Norm\Connection
+     * {@inheritDoc}
      */
     public function __construct($options)
     {
         parent::__construct($options);
 
         $defaultOptions = array(
-            'hostname' => \MongoClient::DEFAULT_HOST,
-            'port' => \MongoClient::DEFAULT_PORT,
+            'hostname' => MongoClient::DEFAULT_HOST,
+            'port' => MongoClient::DEFAULT_PORT,
         );
+
         $this->options = $options + $defaultOptions;
 
         if (isset($this->options['connectionString'])) {
@@ -38,22 +53,24 @@ class MongoConnection extends Connection
             if (isset($this->options['database'])) {
                 $database = $this->options['database'];
             } else {
-                throw new \Exception('[Norm/MongoConnection] Missing database name, check your configuration!');
+                throw new Exception('[Norm/MongoConnection] Missing database name, check your configuration!');
             }
 
             $prefix = '';
+
             if (isset($this->options['username'])) {
                 $prefix = $this->options['username'].':'.$this->options['password'].'@';
             }
+
             $connectionString = "mongodb://$prefix$hostname:$port/$database";
         }
 
-        $this->client = new \MongoClient($connectionString);
+        $this->client = new MongoClient($connectionString);
         $this->raw = $this->client->$database;
     }
 
     /**
-     * see Norm\Connection::query()
+     * {@inheritDoc}
      */
     public function query($collection, array $criteria = array())
     {
@@ -61,7 +78,7 @@ class MongoConnection extends Connection
     }
 
     /**
-     * see Norm\Connection::persist()
+     * {@inheritDoc}
      */
     public function persist($collection, array $document)
     {
@@ -75,19 +92,20 @@ class MongoConnection extends Connection
 
         if (isset($document['$id'])) {
             $criteria = array(
-                '_id' => new \MongoId($document['$id']),
+                '_id' => new MongoId($document['$id']),
             );
+
             $marshalledDocument = $this->raw->$collection->findAndModify(
                 $criteria,
                 array('$set' => $marshalledDocument),
                 null,
                 array('new' => true)
             );
-
         } else {
             $retval = $this->raw->$collection->insert($marshalledDocument);
+
             if (!$retval['ok']) {
-                throw new \Exception($retval['errmsg']);
+                throw new Exception($retval['errmsg']);
             }
         }
 
@@ -95,7 +113,7 @@ class MongoConnection extends Connection
     }
 
     /**
-     * see Norm\Connection::remove()
+     * {@inheritDoc}
      */
     public function remove($collection, $criteria = null)
     {
@@ -106,28 +124,29 @@ class MongoConnection extends Connection
         if (func_num_args() === 1) {
             $result = $this->raw->$collection->remove();
         } else {
-            if ($criteria instanceof \Norm\Model) {
+            if ($criteria instanceof Model) {
                 $criteria = $criteria->getId();
             }
 
             if (is_string($criteria)) {
                 $criteria = array(
-                    '_id' => new \MongoId($criteria),
+                    '_id' => new MongoId($criteria),
                 );
-            } elseif (!is_array($criteria)) {
-                throw new \Exception('[Norm/Connection] Cannot remove with specified criteria. Criteria must be array, string, or model');
+            } elseif (! is_array($criteria)) {
+                throw new Exception('[Norm/Connection] Cannot remove with specified criteria. Criteria must be array, string, or model');
             }
 
             $result = $this->raw->$collection->remove($criteria);
         }
 
-        if ($result['ok'] != 1) {
-            throw new \Exception($result['errmsg']);
+        if ((int) $result['ok'] !== 1) {
+            throw new Exception($result['errmsg']);
         }
     }
 
     /**
      * Get MongoDB client
+     *
      * @return MongoClient MongoDB client
      */
     public function getClient()
@@ -136,7 +155,7 @@ class MongoConnection extends Connection
     }
 
     /**
-     * @see Norm\Connection::unmarshall()
+     * {@inheritDoc}
      */
     public function unmarshall($object)
     {
@@ -147,9 +166,9 @@ class MongoConnection extends Connection
 
         foreach ($object as $key => &$value) {
 
-            if ($value instanceof \MongoDate) {
+            if ($value instanceof MongoDate) {
                 $value = new DateTime('@'.$value->sec);
-            } elseif ($value instanceof \MongoId) {
+            } elseif ($value instanceof MongoId) {
                 $value = (string) $value;
             }
 
@@ -164,30 +183,18 @@ class MongoConnection extends Connection
     }
 
     /**
-     * @see Norm\Connection::marshall()
+     * {@inheritDoc}
      */
     public function marshall($object)
     {
-        if ($object instanceof \DateTime) {
-            return new \MongoDate($object->getTimestamp());
-        } elseif ($object instanceof \Norm\Type\NormArray) {
+        if ($object instanceof NormDateTime) {
+            return new MongoDate($object->getTimestamp());
+        } elseif ($object instanceof NormArray) {
             return $object->toArray();
-        } elseif ($object instanceof \Norm\Type\Object) {
+        } elseif ($object instanceof Object) {
             return $object->toObject();
         } else {
             return parent::marshall($object);
         }
     }
-
-    // public function listCollections()
-    // {
-    //     $retval = array();
-
-    //     $collections = $this->raw->listCollections();
-    //     foreach ($collections as $collection) {
-    //         $retval[] = $collection->getName();
-    //     }
-
-    //     return $retval;
-    // }
 }
