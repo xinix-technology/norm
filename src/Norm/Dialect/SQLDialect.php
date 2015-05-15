@@ -82,7 +82,6 @@ abstract class SQLDialect
         if ($key === '!or' || $key === '!and') {
             $wheres = array();
             foreach ($value as $subValues) {
-
                 $subWheres = array();
 
                 foreach ($subValues as $k => $v) {
@@ -143,10 +142,9 @@ abstract class SQLDialect
                     // return array($field, array('$regex', new \MongoRegex($value)));
                 case 'in':
                 case 'nin':
-                    throw new \Exception('Operator regex is not supported to query.');
-                    // $operator = '$'.$splitted[1];
-                    // $multiValue = true;
-                    // break;
+                    $operator = $splitted[1];
+                break;
+                    
                 default:
                     throw new \Exception('Operator regex is not supported to query.');
                     // $operator = '$'.$splitted[1];
@@ -154,31 +152,9 @@ abstract class SQLDialect
             }
         }
 
-        $fk = 'f'.$this->expressionCounter++;
-        $data[$fk] = $fValue;
+        //fix me : change from grammar expresiion old to new grammar expresiion for operator in or nin
 
-        return $this->grammarEscape($field).' '.$operator.' :'.$fk;
-
-        $op = (isset($key[1])) ? $key[1] : '=';
-        switch ($op) {
-            case 'ne':
-                $op = '!=';
-                break;
-            case 'gt':
-                $op = '>';
-                break;
-            case 'gte':
-                $op = '>=';
-                break;
-            case 'lt':
-                $op = '<';
-                break;
-            case 'lt':
-                $op = '<=';
-                break;
-        }
-
-        if ($op == 'in') {
+        if($operator == 'in' || $operator == 'nin'){
             $fgroup = array();
             foreach ($value as $k => $v) {
                 $v1 = $v;
@@ -189,17 +165,15 @@ abstract class SQLDialect
                 $data['f'.$this->expressionCounter] = $v1;
                 $fgroup[] = ':f'.$this->expressionCounter;
             }
-            if (empty($fgroup)) {
-                return '(1)';
-            }
+            return $this->grammarEscape($field).' '.$operator. ' ('.implode(', ', $fgroup).')';
+        }   
 
-            return $this->grammarEscape($key) . ' ' . $op . ' ('.implode(', ', $fgroup).')';
-        } else {
-            $this->expressionCounter++;
-            $data['f'.$this->expressionCounter] = $value;
+        $fk = 'f'.$this->expressionCounter++;
+        $data[$fk] = $fValue;
 
-            return $this->grammarEscape($key) . ' ' . $op . ' :f' . $this->expressionCounter;
-        }
+        return $this->grammarEscape($field).' '.$operator.' :'.$fk;
+
+        
     }
 
     public function grammarInsert($collectionName, $data)
