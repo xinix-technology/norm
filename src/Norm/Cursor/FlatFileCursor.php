@@ -1,14 +1,35 @@
 <?php namespace Norm\Cursor;
 
-use Norm\Cursor;
 use Exception;
+use Norm\Cursor;
 
+/**
+ * Flat File Cursor.
+ *
+ * @author    Krisan Alfa Timur <krisan47@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
 class FlatFileCursor extends Cursor
 {
+    /**
+     * Index in current active cursor.
+     *
+     * @var integer
+     */
     protected $index = -1;
 
+    /**
+     * Rows in cursor.
+     *
+     * @var null
+     */
     protected $rows = null;
 
+    /**
+     * {@inheritDoc}
+     */
     public function current()
     {
         if ($this->valid()) {
@@ -18,6 +39,9 @@ class FlatFileCursor extends Cursor
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getNext()
     {
         $this->index++;
@@ -25,12 +49,20 @@ class FlatFileCursor extends Cursor
         return $this->current();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function next()
     {
         return $this->getNext();
     }
 
-    private function execute()
+    /**
+     * Execute a query.
+     *
+     * @return void
+     */
+    protected function execute()
     {
         $connection = $this->collection->getConnection();
 
@@ -38,9 +70,7 @@ class FlatFileCursor extends Cursor
 
         $this->rows = array_slice($rows, $this->skip, $this->limit);
 
-        $this->sorts = $this->sorts ?: array();
-
-        foreach ($this->sorts as $field => $flag) {
+        foreach ((array) $this->sorts as $field => $flag) {
             usort($this->rows, function($a, $b) use ($field, $flag) {
                 if (isset($a[$field])) {
                     $aValue = utf8_encode(filter_var((string) $a[$field], FILTER_SANITIZE_STRING));
@@ -52,11 +82,17 @@ class FlatFileCursor extends Cursor
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function key()
     {
         return $this->index;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function valid()
     {
         if (is_null($this->rows)) {
@@ -66,6 +102,9 @@ class FlatFileCursor extends Cursor
         return isset($this->rows[$this->index]);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function rewind()
     {
         $this->index = -1;
@@ -73,16 +112,25 @@ class FlatFileCursor extends Cursor
         $this->next();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function translateCriteria(array $criteria = array())
     {
         return $criteria;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function distinct($key)
     {
         throw new Exception('Unimplemented '.__METHOD__);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function count($foundOnly = false)
     {
         if (is_null($this->rows)) {

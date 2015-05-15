@@ -1,37 +1,64 @@
-<?php
-
-namespace Norm\Cursor;
+<?php namespace Norm\Cursor;
 
 use Norm\Cursor;
 
+/**
+ * Bono Cursor.
+ *
+ * @author    Ganesha <reekoheek@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
 class BonoCursor extends Cursor
 {
+    /**
+     * Data buffer
+     *
+     * @var array
+     */
     protected $buffer = array();
 
+    /**
+     * Length of the document haystack.
+     *
+     * @var integer
+     */
     protected $count = 0;
 
+    /**
+     * Next document in haystack.
+     *
+     * @var mixed
+     */
     protected $next;
 
+    /**
+     * A property shows us whether document has been queried or not.
+     *
+     * @var boolean
+     */
     protected $isQueried = false;
 
-
     /**
-     * @see Norm\Cursor::count()
+     * {@inheritDoc}
      */
     public function count($foundOnly = false)
     {
         // TODO revisit me
         if ($foundOnly) {
             $this->rewind();
+
             return $this->count;
         } else {
             $this->rewind();
+
             return count($this->buffer);
         }
     }
 
     /**
-     * @see Norm\Cursor::translateCriteria()
+     * {@inheritDoc}
      */
     public function translateCriteria(array $criteria = array())
     {
@@ -39,7 +66,7 @@ class BonoCursor extends Cursor
     }
 
     /**
-     * @see Norm\Cursor::current()
+     * {@inheritDoc}
      */
     public function current()
     {
@@ -48,7 +75,7 @@ class BonoCursor extends Cursor
     }
 
     /**
-     * @see Norm\Cursor::next()
+     * {@inheritDoc}
      */
     public function next()
     {
@@ -74,7 +101,7 @@ class BonoCursor extends Cursor
     }
 
     /**
-     * @see Norm\Cursor::key()
+     * {@inheritDoc}
      */
     public function key()
     {
@@ -82,7 +109,7 @@ class BonoCursor extends Cursor
     }
 
     /**
-     * @see Norm\Cursor::valid()
+     * {@inheritDoc}
      */
     public function valid()
     {
@@ -92,11 +119,12 @@ class BonoCursor extends Cursor
     }
 
     /**
-     * @see Norm\Cursor::rewind()
+     * {@inheritDoc}
      */
     public function rewind()
     {
         reset($this->buffer);
+
         $this->next();
     }
 }
