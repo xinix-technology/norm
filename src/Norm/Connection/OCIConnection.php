@@ -1,20 +1,34 @@
 <?php
+ namespace Norm\Connection;
 
-namespace Norm\Connection;
-
-use Norm\Collection;
+use Exception;
 use Norm\Model;
-use Norm\Cursor\OCICursor as Cursor;
+use Norm\Collection;
+use Norm\Connection;
 use Norm\Dialect\OracleDialect;
+use Norm\Cursor\OCICursor as Cursor;
 
-class OCIConnection extends \Norm\Connection
+/**
+ * OCI Connection.
+ *
+ * @author    Aprianto Pramana Putra <apriantopramanaputra@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
+class OCIConnection extends Connection
 {
-
     protected $dialect;
 
-    public function initialize($options)
+    /**
+     * Initializing class
+     *
+     * @param array $options
+     *
+     * @return void
+     */
+    public function initialize(array $options = array())
     {
-
         $defaultOptions = array(
             'username' => null,
             'password' => null,
@@ -24,6 +38,7 @@ class OCIConnection extends \Norm\Connection
         );
 
         $this->options = array_merge($defaultOptions, $options);
+
         $this->raw = oci_connect(
             $this->options['username'],
             $this->options['password'],
@@ -31,12 +46,18 @@ class OCIConnection extends \Norm\Connection
             $this->options['charset'],
             $this->options['mode']
         );
+
         $this->prepareInit();
 
         $this->dialect = new OracleDialect($this);
     }
 
-    private function prepareInit()
+    /**
+     * Preparing initialization of connection
+     *
+     * @return void
+     */
+    protected function prepareInit()
     {
         $stid = oci_parse($this->raw, "ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
         oci_execute($stid);
@@ -51,20 +72,25 @@ class OCIConnection extends \Norm\Connection
         oci_free_statement($stid);
     }
 
-    public function listCollections()
-    {
-        throw new \Exception('Not implemented!');
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     public function query(Collection $collection)
     {
         return new Cursor($collection);
     }
 
+    /**
+     * Sync data to database. If it's new data, we insert it as new document, otherwise, if the document exists, we just update it.
+     *
+     * @param Collection $collection
+     * @param Model $model
+     *
+     * @return bool
+     */
     public function save(Collection $collection, Model $model)
     {
         $collectionName = $collection->name;
-        // $schemes = $collection->schema();
         $data = $this->marshall($model->dump());
         $result = false;
 
@@ -82,9 +108,13 @@ class OCIConnection extends \Norm\Connection
                 $result = true;
             }
         }
+
         return $result;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function remove(Collection $collection, $model)
     {
         $collectionName = $collection->name;
@@ -100,27 +130,48 @@ class OCIConnection extends \Norm\Connection
         return $result;
     }
 
+    /**
+     * Perform insert new document to database.
+     *
+     * @param string $collectionName
+     * @param mixed $data
+     *
+     * @return bool
+     */
     public function insert($collectionName, $data)
     {
         $id = 0;
         $sql = $this->dialect->grammarInsert($collectionName, $data);
 
         $stid = oci_parse($this->raw, $sql);
+
         oci_bind_by_name($stid, ":id", $id);
 
         foreach ($data as $key => $value) {
             oci_bind_by_name($stid, ":".$key, $data[$key]);
         }
+
         oci_execute($stid);
+
         oci_free_statement($stid);
+
         return $id;
     }
 
+    /**
+     * Perform update to a document.
+     *
+     * @param string $collectionName
+     * @param mixed $data
+     *
+     * @return bool
+     */
     public function update($collectionName, $data)
     {
         $sql = $this->dialect->grammarUpdate($collectionName, $data);
 
         $stid = oci_parse($this->raw, $sql);
+
         oci_bind_by_name($stid, ":id", $data['id']);
 
         foreach ($data as $key => $value) {
@@ -128,10 +179,15 @@ class OCIConnection extends \Norm\Connection
         }
 
         $result = oci_execute($stid);
+
         oci_free_statement($stid);
+
         return $result;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function marshall($object)
     {
         if ($object instanceof \Norm\Type\DateTime) {
@@ -155,6 +211,11 @@ class OCIConnection extends \Norm\Connection
         }
     }
 
+    /**
+     * Get dialect used by this implementation.
+     *
+     * @return \Norm\Dialect\OracleDialect
+     */
     public function getDialect()
     {
         return $this->dialect;
