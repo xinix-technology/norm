@@ -233,6 +233,7 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
 
     /**
      * Return number of documents available. When foundOnly true will return found document only
+     *
      * @param boolean $foundOnly
      *
      * @return integer

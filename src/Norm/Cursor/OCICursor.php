@@ -1,32 +1,92 @@
-<?php
-
-namespace Norm\Cursor;
+<?php namespace Norm\Cursor;
 
 use Norm\Norm;
+use Norm\Schema\Reference;
+use Norm\Cursor;
 
-class OCICursor extends \Norm\Cursor implements ICursor
+/**
+ * Oracle OCI Cursor.
+ *
+ * @author    Aprianto Pramana Putra <apriantopramanaputra@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
+class OCICursor extends Cursor
 {
-
+    /**
+     * Collection implementation.
+     *
+     * @var \Norm\Collection
+     */
     protected $collection;
 
+    /**
+     * Dialect implementation.
+     *
+     * @var \Norm\Dialect\OracleDialect
+     */
     protected $dialect;
 
+    /**
+     * Criteria of current query
+     *
+     * @var array
+     */
     protected $criteria;
 
+    /**
+     * Raw query
+     *
+     * @var string
+     */
     protected $raw;
 
+    /**
+     * Sorter of current query.
+     *
+     * @var array
+     */
     protected $sortBy;
 
+    /**
+     * Limit document that will be fetched by `n`.
+     *
+     * @var integer
+     */
     protected $limit = 0;
 
+    /**
+     * Skip document that will be fetched by `n`.
+     *
+     * @var integer
+     */
     protected $skip = 0;
 
+    /**
+     * Match criteria of current query.
+     *
+     * @var array
+     */
     protected $match;
 
+    /**
+     * Rows of current document.
+     *
+     * @var array
+     */
     protected $rows = null;
 
+    /**
+     * Index of current active document index.
+     *
+     * @var integer
+     */
     protected $index = -1;
 
+    /**
+     * {@inheritDoc}
+     */
     public function __construct($collection)
     {
         $this->collection = $collection;
@@ -38,6 +98,9 @@ class OCICursor extends \Norm\Cursor implements ICursor
         $this->criteria = $collection->getCriteria();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function current()
     {
         if ($this->valid()) {
@@ -45,12 +108,19 @@ class OCICursor extends \Norm\Cursor implements ICursor
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getNext()
     {
         $this->next();
+
         return $this->current();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function next()
     {
 
@@ -61,25 +131,35 @@ class OCICursor extends \Norm\Cursor implements ICursor
         $this->index++;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function key()
     {
         return $this->index;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function valid()
     {
         return isset($this->rows[$this->index]);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function rewind()
     {
         $this->index = -1;
 
         $this->next();
-
     }
 
-    // FIXME: krisanalfa Make a separate function to build where, matchOr, skip, limit, and order
+    /**
+     * {@inheritDoc}
+     */
     public function count($foundOnly = false)
     {
         $wheres   = array();
@@ -98,8 +178,9 @@ class OCICursor extends \Norm\Cursor implements ICursor
             $schema = $this->collection->schema();
 
             $i = 0;
+
             foreach ($schema as $key => $value) {
-                if ($value instanceof \Norm\Schema\Reference) {
+                if ($value instanceof Reference) {
                     $foreign = $value['foreign'];
                     $foreignLabel = $value['foreignLabel'];
                     $foreignKey = $value['foreignKey'];
@@ -109,6 +190,7 @@ class OCICursor extends \Norm\Cursor implements ICursor
                     $i++;
                 }
             }
+
             $wheres[] = '('.implode(' OR ', $matchOrs).')';
         }
 
@@ -139,6 +221,7 @@ class OCICursor extends \Norm\Cursor implements ICursor
         oci_execute($statement);
 
         $result = array();
+
         while ($row = oci_fetch_array($statement, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS)) {
             $result[] = $row;
         }
@@ -151,12 +234,19 @@ class OCICursor extends \Norm\Cursor implements ICursor
         return (int) $r;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function match($q)
     {
         $this->match = $q;
+
         return $this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function prepareCriteria($criteria)
     {
         if (is_null($criteria)) {
@@ -168,14 +258,16 @@ class OCICursor extends \Norm\Cursor implements ICursor
             unset($criteria['$id']);
         }
 
-
         return $criteria ? : array();
     }
 
-    // FIXME: krisanalfa Make a separate function to build where, matchOr, skip, limit, and order
+    /**
+     * Execute a query.
+     *
+     * @return int
+     */
     public function execute()
     {
-
         $data = array();
         $wheres = array();
         $matchOrs = array();
@@ -191,6 +283,7 @@ class OCICursor extends \Norm\Cursor implements ICursor
             $schema = $this->collection->schema();
 
             $i = 0;
+
             foreach ($schema as $key => $value) {
                 if ($value instanceof \Norm\Schema\Reference) {
                     $foreign = $value['foreign'];
@@ -202,6 +295,7 @@ class OCICursor extends \Norm\Cursor implements ICursor
                     $i++;
                 }
             }
+
             $wheres[] = '('.implode(' OR ', $matchOrs).')';
         }
 
@@ -224,6 +318,7 @@ class OCICursor extends \Norm\Cursor implements ICursor
                 }
                 $order[] = $key . $op;
             }
+
             if (!empty($order)) {
                 $order = ' ORDER BY '.implode(',', $order);
             }
@@ -268,9 +363,11 @@ class OCICursor extends \Norm\Cursor implements ICursor
         oci_execute($statement);
 
         $result = array();
+
         while ($row = oci_fetch_array($statement, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS)) {
             $result[] = $row;
         }
+
         $this->rows = $result;
 
         oci_free_statement($statement);
@@ -278,24 +375,47 @@ class OCICursor extends \Norm\Cursor implements ICursor
         $this->index = -1;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function sort(array $fields)
     {
         $this->sortBy = $fields;
+
         return $this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function limit($num)
     {
         $this->limit = $num;
+
         return $this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function skip($offset)
     {
         $this->skip = $offset;
+
         return $this;
     }
 
+    /**
+     * Find reference of a foreign key.
+     *
+     * @param string $key
+     * @param string $foreign
+     * @param string $foreignLabel
+     * @param string $foreignKey
+     * @param int &$i
+     *
+     * @return string
+     */
     public function getQueryReference($key = '', $foreign = '', $foreignLabel = '', $foreignKey = '', &$i)
     {
         $model      = Norm::factory($foreign);

@@ -1,18 +1,41 @@
-<?php
+<?php namespace Norm\Controller;
 
-namespace Norm\Controller;
-
+use Exception;
 use Norm\Norm;
-use Bono\Controller\RestController;
 use ROH\Util\Inflector;
+use Slim\Exception\Stop;
+use Bono\Controller\RestController;
 
+/**
+ * Controller used by Bono App to integrate with NORM easily.
+ *
+ * @author    Ganesha <reekoheek@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
 class NormController extends RestController
 {
-
+    /**
+     * Collection for current request.
+     *
+     * @var \Norm\Collection
+     */
     protected $collection;
 
+    /**
+     * Route that has a model attached in it.
+     *
+     * @var array
+     */
     protected $routeModels = array();
 
+    /**
+     * Class constructor.
+     *
+     * @param \Bono\App $app
+     * @param string    $uri
+     */
     public function __construct($app, $uri)
     {
         parent::__construct($app, $uri);
@@ -20,6 +43,11 @@ class NormController extends RestController
         $this->collection = Norm::factory($this->clazz);
     }
 
+    /**
+     * Map route schema
+     *
+     * @return void
+     */
     public function mapRoute()
     {
         parent::mapRoute();
@@ -27,6 +55,11 @@ class NormController extends RestController
         $this->map('/null/schema', 'getSchema')->via('GET');
     }
 
+    /**
+     * Get criteria of current request
+     *
+     * @return array
+     */
     public function getCriteria()
     {
         $gets = $this->request->get();
@@ -36,6 +69,7 @@ class NormController extends RestController
         } else {
             $criteria = $this->routeData;
         }
+
         foreach ($gets as $key => $value) {
             if ($key[0] !== '!') {
                 $criteria[$key] = $value;
@@ -47,12 +81,23 @@ class NormController extends RestController
         return $criteria;
     }
 
-
-    public function getOr(){
+    /**
+     * Get **or** criteria of current request.
+     *
+     * @return array
+     */
+    public function getOr()
+    {
         $or = $this->request->get('!or') ? array("!or" => $this->request->get('!or')): array();
+
         return $or;
     }
 
+    /**
+     * Get **sort** command of current request.
+     *
+     * @return array
+     */
     public function getSort()
     {
         $sorts = $get = $this->request->get('!sort') ?: array();
@@ -60,15 +105,27 @@ class NormController extends RestController
         foreach ($sorts as $key => &$value) {
             $value = (int) $value;
         }
+
         return $sorts;
     }
 
+    /**
+     * Get **skip** command of current request.
+     *
+     * @return array
+     */
     public function getSkip()
     {
         $skip = $this->request->get('!skip') ?: null;
+
         return $skip;
     }
 
+    /**
+     * Get **limit** command of current request.
+     *
+     * @return array
+     */
     public function getLimit()
     {
         $limit = $this->request->get('!limit');
@@ -80,12 +137,23 @@ class NormController extends RestController
         return $limit;
     }
 
+    /**
+     * Get **match** criteria of current request.
+     *
+     * @return array
+     */
     public function getMatch()
     {
         $match = $this->request->get('!match') ?: null;
+
         return $match;
     }
 
+    /**
+     * Handle **search / listing** request.
+     *
+     * @return void
+     */
     public function search()
     {
         $entries = $this->collection->find($this->getCriteria())
@@ -97,6 +165,11 @@ class NormController extends RestController
         $this->data['entries'] = $entries;
     }
 
+    /**
+     * Handle creation of new document.
+     *
+     * @return void
+     */
     public function create()
     {
         $entry = $this->collection->newInstance()->set($this->getCriteria());
@@ -110,10 +183,9 @@ class NormController extends RestController
                 h('controller.create.success', array(
                     'model' => $entry
                 ));
-
-            } catch (\Slim\Exception\Stop $e) {
+            } catch (Stop $e) {
                 throw $e;
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
 
                 h('notification.error', $e);
 
@@ -122,35 +194,47 @@ class NormController extends RestController
                     'error' => $e,
                 ));
             }
-
         }
 
         $this->data['entry'] = $entry;
     }
 
+    /**
+     * Show a document **detail** by an ID.
+     *
+     * @param mixed $id
+     *
+     * @return void
+     */
     public function read($id)
     {
         $found = false;
 
         try {
             $this->data['entry'] = $entry = $this->collection->findOne($id);
-        } catch (\Exception $e) {
-        }
+        } catch (Exception $e) { }
+
         if (isset($entry)) {
             $found = true;
         }
 
-        if (!$found) {
+        if (! $found) {
             return $this->app->notFound();
         }
     }
 
+    /**
+     * Perform **updating** a document.
+     *
+     * @param mixed $id
+     *
+     * @return void
+     */
     public function update($id)
     {
         try {
             $entry = $this->collection->findOne($id);
-        } catch (\Exception $e) {
-        }
+        } catch (Exception $e) { }
 
         if (is_null($entry)) {
             return $this->app->notFound();
@@ -162,6 +246,7 @@ class NormController extends RestController
                     isset($entry) ? $entry->dump() : array(),
                     $this->request->getBody() ?: array()
                 );
+
                 $entry->set($merged)->save();
 
                 h('notification.info', $this->clazz.' updated');
@@ -169,9 +254,9 @@ class NormController extends RestController
                 h('controller.update.success', array(
                     'model' => $entry,
                 ));
-            } catch (\Slim\Exception\Stop $e) {
+            } catch (Stop $e) {
                 throw $e;
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 h('notification.error', $e);
 
                 if (empty($entry)) {
@@ -184,12 +269,21 @@ class NormController extends RestController
                 ));
             }
         }
+
         $this->data['entry'] = $entry;
     }
 
+    /**
+     * Perform **deletion** of a document by an ID given.
+     *
+     * @param mixed $id
+     *
+     * @return void
+     */
     public function delete($id)
     {
         $id = explode(',', $id);
+
         if ($this->request->isPost() || $this->request->isDelete()) {
 
             $single = false;
@@ -198,8 +292,8 @@ class NormController extends RestController
             }
 
             try {
-
                 $this->data['entries'] = array();
+
                 foreach ($id as $value) {
                     $model = $this->collection->findOne($value);
 
@@ -207,6 +301,7 @@ class NormController extends RestController
                         if ($single) {
                             $this->app->notFound();
                         }
+
                         continue;
                     }
 
@@ -221,9 +316,9 @@ class NormController extends RestController
                     'models' => $this->data['entries'],
                 ));
 
-            } catch (\Slim\Exception\Stop $e) {
+            } catch (Stop $e) {
                 throw $e;
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 h('notification.error', $e);
 
                 if (empty($model)) {
@@ -240,41 +335,47 @@ class NormController extends RestController
     }
 
     /**
-     * @see Bono\Controller\RestController
+     * Get schema of collection
+     *
+     * @param string|null $schema
+     *
+     * @return mixed
      */
     public function schema($schema = null)
     {
         if (func_num_args() === 0) {
             return $this->collection->schema();
         }
+
         return $this->collection->schema($schema);
     }
 
+    /**
+     * Get data schema attached to this class.
+     *
+     * @return array
+     */
     public function getSchema()
     {
         $schema = $this->schema();
+
         $this->data['schema'] = $schema;
-        // foreach ($schema as $key => $value) {
-        //     $entry = array(
-        //         'class' => get_class($value)
-        //     );
-
-        //     foreach ($value as $attrKey => $attrValue) {
-        //         $entry[$attrKey] = $attrValue;
-        //     }
-
-        //     $this->data['schema'][$key] = $entry;
-        // }
-        // var_dump($schema);
-        // exit;
     }
 
-    public function routeModel($key) {
-        if (!isset($this->routeModels[$key])) {
+    /**
+     * Register a route model.
+     *
+     * @param string $key
+     *
+     * @return mixed
+     */
+    public function routeModel($key)
+    {
+        if (! isset($this->routeModels[$key])) {
+
             $Clazz = Inflector::classify($key);
 
             $collection = Norm::factory($this->schema($key)->get('foreign'));
-
 
             $this->routeModels[$key] = $collection->findOne($this->routeData($key));
         }
