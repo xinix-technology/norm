@@ -1,7 +1,8 @@
 <?php namespace Norm\Type;
 
-use DateTime;
 use Norm\Norm;
+use DateTimeZone;
+use DateTime as DT;
 use JsonKit\JsonSerializer;
 
 /**
@@ -12,7 +13,7 @@ use JsonKit\JsonSerializer;
  * @link      http://xinix.co.id/products/norm Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
-class DateTime extends DateTime implements JsonSerializer
+class DateTime extends DT implements JsonSerializer
 {
     /**
      * Formatting date time implementation.
@@ -37,7 +38,7 @@ class DateTime extends DateTime implements JsonSerializer
     public function tzFormat($format, $tz = null)
     {
         if (isset($tz)) {
-            $this->setTimezone(new \DateTimeZone($tz));
+            $this->setTimezone(new DateTimeZone($tz));
         }
 
         return $this->format($format);
@@ -51,7 +52,7 @@ class DateTime extends DateTime implements JsonSerializer
     public function jsonSerialize()
     {
         if ($tz = Norm::options('tz')) {
-            $this->setTimezone(new \DateTimeZone($tz));
+            $this->setTimezone(new DateTimeZone($tz));
         }
 
         return $this->format('c');
@@ -65,7 +66,7 @@ class DateTime extends DateTime implements JsonSerializer
     public function __toString()
     {
         if ($tz = Norm::options('tz')) {
-            $this->setTimezone(new \DateTimeZone($tz));
+            $this->setTimezone(new DateTimeZone($tz));
         }
 
         return $this->format('c');
