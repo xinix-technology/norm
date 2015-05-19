@@ -1,61 +1,36 @@
-<?php
+<?php namespace Norm;
 
 /**
- * Norm - (not) ORM Framework
- *
- * MIT LICENSE
- *
- * Copyright (c) 2013 PT Sagara Xinix Solusitama
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * Base class for hookable implementation
  *
  * @author      Ganesha <reekoheek@gmail.com>
  * @copyright   2013 PT Sagara Xinix Solusitama
- * @link        http://xinix.co.id/products/norm
+ * @link        http://xinix.co.id/products/norm Norm
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
- *
- */
-namespace Norm;
-
-/**
- * Base class for hookable object
  */
 abstract class Hookable
 {
     /**
+     * Hooks list
+     *
      * @var array
      */
     protected $hooks = array();
 
     /**
      * Assign hook
-     * @param  string   $name       The hook name
-     * @param  mixed    $callable   A callable object
-     * @param  int      $priority   The hook priority; 0 = high, 10 = low
+     *
+     * @param string $name     The hook name
+     * @param mixed  $callable A callable object
+     * @param int    $priority The hook priority; 0 = high, 10 = low
      */
     public function hook($name, $callable, $priority = 10)
     {
         if (!isset($this->hooks[$name])) {
             $this->hooks[$name] = array(array());
         }
+
         if (is_callable($callable)) {
             $this->hooks[$name][(int) $priority][] = $callable;
         }
@@ -63,8 +38,9 @@ abstract class Hookable
 
     /**
      * Invoke hook
-     * @param  string   $name       The hook name
-     * @param  mixed    $hookArg    (Optional) Argument for hooked functions
+     *
+     * @param string $name    The hook name
+     * @param mixed  $hookArg (Optional) Argument for hooked functions
      */
     public function applyHook($name, $hookArg = null)
     {
@@ -77,6 +53,7 @@ abstract class Hookable
             if (count($this->hooks[$name]) > 1) {
                 ksort($this->hooks[$name]);
             }
+
             foreach ($this->hooks[$name] as $priority) {
                 if (!empty($priority)) {
                     foreach ($priority as $callable) {
@@ -88,9 +65,12 @@ abstract class Hookable
     }
 
     /**
-     * Invoke hook
-     * @param  string   $name       The hook name
-     * @param  mixed    $filterArg    (Optional) Argument for hooked functions
+     * Invoke filter
+     *
+     * @param string $name      The hook name
+     * @param mixed  $filterArg (Optional) Argument for hooked functions
+     *
+     * @return mixed
      */
     public function applyFilter($name, $filterArg = null)
     {
@@ -116,14 +96,10 @@ abstract class Hookable
     }
 
     /**
-     * Get hook listeners
+     * Get hook listeners. Return an array of registered hooks. If `$name` is a valid hook name, only the listeners attached to that hook are returned. Else, all listeners are returned as an associative array whose keys are hook names and whose values are arrays of listeners.
      *
-     * Return an array of registered hooks. If `$name` is a valid
-     * hook name, only the listeners attached to that hook are returned.
-     * Else, all listeners are returned as an associative array whose
-     * keys are hook names and whose values are arrays of listeners.
+     * @param string $name A hook name (Optional)
      *
-     * @param  string     $name     A hook name (Optional)
      * @return array|null
      */
     public function getHooks($name = null)
@@ -136,13 +112,9 @@ abstract class Hookable
     }
 
     /**
-     * Clear hook listeners
+     * Clear hook listeners. Clear all listeners for all hooks. If `$name` is a valid hook name, only the listeners attached to that hook will be cleared.
      *
-     * Clear all listeners for all hooks. If `$name` is
-     * a valid hook name, only the listeners attached
-     * to that hook will be cleared.
-     *
-     * @param  string   $name   A hook name (Optional)
+     * @param string $name A hook name (Optional)
      */
     public function clearHooks($name = null)
     {

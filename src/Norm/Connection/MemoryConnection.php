@@ -1,15 +1,20 @@
-<?php
-
-namespace Norm\Connection;
+<?php namespace Norm\Connection;
 
 use Norm\Connection;
 use Norm\Collection;
-use Norm\Cursor\MemoryCursor;
 use Rhumsaa\Uuid\Uuid;
+use Norm\Cursor\MemoryCursor;
 
+/**
+ * Memory Connection.
+ *
+ * @author    Ganesha <reekoheek@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
 class MemoryConnection extends Connection
 {
-
     public $data = array();
 
     /**

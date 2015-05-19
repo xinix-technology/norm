@@ -10,6 +10,11 @@ use PDO;
 
 class PDOConnection extends \Norm\Connection
 {
+    /**
+     * Class map of dialect
+     *
+     * @var array
+     */
     protected $DIALECT_MAP = array(
         'mysql' => 'Norm\\Dialect\\MySQLDialect',
         'sqlite' => 'Norm\\Dialect\\SqliteDialect',
@@ -17,12 +22,13 @@ class PDOConnection extends \Norm\Connection
 
     /**
      * Dialect to use for database server
+     *
      * @var mixed
      */
     protected $dialect;
 
     /**
-     * @see Norm\Connection::__construct()
+     * {@inheritDoc}
      */
     public function __construct(array $options = array())
     {
@@ -47,8 +53,10 @@ class PDOConnection extends \Norm\Connection
                     $key === 'dialect') {
                     continue;
                 }
+
                 $dsnArray[] = "$key=$value";
             }
+
             $dsn = $options['prefix'].':'.implode(';', $dsnArray);
         }
 
@@ -67,7 +75,6 @@ class PDOConnection extends \Norm\Connection
             $Dialect = $this->DIALECT_MAP[$options['prefix']];
         } else {
             throw new Exception('[Norm/PDOConnection] Missing dialect!');
-            // $Dialect = 'Norm\\Dialect\\SQLDialect';
         }
 
         $this->dialect = new $Dialect($this);
@@ -75,11 +82,10 @@ class PDOConnection extends \Norm\Connection
     }
 
     /**
-     * @see Norm\Connection::persist()
+     * {@inheritDoc}
      */
     public function persist($collection, array $document)
     {
-
         if ($collection instanceof Collection) {
             $collectionName = $collection->getName();
         } else {
@@ -119,7 +125,7 @@ class PDOConnection extends \Norm\Connection
     }
 
     /**
-     * @see Norm\Connection::query()
+     * {@inheritDoc}
      */
     public function query($collection, array $criteria = null)
     {
@@ -133,7 +139,7 @@ class PDOConnection extends \Norm\Connection
     }
 
     /**
-     * @see Norm\Connection::remove()
+     * {@inheritDoc}
      */
     public function remove($collection, $criteria = null)
     {
@@ -166,7 +172,8 @@ class PDOConnection extends \Norm\Connection
 
     /**
      * Getter for dialect
-     * @return Norm\Dialect\SQLDialect
+     *
+     * @return \Norm\Dialect\SQLDialect
      */
     public function getDialect()
     {
@@ -175,7 +182,9 @@ class PDOConnection extends \Norm\Connection
 
     /**
      * DDL runner for collection
-     * @param  Norm\Collection $collection
+     *
+     * @param \Norm\Collection $collection
+     *
      * @return void
      */
     public function ddl(Collection $collection)
@@ -187,6 +196,14 @@ class PDOConnection extends \Norm\Connection
         }
     }
 
+    /**
+     * Execute an sql
+     *
+     * @param string $sql
+     * @param array  $data
+     *
+     * @return bool
+     */
     protected function execute($sql, array $data = array())
     {
         $statement = $this->raw->prepare($sql);
@@ -194,11 +211,13 @@ class PDOConnection extends \Norm\Connection
         return $statement->execute($data);
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     public function marshall($object)
     {
         if (is_array($object)) {
-            
+
             $result = array();
             foreach ($object as $key => $value) {
                 if ($key[0] === '$') {
@@ -221,17 +240,4 @@ class PDOConnection extends \Norm\Connection
             return $object;
         }
     }
-
-    // public function listCollections()
-    // {
-    //     return $this->dialect->listCollections();
-    // }
-
-    // public function migrate(Collection $collection) {
-    //     if (!$this->hasCollection($collection->name)) {
-    //         $grammarCreate = $this->dialect->grammarCreate($collection->name, $collection->schema);
-
-    //         $this->raw->query($grammarCreate);
-    //     }
-    // }
 }

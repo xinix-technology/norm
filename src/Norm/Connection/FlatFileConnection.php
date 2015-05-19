@@ -1,19 +1,41 @@
 <?php namespace Norm\Connection;
 
-use Norm\Connection;
-use Norm\Collection;
-use Norm\Cursor\FlatFileCursor;
-use Rhumsaa\Uuid\Uuid;
 use Exception;
 use Norm\Model;
+use Norm\Connection;
+use Norm\Collection;
+use Rhumsaa\Uuid\Uuid;
+use Norm\Cursor\FlatFileCursor;
 
+/**
+ * Flat file connection.
+ *
+ * @author    Krisan Alfa Timur <krisan47@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
 class FlatFileConnection extends Connection
 {
-
+    /**
+     * Data stored in document.
+     *
+     * @var array
+     */
     public $data = array();
 
+    /**
+     * Database root path
+     *
+     * @var string
+     */
     protected $dbPath = null;
 
+    /**
+     * Class constructor
+     *
+     * @param array $options
+     */
     public function __construct(array $options = array())
     {
         parent::__construct($options);
@@ -33,6 +55,11 @@ class FlatFileConnection extends Connection
         }
     }
 
+    /**
+     * Prepare database file and folder structure.
+     *
+     * @return void
+     */
     protected function prepareDatabaseEcosystem()
     {
         $basePath = realpath('../');
@@ -46,7 +73,7 @@ class FlatFileConnection extends Connection
     }
 
     /**
-     * @see Norm\Connection::query()
+     * {@inheritDoc}
      */
     public function query($collection, array $criteria = null)
     {
@@ -54,7 +81,7 @@ class FlatFileConnection extends Connection
     }
 
     /**
-     * @see Norm\Connection::persist()
+     * {@inheritDoc}
      */
     public function persist($collection, array $document)
     {
@@ -85,7 +112,7 @@ class FlatFileConnection extends Connection
     }
 
     /**
-     * @see Norm\Connection::remove()
+     * @see {@inheritDoc}
      */
     public function remove($collection, $criteria = null)
     {

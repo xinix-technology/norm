@@ -1,15 +1,23 @@
-<?php
+<?php namespace Norm\Connection;
 
-namespace Norm\Connection;
-
+use Exception;
+use Norm\Cursor;
 use Norm\Connection;
-use Norm\Cursor\BonoCursor;
 use Guzzle\Http\Client;
+use Norm\Cursor\BonoCursor;
 
+/**
+ * Bono Collection.
+ *
+ * @author    Ganesha <reekoheek@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
 class BonoConnection extends Connection
 {
     /**
-     * @see Norm\Connection::query()
+     * {@inheritDoc}
      */
     public function query($collection, array $criteria = null)
     {
@@ -17,7 +25,7 @@ class BonoConnection extends Connection
     }
 
     /**
-     * @see Norm\Connection::persist()
+     * {@inheritDoc}
      */
     public function persist($collection, array $document)
     {
@@ -25,15 +33,24 @@ class BonoConnection extends Connection
     }
 
     /**
-     * @see Norm\Connection::remove()
+     * @see {@inheritDoc}
      */
     public function remove($collection, $criteria = null)
     {
         throw new \Exception(__METHOD__.' unimplemented!');
     }
 
+    /**
+     * Get data from rest service.
+     *
+     * @param \Norm\Cursor $cursor
+     *
+     * @throws \Exception
+     *
+     * @return array
+     */
     public function restGet($cursor) {
-        if ($cursor instanceof \Norm\Cursor) {
+        if ($cursor instanceof Cursor) {
             $name = $cursor->getCollection()->getName();
             $criteria = $cursor->getCriteria();
             $limit = $cursor->limit();
@@ -41,6 +58,7 @@ class BonoConnection extends Connection
             $sorts = $cursor->sort();
 
             $query = array();
+
             foreach ($criteria as $key => $value) {
                 $query[$key] = $value;
             }
@@ -71,7 +89,6 @@ class BonoConnection extends Connection
                 }
             }
 
-
             if ($qs) {
                 $qs = '?'.implode('&', $qs);
             } else {
@@ -85,7 +102,7 @@ class BonoConnection extends Connection
 
             return json_decode($response->getBody(true), true);
         } else {
-            throw new \Exception('Unimplemented yet!');
+            throw new Exception('Unimplemented yet!');
         }
     }
 }

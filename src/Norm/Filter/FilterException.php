@@ -49,43 +49,67 @@ namespace Norm\Filter;
  */
 class FilterException extends \RuntimeException
 {
-
     /**
-     * Database field context where exception raise
+     * Database field context where exception raise.
+     *
      * @var string
      */
     protected $context;
 
     /**
-     * Array of sub exceptions
+     * Array of sub exceptions.
+     *
      * @var array
      */
     protected $sub;
 
+    /**
+     * Arguments of the implementation.
+     *
+     * @var array
+     */
     protected $args;
 
+    /**
+     * Format of message thrown by exception.
+     *
+     * @var string
+     */
     protected $formatMessage;
 
     /**
      * Factory method to create new exception
+     *
      * @param  string $message Message of new exception
+     *
      * @return \Norm\Filter\FilterException
      */
     public static function factory($context, $message)
     {
         $o = new static($message);
+
         return $o->context($context);
     }
 
-    public function __construct($message = '', $code = 0, $exception = null)
+    /**
+     * Class constructor
+     *
+     * @param string     $message
+     * @param integer    $code
+     * @param \Exception $previousException
+     */
+    public function __construct($message = '', $code = 0, $previousException = null)
     {
         $this->formatMessage = $message;
-        parent::__construct($message, 400, $exception);
+
+        parent::__construct($message, 400, $previousException);
     }
 
     /**
      * Set field context of exception
-     * @param  string $context The field context
+     *
+     * @param string $context The field context
+     *
      * @return FilterException return self object to be chained
      */
     public function context($context = null)
@@ -95,12 +119,15 @@ class FilterException extends \RuntimeException
         }
 
         $this->context = $context;
+
         return $this;
     }
 
     /**
      * Set sub exceptions
+     *
      * @param  array $sub Sub exceptions
+     *
      * @return FilterException return self object to be chained
      */
     public function sub($sub = null)
@@ -110,9 +137,15 @@ class FilterException extends \RuntimeException
         }
 
         $this->sub = $sub;
+
         return $this;
     }
 
+    /**
+     * Get the arrguments passed and build message by them.
+     *
+     * @return Norm\Filter\FilterException
+     */
     public function args()
     {
         $this->args = func_get_args();

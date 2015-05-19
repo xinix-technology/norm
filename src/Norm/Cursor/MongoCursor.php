@@ -1,25 +1,38 @@
-<?php
-
-namespace Norm\Cursor;
+<?php namespace Norm\Cursor;
 
 use MongoId;
+use Exception;
 use Norm\Cursor;
 
+/**
+ * Bono Cursor.
+ *
+ * @author    Ganesha <reekoheek@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
 class MongoCursor extends Cursor
 {
+    /**
+     * `MongoCursor` implementation.
+     *
+     * @var \MongoCursor
+     */
     protected $cursor;
 
     /**
-     * @see Norm\Cursor::getNext()
+     * {@inheritDoc}
      */
     public function getNext()
     {
         $next = $this->getCursor()->getNext();
+
         return isset($next) ? $this->collection->attach($next) : null;
     }
 
     /**
-     * @see  Norm\Cursor::count()
+     * {@inheritDoc}
      */
     public function count($foundOnly = false)
     {
@@ -27,7 +40,7 @@ class MongoCursor extends Cursor
     }
 
     /**
-     * @see  Norm\Cursor::translateCriteria()
+     * {@inheritDoc}
      */
     public function translateCriteria(array $criteria = array())
     {
@@ -44,6 +57,7 @@ class MongoCursor extends Cursor
                 if (!isset($newCriteria[$newKey])) {
                     $newCriteria[$newKey] = array();
                 }
+
                 $newCriteria[$newKey] = array_merge($newCriteria[$newKey], $newValue);
             } else {
                 $newCriteria[$newKey] = $newValue;
@@ -55,16 +69,17 @@ class MongoCursor extends Cursor
     }
 
     /**
-     * @see  Norm\Cursor::current()
+     * {@inheritDoc}
      */
     public function current()
     {
         $data = $this->getCursor()->current();
+
         return isset($data) ? $this->collection->attach($data) : null;
     }
 
     /**
-     * @see  Norm\Cursor::next()
+     * {@inheritDoc}
      */
     public function next()
     {
@@ -72,7 +87,7 @@ class MongoCursor extends Cursor
     }
 
     /**
-     * @see  Norm\Cursor::key()
+     * {@inheritDoc}
      */
     public function key()
     {
@@ -80,7 +95,7 @@ class MongoCursor extends Cursor
     }
 
     /**
-     * @see  Norm\Cursor::valid()
+     * {@inheritDoc}
      */
     public function valid()
     {
@@ -88,13 +103,16 @@ class MongoCursor extends Cursor
     }
 
     /**
-     * @see  Norm\Cursor::rewind()
+     * {@inheritDoc}
      */
     public function rewind()
     {
         $this->getCursor()->rewind();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getCursor()
     {
         if (is_null($this->cursor)) {
@@ -105,9 +123,11 @@ class MongoCursor extends Cursor
             } else {
                 $this->cursor = $rawCollection->find($this->criteria);
             }
+
             if (isset($this->sorts)) {
                 $this->cursor->sort($this->sorts);
             }
+
             if (isset($this->skip)) {
                 $this->cursor->skip($this->skip);
             }
@@ -120,14 +140,23 @@ class MongoCursor extends Cursor
         return $this->cursor;
     }
 
+    /**
+     * Generate a standard NORM query expression.
+     *
+     * @param string $key
+     * @param mixed $value
+     *
+     * @return array
+     */
     public function grammarExpression($key, $value)
     {
         if ($key === '!or' || $key === '!and') {
             if (!is_array($value)) {
-                throw new \Exception('[Norm/MongoCursor] "!or" and "!and" must have value as array.');
+                throw new Exception('[Norm/MongoCursor] "!or" and "!and" must have value as array.');
             }
 
             $newValue = array();
+
             foreach ($value as $v) {
                 $newValue[] = $this->translateCriteria($v, true);
             }
@@ -147,6 +176,7 @@ class MongoCursor extends Cursor
 
         $operator = '$eq';
         $multiValue = false;
+
         if (isset($splitted[1])) {
             switch ($splitted[1]) {
                 case 'like':
@@ -176,6 +206,7 @@ class MongoCursor extends Cursor
             if ($multiValue) {
                 if (!empty($value)) {
                     $newValue = array();
+
                     foreach ($value as $k => $v) {
                         // TODO ini quickfix buat query norm array seperti mongo
                         // kalau ada yang lebih bagus caranya bisa dibenerin
@@ -205,10 +236,14 @@ class MongoCursor extends Cursor
         }
     }
 
-    // implemented later
+
+    /**
+     * {@inheritDoc}
+     */
     public function distinct($key) {
         $rawCollection = $this->connection->getRaw()->{$this->collection->getName()};
         $result = $rawCollection->distinct($key);
         return $result;
+
     }
 }

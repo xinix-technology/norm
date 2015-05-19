@@ -1,27 +1,41 @@
-<?php
+<?php namespace Norm\Cursor;
 
-namespace Norm\Cursor;
-
+use Exception;
 use Norm\Cursor;
 
+/**
+ * Bono Cursor.
+ *
+ * @author    Ganesha <reekoheek@gmail.com>
+ * @copyright 2013 PT Sagara Xinix Solusitama
+ * @link      http://xinix.co.id/products/norm Norm
+ * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
+ */
 class MemoryCursor extends Cursor
 {
     /**
      * Buffer data held in memory
+     *
      * @var array
      */
     protected $buffer = array();
 
     /**
      * Next record read
+     *
      * @var boolean
      */
     protected $next = false;
 
+    /**
+     * A property shows us whether document has been queried or not.
+     *
+     * @var boolean
+     */
     protected $isQueried = false;
 
     /**
-     * @see Norm\Cursor::current()
+     * {@inheritDoc}
      */
     public function current()
     {
@@ -30,7 +44,7 @@ class MemoryCursor extends Cursor
     }
 
     /**
-     * @see Norm\Cursor::next()
+     * {@inheritDoc}
      */
     public function next()
     {
@@ -51,11 +65,13 @@ class MemoryCursor extends Cursor
 
                 foreach ($buffer as $k => $row) {
                     $match = true;
+
                     foreach ($this->criteria as $ckey => $cval) {
                         if ($row[$ckey] !== $cval) {
                             $match = false;
                         }
                     }
+
                     if ($match) {
                         $this->buffer[] = $row;
                     }
@@ -67,7 +83,7 @@ class MemoryCursor extends Cursor
     }
 
     /**
-     * @see Norm\Cursor::key()
+     * {@inheritDoc}
      */
     public function key()
     {
@@ -75,7 +91,7 @@ class MemoryCursor extends Cursor
     }
 
     /**
-     * @see Norm\Cursor::valid()
+     * {@inheritDoc}
      */
     public function valid()
     {
@@ -83,35 +99,42 @@ class MemoryCursor extends Cursor
     }
 
     /**
-     * @see Norm\Cursor::rewind()
+     * {@inheritDoc}
      */
     public function rewind()
     {
         reset($this->buffer);
+
         $this->next();
     }
 
     /**
-     * @see Norm\Cursor::count()
+     * {@inheritDoc}
      */
     public function count($foundOnly = false)
     {
-        // echo __METHOD__."\n";
         if ($foundOnly) {
-            throw new \Exception('Unimplemented '.__METHOD__);
+            throw new Exception('Unimplemented '.__METHOD__);
         } else {
             $this->rewind();
+
             return count($this->buffer);
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function translateCriteria(array $criteria = array())
     {
         return $criteria;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function distinct($key)
     {
-        throw new \Exception('Unimplemented '.__METHOD__);
+        throw new Exception('Unimplemented '.__METHOD__);
     }
 }

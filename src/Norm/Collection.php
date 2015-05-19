@@ -1,60 +1,75 @@
-<?php
-
-namespace Norm;
+<?php namespace Norm;
 
 use Norm\Model;
 use Norm\Cursor;
-use Norm\Filter\Filter;
 use Norm\Type\Object;
+use Norm\Filter\Filter;
 use ROH\Util\Inflector;
 use JsonKit\JsonSerializer;
 
+/**
+ * The collection class that wraps models.
+ *
+ * @author      Ganesha <reekoheek@gmail.com>
+ * @copyright   2013 PT Sagara Xinix Solusitama
+ * @link        http://xinix.co.id/products/norm Norm
+ * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
+ * @package     Norm
+ */
 class Collection extends Hookable implements JsonSerializer
 {
     /**
      * Logical class name
+     *
      * @var string
      */
     protected $clazz;
 
     /**
      * Data source representative name
+     *
      * @var string
      */
     protected $name;
 
     /**
      * Norm Connection
+     *
      * @var Norm\Connection
      */
     protected $connection;
 
     /**
      * Schema
+     *
      * @var Norm\Type\Object
      */
     protected $schema;
 
     /**
      * Collection options
+     *
      * @var array
      */
     protected $options;
 
     /**
      * Collection data filters
+     *
      * @var array
      */
     protected $filter;
 
     /**
      * Collection cache
+     *
      * @var array
      */
     protected $cache;
 
     /**
      * Constructor
+     *
      * @param array $options
      */
     public function __construct(array $options = array())
@@ -102,8 +117,8 @@ class Collection extends Hookable implements JsonSerializer
     }
 
     /**
-     * Getter of collection name
-     * Collection name usually mapped to table name or collection name
+     * Getter of collection name. Collection name usually mapped to table name or collection name
+     *
      * @return string
      */
     public function getName()
@@ -113,6 +128,7 @@ class Collection extends Hookable implements JsonSerializer
 
     /**
      * Getter of collection class
+     *
      * @return string
      */
     public function getClass()
@@ -122,6 +138,7 @@ class Collection extends Hookable implements JsonSerializer
 
     /**
      * Getter of connection
+     *
      * @return Norm\Connection
      */
     public function getConnection()
@@ -131,7 +148,9 @@ class Collection extends Hookable implements JsonSerializer
 
     /**
      * Getter of collection option
-     * @param  string $key
+     *
+     * @param string $key
+     *
      * @return mixed
      */
     public function option($key = null)
@@ -144,11 +163,10 @@ class Collection extends Hookable implements JsonSerializer
     }
 
     /**
-     * Getter and setter of collection schema
-     * If there is no argument specified, the method will set and override schema
-     * If argument specified, method will act as getter to specific field schema.
+     * Getter and setter of collection schema. If there is no argument specified, the method will set and override schema. If argument specified, method will act as getter to specific field schema.
      *
-     * @param  string $schema
+     * @param string $schema
+     *
      * @return mixed
      */
     public function schema($key = null, $value = null)
@@ -169,10 +187,12 @@ class Collection extends Hookable implements JsonSerializer
 
     /**
      * Prepare data value for specific field name
-     * @param  string               $key    Field name
-     * @param  mixed                $value  Original data value
-     * @param  Norm\Schema\Field    $schema If specified will override default schema
-     * @return mixed                        Prepared data value
+     *
+     * @param  string             $key    Field name
+     * @param  mixed              $value  Original data value
+     * @param  Norm\Schema\Field  $schema If specified will override default schema
+     *
+     * @return mixed Prepared data value
      */
     public function prepare($key, $value, $schema = null)
     {
@@ -188,8 +208,10 @@ class Collection extends Hookable implements JsonSerializer
 
     /**
      * Attach document to Norm system as model.
-     * @param  mixed    $document   Raw document data
-     * @return Norm\Model           Attached model
+     *
+     * @param mixed document Raw document data
+     *
+     * @return Norm\Model Attached model
      */
     public function attach($document)
     {
@@ -201,6 +223,7 @@ class Collection extends Hookable implements JsonSerializer
         $document = new Object($document);
 
         $this->applyHook('attaching', $document);
+
         if (isset($this->options['model'])) {
             $Model = $this->options['model'];
             $model = new $Model($document->toArray(), array(
@@ -211,6 +234,7 @@ class Collection extends Hookable implements JsonSerializer
                 'collection' => $this,
             ));
         }
+
         $this->applyHook('attached', $model);
 
         return $model;
@@ -218,7 +242,9 @@ class Collection extends Hookable implements JsonSerializer
 
     /**
      * Find data with specified criteria
-     * @param  array        $criteria
+     *
+     * @param array $criteria
+     *
      * @return Norm\Cursor
      */
     public function find($criteria = array())
@@ -241,7 +267,9 @@ class Collection extends Hookable implements JsonSerializer
 
     /**
      * Find one document from collection
-     * @param  array|mixed        $criteria   Criteria to search
+     *
+     * @param  array|mixed $criteria   Criteria to search
+     *
      * @return Norm\Model
      */
     public function findOne($criteria = array())
@@ -259,8 +287,10 @@ class Collection extends Hookable implements JsonSerializer
 
     /**
      * Create new instance of model
-     * @param   array|Norm\Model    $cloned Model to clone
-     * @return  Norm\Model
+     *
+     * @param array|\Norm\Model $cloned Model to clone
+     *
+     * @return \Norm\Model
      */
     public function newInstance($cloned = array())
     {
@@ -277,18 +307,19 @@ class Collection extends Hookable implements JsonSerializer
     }
 
     /**
-     * Filter model data with functions to cleanse, prepare and validate data.
-     * When key argument specified, filter will run partially for specified key only.
-     * @param  Norm\Model   $model
-     * @param  string       $key    Key field of model
-     * @return bool                 True if success and false if fail
+     * Filter model data with functions to cleanse, prepare and validate data. When key argument specified, filter will run partially for specified key only.
+     *
+     * @param \Norm\Model   $model
+     *
+     * @param string $key Key field of model
+     *
+     * @return bool True if success and false if fail
      */
     public function filter(Model $model, $key = null)
     {
         if (is_null($this->filter)) {
             $this->filter = Filter::fromSchema($this->schema());
         }
-
 
         $this->applyHook('filtering', $model, $key);
         $result = $this->filter->run($model, $key);
@@ -299,8 +330,10 @@ class Collection extends Hookable implements JsonSerializer
 
     /**
      * Save model to persistent state
-     * @param  Model  $model
-     * @param  array  $options
+     *
+     * @param \Norm\Model $model
+     * @param array       $options
+     *
      * @return void
      */
     public function save(Model $model, $options = array())
@@ -317,18 +350,23 @@ class Collection extends Hookable implements JsonSerializer
         if ($options['observer']) {
             $this->applyHook('saving', $model, $options);
         }
+
         $modified = $this->connection->persist($this, $model->dump());
         $model->setId($modified['$id']);
+
         if ($options['observer']) {
             $this->applyHook('saved', $model, $options);
         }
+
         $model->sync($modified);
         $this->resetCache();
     }
 
     /**
      * Remove single model
-     * @param  Norm\Model     $model
+     *
+     * @param \Norm\Model $model
+     *
      * @return void
      */
     public function remove(Model $model = null)
@@ -343,6 +381,7 @@ class Collection extends Hookable implements JsonSerializer
 
             $this->applyHook('removing', $model);
             $result = $this->connection->remove($this, $model);
+
             if ($result) {
                 $model->reset();
             }
@@ -352,9 +391,9 @@ class Collection extends Hookable implements JsonSerializer
     }
 
     /**
-     * Override this to add new functionality of observer to the collection, otherwise you are not
-     * necessarilly to know about this.
-     * @param  object   $observer
+     * Override this to add new functionality of observer to the collection, otherwise you are not necessarilly to know about this.
+     * @param object $observer
+     *
      * @return void
      */
     protected function observe($observer)
@@ -404,25 +443,60 @@ class Collection extends Hookable implements JsonSerializer
         }
     }
 
+    /**
+     * Reset Cache
+     *
+     * @method resetCache
+     *
+     * @return void
+     */
     protected function resetCache()
     {
         $this->cache = array();
     }
 
+    /**
+     * Put item in cache bags.
+     *
+     * @method rememberCache
+     *
+     * @param mixed       $criteria
+     * @param \Norm\Model $model    [description]
+     *
+     * @return void
+     */
     protected function rememberCache($criteria, $model)
     {
         $ser = serialize($criteria);
+
         $this->cache[$ser] = $model;
     }
 
+    /**
+     * Get item from cache.
+     *
+     * @method fetchCache
+     *
+     * @param object $criteria
+     *
+     * @return void|\Norm\Model
+     */
     protected function fetchCache($criteria)
     {
         $ser = serialize($criteria);
+
         if (isset($this->cache[$ser])) {
             return $this->cache[$ser];
         }
     }
 
+    /**
+     * Json serialization of this class.
+     *
+     * @method jsonSerialize
+     *
+     * @return string
+     */
     public function jsonSerialize()
     {
         return $this->clazz;

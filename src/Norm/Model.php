@@ -2,14 +2,20 @@
 
 namespace Norm;
 
+use Closure;
 use Norm\Norm;
+use Exception;
+use JsonKit\JsonKit;
 
 /**
- * Norm\Model
+ * Base class for hookable implementation
  *
- * Default model implementation.
+ * @author      Ganesha <reekoheek@gmail.com>
+ * @copyright   2013 PT Sagara Xinix Solusitama
+ * @link        http://xinix.co.id/products/norm Norm
+ * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
+ * @package     Norm
  */
-
 class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 {
 
@@ -19,19 +25,26 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      * FETCH_PUBLISHED will fetch published attributes of model
      * FETCH_HIDDEN    will fetch hidden attributes of model
      */
-    const FETCH_ALL         = 'FETCH_ALL';
-    const FETCH_RAW         = 'FETCH_RAW';
-    const FETCH_PUBLISHED   = 'FETCH_PUBLISHED';
-    const FETCH_HIDDEN      = 'FETCH_HIDDEN';
+    const FETCH_ALL       = 'FETCH_ALL';
+    const FETCH_RAW       = 'FETCH_RAW';
+    const FETCH_PUBLISHED = 'FETCH_PUBLISHED';
+    const FETCH_HIDDEN    = 'FETCH_HIDDEN';
 
-    const STATE_DETACHED    = 'STATE_DETACHED';
-    const STATE_ATTACHED    = 'STATE_ATTACHED';
-    const STATE_REMOVED     = 'STATE_REMOVED';
+    /**
+     * State of document
+     *
+     * STATE_DETACHED
+     * STATE_ATTACHED
+     * STATE_REMOVED
+     */
+    const STATE_DETACHED = 'STATE_DETACHED';
+    const STATE_ATTACHED = 'STATE_ATTACHED';
+    const STATE_REMOVED  = 'STATE_REMOVED';
 
     /**
      * Collection object of model.
      *
-     * @var Bono\Collection
+     * @var \Bono\Collection
      */
     protected $collection;
 
@@ -44,6 +57,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     /**
      * Model old attributes before setting new attributes
+     *
      * @var array
      */
     protected $oldAttributes;
@@ -55,6 +69,11 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      */
     protected $id = null;
 
+    /**
+     * State of current document.
+     *
+     * @var string
+     */
     protected $state = '';
 
     /**
@@ -75,7 +94,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     /**
      * Getter for collection
-     * @return Norm\Collection
+     *
+     * @return \Norm\Collection
      */
     public function getCollection()
     {
@@ -84,6 +104,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     /**
      * Reset model to deleted state
+     *
      * @return void
      */
     public function reset()
@@ -115,6 +136,15 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         return $this->id;
     }
 
+    /**
+     * Determine if offset is exist in attributes.
+     *
+     * @method has
+     *
+     * @param string $offset
+     *
+     * @return boolean
+     */
     public function has($offset)
     {
         return array_key_exists($offset, $this->attributes);
@@ -123,7 +153,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     /**
      * Get the attribute.
      *
-     * @param  string $key
+     * @param string $key
+     *
      * @return mixed
      */
     public function get($key)
@@ -133,32 +164,51 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         }
 
         $schema = $this->schema($key);
-        if (isset($schema) && $schema->hasReader()) {
+        if (isset($schema) and $schema->hasReader()) {
             return $schema->read($this);
         }
         return isset($this->attributes[$key]) ? $this->attributes[$key] : null;
     }
 
+    /**
+     * Dump attributes raw data.
+     *
+     * @method dump
+     *
+     * @return array
+     */
     public function dump()
     {
         $attributes = array();
+
         if ($this->id) {
             $attributes['$id'] = $this->id;
         }
 
         foreach ($this->attributes as $key => $value) {
             $schema = $this->schema($key);
-            if (!empty($schema['transient'])) {
+
+            if (! empty($schema['transient'])) {
                 continue;
             }
+
             $attributes[$key] = $value;
         }
+
         return $attributes;
     }
 
+    /**
+     * Add an attributes data.
+     *
+     * @method add
+     *
+     * @param string $key
+     * @param mixed  $value
+     */
     public function add($key, $value)
     {
-        if (!isset($this->attributes[$key])) {
+        if (! isset($this->attributes[$key])) {
             $this->attributes[$key] = array();
         }
 
@@ -182,31 +232,42 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
                 }
             }
         } elseif ($key === '$id') {
-            throw new \Exception('[Norm/Model] Restricting set for $id.');
+            throw new Exception('[Norm/Model] Restricting set for $id.');
         } else {
             $this->attributes[$key] = $this->prepare($key, $value);
         }
+
         return $this;
     }
 
+    /**
+     * Clear attributes value.
+     *
+     * @method clear
+     *
+     * @param string $key
+     *
+     * @return \Norm\Model
+     */
     public function clear($key = null)
     {
         if (func_num_args() === 0) {
             $this->attributes = array();
         } elseif ($key === '$id') {
-            throw new \Exception('[Norm/Model] Restricting clear for $id.');
+            throw new Exception('[Norm/Model] Restricting clear for $id.');
         } else {
             unset($this->attributes[$key]);
         }
+
         return $this;
     }
 
     /**
-     * Sync the existing attributes with new values. After update or insert,
-     * this method used to modify the existing attributes.
+     * Sync the existing attributes with new values. After update or insert, this method used to modify the existing attributes.
      *
-     * @param  [type] $attributes [description]
-     * @return [type]             [description]
+     * @param array $attributes
+     *
+     * @return void
      */
     public function sync($attributes)
     {
@@ -219,6 +280,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
                     $attributes[$key] = $field['default'];
                 }
             }
+
             $this->state = static::STATE_DETACHED;
         }
 
@@ -226,6 +288,17 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         $this->populateOld();
     }
 
+    /**
+     * Prepare model to be sync'd.
+     *
+     * @method prepare
+     *
+     * @param string $key
+     * @param string $value
+     * @param mixed  $schema
+     *
+     * @return [type]
+     */
     public function prepare($key, $value, $schema = null)
     {
         if ($this->collection) {
@@ -245,6 +318,15 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         $this->collection->save($this, $options);
     }
 
+    /**
+     * Run filter hook.
+     *
+     * @method filter
+     *
+     * @param string $fieldName
+     *
+     * @return mixed
+     */
     public function filter($fieldName = null)
     {
         return $this->collection->filter($this, $fieldName);
@@ -252,6 +334,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     /**
      * Remove the model.
+     *
      * @return int Status of removal.
      */
     public function remove()
@@ -261,7 +344,9 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     /**
      * Get array structure of model
-     * @param  mixed  $fetchType
+     *
+     * @param mixed $fetchType
+     *
      * @return array
      */
     public function toArray($fetchType = Model::FETCH_ALL)
@@ -276,7 +361,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
             $this->attributes = array();
         }
 
-        if ($fetchType === Model::FETCH_ALL || $fetchType === Model::FETCH_HIDDEN) {
+        if ($fetchType === Model::FETCH_ALL or $fetchType === Model::FETCH_HIDDEN) {
             $attributes['$type'] = $this->getClass();
             $attributes['$id'] = $this->getId();
 
@@ -287,33 +372,69 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
             }
         }
 
-        if ($fetchType === Model::FETCH_ALL || $fetchType === Model::FETCH_PUBLISHED) {
+        if ($fetchType === Model::FETCH_ALL or $fetchType === Model::FETCH_PUBLISHED) {
             foreach ($this->attributes as $key => $value) {
                 if ($key[0] !== '$') {
                     $attributes[$key] = $value;
                 }
-
             }
         }
 
         return $attributes;
     }
 
+    /**
+     * Determine if offset exists in attributes.
+     *
+     * @method offsetExists
+     *
+     * @param string $offset
+     *
+     * @return bool
+     */
     public function offsetExists($offset)
     {
         return $this->has($offset);
     }
 
+    /**
+     * Get value from attributes.
+     *
+     * @method offsetExists
+     *
+     * @param string $offset
+     *
+     * @return mixed
+     */
     public function offsetGet($offset)
     {
         return $this->get($offset);
     }
 
+    /**
+     * Set value in attributes.
+     *
+     * @method offsetExists
+     *
+     * @param string $offset
+     * @param mixed  $value
+     *
+     * @return void
+     */
     public function offsetSet($offset, $value)
     {
         return $this->set($offset, $value);
     }
 
+    /**
+     * Remove an attributes value.
+     *
+     * @method offsetExists
+     *
+     * @param string $offset
+     *
+     * @return void
+     */
     public function offsetUnset($offset)
     {
         return $this->clear($offset);
@@ -321,10 +442,12 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
     /**
      * Implement the json serializer normalizing the data structures.
+     *
+     * @return array
      */
     public function jsonSerialize()
     {
-        if (!Norm::options('include')) {
+        if (! Norm::options('include')) {
             return $this->toArray();
         }
 
@@ -334,46 +457,81 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         $schema = $this->collection->schema();
 
         foreach ($source as $key => $value) {
-            if (isset($schema[$key]) && !is_null($value)) {
+            if (isset($schema[$key]) and ! $value === null) {
                 $destination[$key] = $schema[$key]->toJSON($value);
             } else {
                 $destination[$key] = $value;
             }
-            $destination[$key] = \JsonKit\JsonKit::replaceObject($destination[$key]);
+
+            $destination[$key] = JsonKit::replaceObject($destination[$key]);
         }
+
         return $destination;
     }
 
+    /**
+     * Set original attributes.
+     *
+     * @method populateOld
+     *
+     * @return void
+     */
     protected function populateOld()
     {
-        // use copy on write to populate old original attributes
         $this->oldAttributes = $this->attributes ?: array();
-        // $this->oldAttributes = array();
-        // if (is_array($this->attributes)) {
-        //     foreach ($this->attributes as $k => $v) {
-        //         $this->oldAttributes[$k] = $v;
-        //     }
-        // }
     }
 
+    /**
+     * Get original attributes
+     *
+     * @method previous
+     *
+     * @param string $key
+     *
+     * @return mixed
+     */
     public function previous($key = null)
     {
         if (is_null($key)) {
             return $this->oldAttributes;
         }
+
         return $this->oldAttributes[$key];
     }
 
+    /**
+     * Determine if model is a new document.
+     *
+     * @method isNew
+     *
+     * @return boolean
+     */
     public function isNew()
     {
         return ($this->state === static::STATE_DETACHED);
     }
 
+    /**
+     * Determine if document has been removed.
+     *
+     * @method isRemoved
+     *
+     * @return boolean
+     */
     public function isRemoved()
     {
         return ($this->state === static::STATE_REMOVED);
     }
 
+    /**
+     * Get schema configuration.
+     *
+     * @method schema
+     *
+     * @param string $key
+     *
+     * @return mixed
+     */
     public function schema($key = null)
     {
         if (func_num_args() === 0) {
@@ -383,18 +541,40 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         }
     }
 
+    /**
+     * Get schema configuration by offset name.
+     *
+     * @method schemaByIndex
+     *
+     * @param string $index
+     *
+     * @return mixed
+     */
     public function schemaByIndex($index)
     {
         $schema = array();
+
         foreach ($this->collection->schema() as $value) {
             $schema[] = $value;
         }
-        return @$schema[$index];
+
+        return (empty($schema[$index])) ? null : $schema[$index];
     }
 
+    /**
+     * Format the model to HTML file. Bind it's attributes to view.
+     *
+     * @method format
+     *
+     * @param string $field
+     * @param string $format
+     *
+     * @return mixed
+     */
     public function format($field = null, $format = null)
     {
         $numArgs = func_num_args();
+
         if ($numArgs === 0) {
             $formatter = $this->collection->option('format');
 
@@ -406,7 +586,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
                     return '-- no formatter and schema --';
                 }
             } else {
-                if ($formatter instanceof \Closure) {
+                if ($formatter instanceof Closure) {
                     return $formatter($this);
                 } elseif (is_string($formatter)) {
 
@@ -416,12 +596,9 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
                     return $result;
                 } else {
-                    throw new \Exception('Unknown format for Model formatter.');
+                    throw new Exception('Unknown format for Model formatter.');
                 }
             }
-        // } elseif (isset($this->formats[$field][$format])) {
-        //     $fn = $this->formats[$field][$format];
-        //     return call_user_func($fn, $this[$field], $this);
         } else {
             $format = $format ?: 'plain';
 
@@ -429,15 +606,21 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
 
             // TODO return value if no formatter or just throw exception?
             if (is_null($schema)) {
-                throw new \Exception("[Norm/Model] No formatter [$format] for field [$field].");
+                throw new Exception("[Norm/Model] No formatter [$format] for field [$field].");
             } else {
                 $value = isset($this[$field]) ? val($this[$field]) : null;
                 return $schema->format($format, $value, $this);
             }
-
         }
     }
 
+    /**
+     * Get implementation name.
+     *
+     * @method getClass
+     *
+     * @return string
+     */
     public function getClass()
     {
         return $this->collection->getClass();

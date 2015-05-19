@@ -1,66 +1,36 @@
-<?php
+<?php namespace Norm\Filter;
 
-/**
- * Norm - (not) ORM Framework
- *
- * MIT LICENSE
- *
- * Copyright (c) 2013 PT Sagara Xinix Solusitama
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * @author      Ganesha <reekoheek@gmail.com>
- * @copyright   2013 PT Sagara Xinix Solusitama
- * @link        http://xinix.co.id/products/norm
- * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
- * @package     Norm\Filter
- *
- */
-namespace Norm\Filter;
+use Exception;
 
 /**
  * Filter (validation) for database field
  */
 class Filter
 {
-
     /**
      * Registries of available filters
+     *
      * @var array
      */
     protected static $registries = array();
 
     /**
      * Available rules
+     *
      * @var array
      */
     protected $rules = array();
 
     /**
      * Errors
+     *
      * @var array
      */
     protected $errors;
 
     /**
      * Register custom filter to use later
+     *
      * @param  string $key   Key name of filter
      * @param  string $clazz PHP class to use
      */
@@ -71,9 +41,11 @@ class Filter
 
     /**
      * Static method to create instance of filter from database schema configuration.
-     * @param  array $schema      Database schema configuration
-     * @param  array  $preFilter  Filters that will be run before the filter
-     * @param  array  $postFilter Filters that will be run after the filter
+     *
+     * @param array $schema      Database schema configuration
+     * @param array $preFilter   Filters that will be run before the filter
+     * @param array $postFilter  Filters that will be run after the filter
+     *
      * @return \Norm\Filter\Filter
      */
     public static function fromSchema($schema, $preFilter = array(), $postFilter = array())
@@ -82,6 +54,7 @@ class Filter
 
         foreach ($preFilter as $key => $filter) {
             $filter = explode('|', $filter);
+
             foreach ($filter as $f) {
                 $rules[$key][] = trim($f);
             }
@@ -101,6 +74,7 @@ class Filter
 
         foreach ($postFilter as $key => $filter) {
             $filter = explode('|', $filter);
+
             foreach ($filter as $f) {
                 $rules[$key]['filter'][] = trim($f);
             }
@@ -115,6 +89,7 @@ class Filter
 
         foreach ($filters as $key => $filter) {
             $filter = explode('|', $filter);
+
             foreach ($filter as $f) {
                 $rules[$key]['label'] = $key;
                 $rules[$key]['filter'][] = trim($f);
@@ -134,6 +109,7 @@ class Filter
         $this->errors = array();
 
         $rules = null;
+
         if (is_null($key)) {
             $rules = $this->rules;
         } elseif (isset($this->rules[$key])) {
@@ -153,13 +129,15 @@ class Filter
                         if (is_string($filterChain)) {
                             $method = explode(':', $filterChain);
                             $args = array();
+
                             if (isset($method[1])) {
                                 $args = explode(',', $method[1]);
                             }
+
                             $method = $method[0];
 
-
                             $innerMethodName = 'filter'.strtoupper($method[0]).substr($method, 1);
+
                             if (method_exists($this, $innerMethodName)) {
                                 $method = $innerMethodName;
                                 $val = (isset($data[$k])) ? $data[$k] : null;
@@ -171,24 +149,25 @@ class Filter
                             } elseif (function_exists($method)) {
                                 $data[$k] = $method($data[$k]);
                             } else {
-                                throw new \Exception('Filter "'.$filterChain.'" not found.');
+                                throw new Exception('Filter "'.$filterChain.'" not found.');
                             }
                         } elseif (is_callable($filterChain)) {
                             $data[$k] = call_user_func($filterChain, $data[$k], $data, array());
                         }
                     } catch (SkipException $e) {
                         break;
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         $this->errors[] = $e;
+
                         break;
                     }
                 }
             }
         }
 
-
         if ($this->errors) {
             $e = new FilterException();
+
             throw $e->sub($this->errors);
         }
 
@@ -205,6 +184,7 @@ class Filter
         if (is_null($value) || $value === '') {
             throw FilterException::factory($key, 'Field %s is required')->args($this->rules[$key]['label']);
         }
+
         return $value;
     }
 
@@ -215,23 +195,16 @@ class Filter
             unset($data[$key.'_confirmation']);
             return '';
         }
+
         if ($value.'' !== $data[$key.'_confirmation']) {
             throw FilterException::factory($key, 'Field %s must be confirmed')->args($this->rules[$key]['label']);
         }
+
         unset($data[$key.'_confirmation']);
+
         return $value;
     }
 
-    // DEPRECATED
-    // public function filterIgnoreNull($key, $value, $data)
-    // {
-    //     if ($value == '') {
-    //         unset($data[$key]);
-    //         throw new SkipException();
-    //     }
-
-    //     return $value;
-    // }
 
     public function filterUnique($key, $value, $data, $args = array())
     {
@@ -242,9 +215,11 @@ class Filter
         $clazz = $args[0];
         $field = isset($args[1]) ? $args[1] : $key;
         $model = \Norm\Norm::factory($clazz)->findOne(array($field => $value));
+
         if (isset($model) && $model['$id'] != $data['$id']) {
             throw FilterException::factory($key, 'Field %s must be unique')->args($this->rules[$key]['label']);
         }
+
         return $value;
     }
 
@@ -257,6 +232,7 @@ class Filter
         if (!empty($data[$args[0]]) && (is_null($value) || $value === '')) {
             throw FilterException::factory($key, 'Field %s is required')->args($this->rules[$key]['label']);
         }
+
         return $value;
 
     }
@@ -270,6 +246,7 @@ class Filter
         if (empty($data[$args[0]]) && (is_null($value) || $value === '')) {
             throw FilterException::factory($key, 'Field %s is required')->args($this->rules[$key]['label']);
         }
+
         return $value;
 
     }
@@ -283,6 +260,7 @@ class Filter
         if ($value < $args[0]) {
             throw FilterException::factory($key, 'Field %s less than '.$args[0])->args($this->rules[$key]['label']);
         }
+
         return $value;
 
     }
@@ -296,6 +274,7 @@ class Filter
         if (!empty($value) && !filter_var($value, FILTER_VALIDATE_IP)) {
             throw FilterException::factory($key, 'Field %s is not valid IP Address')->args($this->rules[$key]['label']);
         }
+
         return $value;
     }
 
@@ -308,6 +287,7 @@ class Filter
         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
             throw FilterException::factory($key, 'Field %s is not valid email')->args($this->rules[$key]['label']);
         }
+
         return $value;
     }
 }
