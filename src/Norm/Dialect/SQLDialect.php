@@ -16,6 +16,7 @@ abstract class SQLDialect
     protected $expressionCounter = 0;
 
     abstract public function grammarCount(Cursor $cursor, $foundOnly, array &$data = array());
+    abstract public function grammarDistinct(Cursor $cursor, $key);
 
     public function __construct($connection)
     {
@@ -112,7 +113,7 @@ abstract class SQLDialect
         if ($field == '$id') {
             $field = 'id';
         } elseif (strlen($field) > 0 && $field[0] === '$') {
-            $field = 'h_'.substr($field, 1);
+            $field = '_'.substr($field, 1);
         }
 
         $operator = '=';
