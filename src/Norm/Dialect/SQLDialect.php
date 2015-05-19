@@ -1,9 +1,9 @@
-<?php
+<?php namespace Norm\Dialect;
 
-namespace Norm\Dialect;
-
-use Norm\Collection;
+use Exception;
+use Norm\Model;
 use Norm\Cursor;
+use Norm\Collection;
 
 abstract class SQLDialect
 {
@@ -29,7 +29,7 @@ abstract class SQLDialect
             case 'create':
                 return $this->grammarCreate($collection->getName(), $collection->schema());
             default:
-                throw new \Exception(__METHOD__.' with type '.$type.' unimplemented yet');
+                throw new Exception(__METHOD__.' with type '.$type.' unimplemented yet');
         }
     }
 
@@ -38,7 +38,7 @@ abstract class SQLDialect
         if (func_num_args() === 1) {
             return "DELETE FROM {$collection->getName()}";
         } else {
-            throw new \Exception(__METHOD__.' unimplemented yet!');
+            throw new Exception(__METHOD__.' unimplemented yet!');
         }
     }
 
@@ -51,6 +51,7 @@ abstract class SQLDialect
                 if ($field instanceof $schemaKey) {
                     $found = true;
                     $fieldDefinitions[] = $field['name'].' '.$schemaValue;
+
                     break;
                 }
             }
@@ -78,7 +79,6 @@ abstract class SQLDialect
 
     public function grammarExpression($key, $value, $collection, &$data)
     {
-
         if ($key === '!or' || $key === '!and') {
             $wheres = array();
             foreach ($value as $subValues) {
@@ -138,47 +138,46 @@ abstract class SQLDialect
                     $operator = '>';
                     break;
                 case 'regex':
-                    throw new \Exception('Operator regex is not supported to query.');
-                    // return array($field, array('$regex', new \MongoRegex($value)));
+                    throw new Exception('Operator regex is not supported to query.');
                 case 'in':
                 case 'nin':
                     $operator = $splitted[1];
                 break;
-                    
+
                 default:
-                    throw new \Exception('Operator regex is not supported to query.');
-                    // $operator = '$'.$splitted[1];
-                    // break;
+                    throw new Exception('Operator regex is not supported to query.');
             }
         }
 
         //fix me : change from grammar expresiion old to new grammar expresiion for operator in or nin
-
-        if($operator == 'in' || $operator == 'nin'){
+        if($operator == 'in' || $operator == 'nin') {
             $fgroup = array();
+
             foreach ($value as $k => $v) {
                 $v1 = $v;
-                if ($v instanceof \Norm\Model) {
+
+                if ($v instanceof Model) {
                     $v1 = $v['$id'];
                 }
+
                 $this->expressionCounter++;
                 $data['f'.$this->expressionCounter] = $v1;
                 $fgroup[] = ':f'.$this->expressionCounter;
             }
+
             return $this->grammarEscape($field).' '.$operator. ' ('.implode(', ', $fgroup).')';
-        }   
+        }
 
         $fk = 'f'.$this->expressionCounter++;
         $data[$fk] = $fValue;
 
         return $this->grammarEscape($field).' '.$operator.' :'.$fk;
 
-        
+
     }
 
     public function grammarInsert($collectionName, $data)
     {
-
         $fields = array();
         $placeholders = array();
 
@@ -218,6 +217,7 @@ abstract class SQLDialect
                 $k = '_'.substr($key, 1);
                 $record[$k] = $value;
                 $sets[] = $k.' = :'.$k;
+
                 unset($record[$key]);
             } else {
                 $k = $key;

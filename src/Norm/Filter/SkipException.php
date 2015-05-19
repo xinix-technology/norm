@@ -1,9 +1,5 @@
-<?php
+<?php namespace Norm\Filter;
 
-namespace Norm\Filter;
+use RuntimeException;
 
-class SkipException extends \RuntimeException {
-    // public function __construct() {
-    //     parent::__construct('');
-    // }
-}
+class SkipException extends RuntimeException { }
