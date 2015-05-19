@@ -51,4 +51,14 @@ class SqliteDialect extends SQLDialect
 
         return $sql;
     }
+
+
+    public function grammarDistinct(Cursor $cursor,$key){
+        $sql = "FROM {$cursor->getCollection()->getName()}";
+        $sql = 'SELECT DISTINCT('. $key .') AS c '.$sql;
+
+        return $sql;
+
+    }
+
 }

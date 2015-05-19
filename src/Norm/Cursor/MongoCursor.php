@@ -236,11 +236,14 @@ class MongoCursor extends Cursor
         }
     }
 
+
     /**
      * {@inheritDoc}
      */
-    public function distinct($key)
-    {
-        throw new Exception('Unimplemented yet!');
+    public function distinct($key) {
+        $rawCollection = $this->connection->getRaw()->{$this->collection->getName()};
+        $result = $rawCollection->distinct($key);
+        return $result;
+
     }
 }
