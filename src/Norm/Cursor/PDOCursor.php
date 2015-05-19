@@ -331,6 +331,10 @@ class PDOCursor extends Cursor
 
     public function distinct($key)
     {
-        // n00p
+        $sql = $this->connection->getDialect()->grammarDistinct($this,$key);
+        $statement = $this->connection->getRaw()->prepare($sql);
+        $statement->execute(array());
+        return $statement;
+
     }
 }

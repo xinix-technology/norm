@@ -16,6 +16,7 @@ abstract class SQLDialect
     protected $expressionCounter = 0;
 
     abstract public function grammarCount(Cursor $cursor, $foundOnly, array &$data = array());
+    abstract public function grammarDistinct(Cursor $cursor, $key);
 
     public function __construct($connection)
     {
