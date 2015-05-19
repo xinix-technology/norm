@@ -62,13 +62,17 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
      *
      * @param array $criteria
      */
-    public function __construct(Collection $collection, array $criteria = array())
+    public function __construct(Collection $collection, $criteria = array())
     {
         $this->collection = $collection;
         $this->connection = $collection->getConnection();
 
         if (is_null($this->connection)) {
             throw new \Exception('[Norm/Cursor] Collection does not have connection, check your configuration!');
+        }
+
+        if ($criteria === null) {
+            $criteria = array();
         }
 
         $this->criteria = $this->translateCriteria($criteria);

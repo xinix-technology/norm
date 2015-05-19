@@ -19,6 +19,8 @@ class MySqlPDOConnectionTest extends AbstractConnectionTest
             'prefix' => 'mysql',
             'dbname' => 'test',
             'autoddl' => 'create',
+            'username' => 'root',
+            'password' => '',
         );
 
         $this->connection = new $Clazz($options);
