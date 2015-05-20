@@ -1,11 +1,11 @@
-<?php
-
-namespace Norm;
+<?php namespace Norm;
 
 use Closure;
 use Norm\Norm;
 use Exception;
+use ArrayAccess;
 use JsonKit\JsonKit;
+use JsonKit\JsonSerializer;
 
 /**
  * Base class for hookable implementation
@@ -16,7 +16,7 @@ use JsonKit\JsonKit;
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-class Model implements \JsonKit\JsonSerializer, \ArrayAccess
+class Model implements JsonSerializer, ArrayAccess
 {
 
     /**
@@ -27,8 +27,8 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      */
     const FETCH_ALL       = 'FETCH_ALL';
     const FETCH_RAW       = 'FETCH_RAW';
-    const FETCH_PUBLISHED = 'FETCH_PUBLISHED';
     const FETCH_HIDDEN    = 'FETCH_HIDDEN';
+    const FETCH_PUBLISHED = 'FETCH_PUBLISHED';
 
     /**
      * State of document
@@ -37,9 +37,9 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      * STATE_ATTACHED
      * STATE_REMOVED
      */
-    const STATE_DETACHED = 'STATE_DETACHED';
-    const STATE_ATTACHED = 'STATE_ATTACHED';
     const STATE_REMOVED  = 'STATE_REMOVED';
+    const STATE_ATTACHED = 'STATE_ATTACHED';
+    const STATE_DETACHED = 'STATE_DETACHED';
 
     /**
      * Collection object of model.
@@ -624,5 +624,41 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     public function getClass()
     {
         return $this->collection->getClass();
+    }
+
+    /**
+     * Set an attribute value
+     *
+     * @param string $index
+     * @param mized  $value
+     *
+     * @return void
+     */
+    public function __set($index, $value = '')
+    {
+        return $this->set($index, $value);
+    }
+
+    /**
+     * Get an attribute value
+     *
+     * @param string $index
+     * @param mixed  $default Default value if index doesn't exist
+     *
+     * @return mixed
+     */
+    public function __get($index)
+    {
+        return $this->get($index);
+    }
+
+   /**
+     * Convert your collection to JSON
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return json_encode($this->jsonSerialize());
     }
 }
