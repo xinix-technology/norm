@@ -173,8 +173,6 @@ abstract class SQLDialect
         $data[$fk] = $fValue;
 
         return $this->grammarEscape($field).' '.$operator.' :'.$fk;
-
-
     }
 
     public function grammarInsert($collectionName, $data)

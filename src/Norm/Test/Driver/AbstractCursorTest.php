@@ -27,6 +27,13 @@ abstract class AbstractCursorTest extends \PHPUnit_Framework_TestCase
             'first_name' => 'pendi',
             'last_name' => 'setiawan',
         ),
+        array(
+            'first_name' => 'wahyu',
+            'last_name' => 'pribadi',
+        ),array(
+            'first_name' => 'wahyu',
+            'last_name' => 'taufik',
+        ),
     );
 
     abstract public function getConnection();
@@ -117,7 +124,7 @@ abstract class AbstractCursorTest extends \PHPUnit_Framework_TestCase
         $limit = $cursor->limit();
 
         $message = 'Cursor::limit() expected count() to be 3';
-        $this->assertEquals(3, $cursor->count(), $message);
+        $this->assertEquals(count($this->fixtures), $cursor->count(), $message);
 
         $message = 'Cursor::limit() expected count(true) to be 1';
         $this->assertEquals(1, $cursor->count(true), $message);
@@ -139,10 +146,10 @@ abstract class AbstractCursorTest extends \PHPUnit_Framework_TestCase
         $skip = $cursor->skip();
 
         $message = 'Cursor::skip() expected count() to be 3';
-        $this->assertEquals(3, $cursor->count(), $message);
+        $this->assertEquals(count($this->fixtures), $cursor->count(), $message);
 
         $message = 'Cursor::skip() expected count(true) to be 1';
-        $this->assertEquals(2, $cursor->count(true), $message);
+        $this->assertEquals(count($this->fixtures) - 1, $cursor->count(true), $message);
 
         $message = 'Cursor::skip() expected return chainable object';
         $this->assertEquals($cursor, $result, $message);
