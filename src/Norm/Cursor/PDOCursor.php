@@ -194,7 +194,12 @@ class PDOCursor extends Cursor
         $sql = $this->connection->getDialect()->grammarDistinct($this,$key);
         $statement = $this->connection->getRaw()->prepare($sql);
         $statement->execute(array());
-        return $statement;
+
+        $result = array();
+        while($row = $statement->fetch(\PDO::FETCH_ASSOC)){
+            $result[] = $row[$key];
+        }
+        return $result;
 
     }
 }

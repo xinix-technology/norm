@@ -48,7 +48,7 @@ class MySQLDialect extends SQLDialect
 
     public function grammarDistinct(Cursor $cursor,$key){
         $sql = "FROM {$cursor->getCollection()->getName()}";
-        $sql = 'SELECT DISTINCT('. $key .') AS c '.$sql;
+        $sql = 'SELECT DISTINCT('. $key .') '.$sql;
 
         return $sql;
 
