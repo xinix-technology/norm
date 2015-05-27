@@ -88,7 +88,8 @@ class MongoConnectionTest extends AbstractConnectionTest
 
         $message = 'Connection::unmarshall() expected the instanceof ' +
             '\MongoDate converted to \Norm\Type\DateTime.';
-        $this->assertInstanceOf('Norm\\Type\\DateTime', $result['field_date'], $message);
+
+        $this->assertInstanceOf('\\DateTime', $result['field_date'], $message);
     }
 
     public function testMarshall()
