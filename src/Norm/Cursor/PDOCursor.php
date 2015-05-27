@@ -195,10 +195,6 @@ class PDOCursor extends Cursor
         $statement = $this->connection->getRaw()->prepare($sql);
         $statement->execute(array());
 
-        $result = array();
-        while($row = $statement->fetch(\PDO::FETCH_ASSOC)){
-            $result[] = $row[$key];
-        }
         return $result;
 
     }
