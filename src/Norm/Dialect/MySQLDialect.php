@@ -94,4 +94,33 @@ class MySQLDialect extends SQLDialect
 
         return $sql;
     }
+
+    //fix by januar : handle for field using  word syntax, just give  charater ` for field
+    public function grammarInsert($collectionName, $data)
+    {
+        $fields = array();
+        $placeholders = array();
+
+        foreach ($data as $key => $value) {
+            if ($key === '$id') {
+                continue;
+            }
+
+            if ($key[0] === '$') {
+                $k = '_'.substr($key, 1);
+                $data[$k] = $value;
+                unset($data[$key]);
+            } else {
+                $k = $key;
+                $sets[] = $k.' = :'.$k;
+            }
+
+            $fields[] = $this->grammarEscape($k);
+            $placeholders[] = ':'.$k;
+        }
+
+        $sql = 'INSERT INTO '.$this->grammarEscape($collectionName).' (`'.implode('`, `', $fields).'`) VALUES ('.implode(', ', $placeholders).')';
+        
+        return $sql;
+    }
 }
