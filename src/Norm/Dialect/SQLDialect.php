@@ -201,7 +201,6 @@ abstract class SQLDialect
         }
 
         $sql = 'INSERT INTO '.$this->grammarEscape($collectionName).' ('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).')';
-
         return $sql;
     }
 
