@@ -2,4 +2,6 @@
 
 use RuntimeException;
 
-class SkipException extends RuntimeException { }
+class SkipException extends RuntimeException
+{
+}

@@ -50,7 +50,8 @@ class Reference extends Field
         return $this->optionData();
     }
 
-    public function optionData() {
+    public function optionData()
+    {
         if (is_array($this['foreign'])) {
             return $this['foreign'];
         } elseif (is_callable($this['foreign'])) {

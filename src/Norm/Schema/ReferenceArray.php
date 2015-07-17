@@ -28,7 +28,8 @@ class ReferenceArray extends NormArray
         return $this;
     }
 
-    public function optionData() {
+    public function optionData()
+    {
         if (is_array($this['foreign'])) {
             return $this['foreign'];
         } elseif (is_callable($this['foreign'])) {
@@ -48,16 +49,20 @@ class ReferenceArray extends NormArray
         return $cursor;
     }
 
-    public function optionValue($entry)
+    public function optionValue($key, $entry)
     {
-        return is_scalar($entry) ? $entry : $entry[$this['foreignKey']];
+        if (is_scalar($entry)) {
+            return $key;
+        } else {
+            return $entry[$this['foreignKey']];
+        }
     }
 
-    public function optionLabel($entry)
+    public function optionLabel($key, $entry)
     {
         if (is_scalar($entry)) {
             $label = $entry;
-        } elseif (is_callable($this['foreignLabel'])) {
+        } elseif ($this['foreignLabel'] instanceof \Closure) {
             $getLabel = $this['foreignLabel'];
             $label = $getLabel($entry);
         } else {
@@ -65,6 +70,33 @@ class ReferenceArray extends NormArray
         }
 
         return $label;
+    }
+
+    public function formatReadonly($value, $entry = null)
+    {
+        $html = "<span class=\"field\">\n";
+        if (!empty($value)) {
+            foreach ($value as $key => $v) {
+                $foreignEntry = Norm::factory($this['foreign'])->findOne(array($this['foreignKey'] => $v));
+                if (is_string($this['foreignLabel'])) {
+                    $label = $foreignEntry[$this['foreignLabel']];
+                } elseif (is_callable($this['foreignLabel'])) {
+                    $getLabel = $this['foreignLabel'];
+                    $label = $getLabel($foreignEntry);
+                }
+                $html .= '<code>'.$label."</code>\n";
+            }
+        }
+        $html .= "</span>\n";
+        return $html;
+    }
+
+    public function formatInput($value, $entry = null)
+    {
+        return $this->render('_schema/reference_array/input', array(
+            'value' => $value,
+            'entry' => $entry,
+        ));
     }
 
     // public function prepare($value)

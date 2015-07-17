@@ -165,7 +165,6 @@ class MongoConnection extends Connection
         }
 
         foreach ($object as $key => &$value) {
-
             if ($value instanceof MongoDate) {
                 $value = new DateTime('@'.$value->sec);
             } elseif ($value instanceof MongoId) {

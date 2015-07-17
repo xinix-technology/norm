@@ -172,10 +172,12 @@ class NormController extends RestController
      */
     public function create()
     {
-        $entry = $this->collection->newInstance()->set($this->getCriteria());
-
         if ($this->request->isPost()) {
             try {
+                $entry = $this->collection->newInstance()->set($this->getCriteria());
+
+                $this->data['entry'] = $entry;
+
                 $result = $entry->set($this->request->getBody())->save();
 
                 h('notification.info', $this->clazz.' created.');
@@ -186,17 +188,20 @@ class NormController extends RestController
             } catch (Stop $e) {
                 throw $e;
             } catch (Exception $e) {
-
-                h('notification.error', $e);
+                // no more set notification.error since notificationmiddleware will
+                // write this later
+                // h('notification.error', $e);
 
                 h('controller.create.error', array(
                     'model' => $entry,
                     'error' => $e,
                 ));
+
+                // rethrow error to make sure notificationmiddleware know what todo
+                throw $e;
             }
         }
 
-        $this->data['entry'] = $entry;
     }
 
     /**
@@ -212,7 +217,9 @@ class NormController extends RestController
 
         try {
             $this->data['entry'] = $entry = $this->collection->findOne($id);
-        } catch (Exception $e) { }
+        } catch (Exception $e) {
+            // noop
+        }
 
         if (isset($entry)) {
             $found = true;
@@ -234,7 +241,9 @@ class NormController extends RestController
     {
         try {
             $entry = $this->collection->findOne($id);
-        } catch (Exception $e) { }
+        } catch (Exception $e) {
+            // noop
+        }
 
         if (is_null($entry)) {
             return $this->app->notFound();
@@ -285,7 +294,6 @@ class NormController extends RestController
         $id = explode(',', $id);
 
         if ($this->request->isPost() || $this->request->isDelete()) {
-
             $single = false;
             if (count($id) === 1) {
                 $single = true;
@@ -372,7 +380,6 @@ class NormController extends RestController
     public function routeModel($key)
     {
         if (! isset($this->routeModels[$key])) {
-
             $Clazz = Inflector::classify($key);
 
             $collection = Norm::factory($this->schema($key)->get('foreign'));

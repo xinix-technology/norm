@@ -35,6 +35,9 @@
  */
 namespace Norm\Filter;
 
+use Bono\Exception\BonoException;
+use Bono\Exception\INotifiedException;
+
 /**
  *
  * FilterException is official exception that raise on the failing of database
@@ -44,10 +47,10 @@ namespace Norm\Filter;
  * failing condition.
  *
  * The FilterException contains information of field context where the exception
- * raise and sub exceptions as array of exceptions raise on the same field context.
+ * raise and children exceptions as array of exceptions raise on the same field context.
  *
  */
-class FilterException extends \RuntimeException
+class FilterException extends BonoException implements INotifiedException
 {
     /**
      * Database field context where exception raise.
@@ -55,13 +58,6 @@ class FilterException extends \RuntimeException
      * @var string
      */
     protected $context;
-
-    /**
-     * Array of sub exceptions.
-     *
-     * @var array
-     */
-    protected $sub;
 
     /**
      * Arguments of the implementation.
@@ -102,7 +98,9 @@ class FilterException extends \RuntimeException
     {
         $this->formatMessage = $message;
 
-        parent::__construct($message, 400, $previousException);
+        $this->setStatus(400);
+
+        parent::__construct($message, $code, $previousException);
     }
 
     /**
@@ -119,24 +117,6 @@ class FilterException extends \RuntimeException
         }
 
         $this->context = $context;
-
-        return $this;
-    }
-
-    /**
-     * Set sub exceptions
-     *
-     * @param  array $sub Sub exceptions
-     *
-     * @return FilterException return self object to be chained
-     */
-    public function sub($sub = null)
-    {
-        if (is_null($sub)) {
-            return $this->sub;
-        }
-
-        $this->sub = $sub;
 
         return $this;
     }

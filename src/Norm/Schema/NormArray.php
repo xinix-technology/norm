@@ -9,7 +9,6 @@ class NormArray extends Field
 
     public function prepare($value)
     {
-
         if (empty($value)) {
             return new TypeArray();
         } elseif ($value instanceof TypeArray) {
@@ -38,11 +37,21 @@ class NormArray extends Field
 
     public function formatInput($value, $entry = null)
     {
-        return '<textarea name="'.$this['name'].'">'.$this->formatPlain($value, $entry).'</textarea>';
+        return $this->render('_schema/array/input', array(
+            'value' => $value,
+            'entry' => $entry,
+        ));
     }
 
     public function formatReadonly($value, $entry = null)
     {
-        return "<span class=\"field\"><pre style=\"margin:0\">".($this->formatPlain($value, $entry) ?: '&nbsp;')."</pre></span>";
+        $html = "<span class=\"field\">\n";
+        if (!empty($value)) {
+            foreach ($value as $key => $v) {
+                $html .= '<code>'.$v."</code>\n";
+            }
+        }
+        $html .= "</span>\n";
+        return $html;
     }
 }

@@ -61,7 +61,6 @@ class Filter
         }
 
         foreach ($schema as $k => $field) {
-
             if (is_null($field)) {
                 continue;
             }
@@ -167,8 +166,8 @@ class Filter
 
         if ($this->errors) {
             $e = new FilterException();
-
-            throw $e->sub($this->errors);
+            $e->setChildren($this->errors);
+            throw $e;
         }
 
         return $data;
@@ -289,5 +288,22 @@ class Filter
         }
 
         return $value;
+    }
+
+    public function filterRemoveEmpty($key, $value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+        $filtered = array_filter($value->toArray());
+        $value->set($filtered);
+        return $value;
+    }
+
+    public function filterDefault($key, $value, $data, $args)
+    {
+        if (empty($value)) {
+            return $args[0];
+        }
     }
 }

@@ -40,6 +40,11 @@ abstract class Collection implements JsonSerializer, ArrayAccess, Iterator, Coun
         }
     }
 
+    public function set($attributes)
+    {
+        $this->attributes = $attributes;
+    }
+
     /**
      * Perform json serialization of this implementation.
      *
@@ -138,7 +143,7 @@ abstract class Collection implements JsonSerializer, ArrayAccess, Iterator, Coun
      */
     public function valid()
     {
-        return $this->current();
+        return !is_null($this->key());
     }
 
     /**
