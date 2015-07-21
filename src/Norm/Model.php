@@ -457,7 +457,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         $schema = $this->collection->schema();
 
         foreach ($source as $key => $value) {
-            if (isset($schema[$key]) and ! $value === null) {
+            if (isset($schema[$key]) and isset($value)) {
                 $destination[$key] = $schema[$key]->toJSON($value);
             } else {
                 $destination[$key] = $value;

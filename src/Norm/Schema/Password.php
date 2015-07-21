@@ -8,7 +8,7 @@ class Password extends Field
 {
     public function toJSON($value)
     {
-        return '';
+        return null;
     }
 
     public function formatPlain($value, $entry = null)
@@ -42,12 +42,4 @@ class Password extends Field
             return new Secret($value);
         }
     }
-
-    // public function cell($value, $entry = null)
-    // {
-    //     if ($this->has('cellFormat')) {
-    //         return parent::cell($value, $entry);
-    //     }
-    //     return '*hidden*';
-    // }
 }

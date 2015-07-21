@@ -124,7 +124,10 @@ abstract class Connection extends Hookable
     }
 
     /**
-     * Unmarshall single object from data source to associative array. The unmarshall process is necessary due to different data type provided by data source. Proper unmarshall will make sure data from data source that will be consumed by Norm in the accepted form of data.
+     * Unmarshall single object from data source to associative array.
+     * The unmarshall process is necessary due to different data type provided
+     * by data source. Proper unmarshall will make sure data from data source
+     * that will be consumed by Norm in the accepted form of data.
      *
      * @see Norm\Connection::marshall()
      *
@@ -150,7 +153,9 @@ abstract class Connection extends Hookable
     }
 
     /**
-     * Marshal single object from norm to the proper data accepted by data source. Sometimes data source expects object to be persisted to it in specific form, this method will transform associative array from Norm into this specific form.
+     * Marshal single object from norm to the proper data accepted by data source.
+     * Sometimes data source expects object to be persisted to it in specific form,
+     * this method will transform associative array from Norm into this specific form.
      *
      * @see \Norm\Connection::unmarshall()
      *

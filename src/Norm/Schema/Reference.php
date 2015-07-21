@@ -52,9 +52,7 @@ class Reference extends Field
 
     public function optionData()
     {
-        if (is_array($this['foreign'])) {
-            return $this['foreign'];
-        } elseif (is_callable($this['foreign'])) {
+        if (!is_string($this['foreign'])) {
             return val($this['foreign']) ?: array();
         }
 
@@ -116,6 +114,18 @@ class Reference extends Field
 
     public function toJSON($value)
     {
+        if (!is_string($this['foreign'])) {
+            $foreign = val($this['foreign']);
+            if (isset($foreign[$value])) {
+                if (is_scalar($foreign[$value])) {
+                    return $value;
+                } else {
+                    return $foreign[$value];
+                }
+            }
+            return null;
+        }
+
         $foreignCollection = Norm::factory($this['foreign']);
 
         if (Norm::options('include')) {

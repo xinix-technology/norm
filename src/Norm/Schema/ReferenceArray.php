@@ -99,37 +99,30 @@ class ReferenceArray extends NormArray
         ));
     }
 
-    // public function prepare($value)
-    // {
+    public function toJSON($value)
+    {
+        if (!is_string($this['foreign'])) {
+            // FIXME should return translated value if non scalar foreign item
+            return $value;
+        }
 
-    //     if (empty($value)) {
-    //         return new TypeArray();
-    //     } elseif ($value instanceof TypeArray) {
-    //         return $value;
-    //     } elseif (is_string($value)) {
-    //         $value = json_decode($value, true);
-    //     }
+        $foreignCollection = Norm::factory($this['foreign']);
 
-    //     return new TypeArray($value);
-    // }
+        if (Norm::options('include')) {
+            $foreignKey = $this['foreignKey'];
 
-    // public function formatPlain($value, $entry = null)
-    // {
-    //     $value = $this->prepare($value);
-    //     if (isset($value)) {
-    //         // TODO this checking should available on JsonKit
-    //         // if (substr(phpversion(), 0, 3) === '5.3') {
-    //         //     $value = json_encode($value->toArray(), JSON_PRETTY_PRINT);
-    //         // } else {
-    //         $value = json_encode($value->toArray());
-    //         // }
-    //     }
+            $newValue = array();
+            foreach ($value as $k => $v) {
+                if (is_null($foreignKey)) {
+                    $newValue[] = $foreignCollection->findOne($v);
+                } else {
+                    $newValue[] = $foreignCollection->findOne(array($this['foreignKey'] => $v));
+                }
+            }
 
-    //     return $value;
-    // }
+            $value = $newValue;
+        }
 
-    // public function formatInput($value, $entry = null)
-    // {
-    //     return '<textarea name="'.$this['name'].'">'.$this->formatPlain($value, $entry).'</textarea>';
-    // }
+        return $value;
+    }
 }
