@@ -172,11 +172,14 @@ class NormController extends RestController
      */
     public function create()
     {
-        $entry = $this->collection->newInstance()->set($this->getCriteria());
+        
 
         
         if ($this->request->isPost()) {
             try {
+                $entry = $this->collection->newInstance()->set($this->getCriteria());
+
+                $this->data['entry'] = $entry;
                 $result = $entry->set($this->request->getBody())->save();
 
                 h('notification.info', $this->clazz.' created.');
@@ -201,7 +204,7 @@ class NormController extends RestController
             }
         }
 
-        $this->data['entry'] = $entry;
+        
 
     }
 
