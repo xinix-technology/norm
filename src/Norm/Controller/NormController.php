@@ -175,6 +175,8 @@ class NormController extends RestController
         
         $entry = $this->collection->newInstance()->set($this->getCriteria());
         
+        $this->data['entry'] = $entry;
+        
         if ($this->request->isPost()) {
             try {
                 $result = $entry->set($this->request->getBody())->save();
@@ -201,7 +203,7 @@ class NormController extends RestController
             }
         }
 
-        $this->data['entry'] = $entry;
+        
 
     }
 
