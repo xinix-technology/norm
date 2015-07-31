@@ -305,5 +305,7 @@ class Filter
         if (empty($value)) {
             return $args[0];
         }
+
+        return $value;
     }
 }
