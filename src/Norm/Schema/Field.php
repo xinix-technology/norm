@@ -106,7 +106,6 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
             if (is_string($filter)) {
                 $filter = explode('|', $filter);
                 foreach ($filter as $f) {
-
                     $baseF = explode(':', trim($f));
                     $baseF = $baseF[0];
                     $this['filter'.strtoupper($baseF[0]).substr($baseF, 1)] = true;
@@ -141,22 +140,22 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
         return $this->attributes[$k];
     }
 
-    public function offsetExists ($offset)
+    public function offsetExists($offset)
     {
         return $this->has($offset);
     }
 
-    public function offsetGet ($offset)
+    public function offsetGet($offset)
     {
         return $this->get($offset);
     }
 
-    public function offsetSet ($offset, $value)
+    public function offsetSet($offset, $value)
     {
         $this->set($offset, $value);
     }
 
-    public function offsetUnset ($offset)
+    public function offsetUnset($offset)
     {
         unset($this->attributes[$offset]);
     }

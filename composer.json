@@ -26,7 +26,7 @@
         "ramsey/uuid": "~2.8"
     },
     "require-dev": {
-        "phpunit/phpunit": "~4.6",
+        "phpunit/phpunit": "*",
         "guzzlehttp/guzzle": "~5.0"
     },
     "autoload": {

@@ -9,6 +9,46 @@ use Norm\Type\NormArray as TypeArray;
 class ReferenceArray extends NormArray
 {
 
+    public function prepare($value)
+    {
+        if (is_array($value) || $value instanceof TypeArray) {
+            $newValue = array();
+            foreach ($value as $k => $v) {
+                $newValue[] = $this->prepareItem($v);
+            }
+            $value = $newValue;
+        }
+
+        if (empty($value)) {
+            return new TypeArray();
+        } elseif ($value instanceof TypeArray) {
+            return $value;
+        } elseif (is_string($value)) {
+            $value = json_decode($value, true);
+        }
+
+        return new TypeArray($value);
+    }
+
+    protected function prepareItem($value)
+    {
+        if (is_scalar($value) || is_array($this['foreign']) || is_callable($this['foreign'])) {
+            return $value;
+        }
+
+        if (isset($value['$id'])) {
+            $item =  Norm::factory($this['foreign'])->findOne(array(
+                $this['foreignKey'] => $value[$this['foreignKey']]
+            ));
+            return $item[$this['foreignKey']];
+        } else {
+            $item = Norm::factory($this['foreign'])->newInstance();
+            $item->set($value);
+            $item->save();
+            return $item[$this['foreignKey']];
+        }
+    }
+
     public function to($foreign, $foreignKey = null, $foreignLabel = null)
     {
         $argc = func_num_args();

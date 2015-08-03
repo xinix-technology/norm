@@ -18,7 +18,7 @@ class File extends Object
 
             $fileMeta['bucket'] = $bucket;
 
-            switch($fileMeta['error']) {
+            switch ($fileMeta['error']) {
                 case UPLOAD_ERR_INI_SIZE:
                 case UPLOAD_ERR_FORM_SIZE:
                     throw new \Exception('The uploaded file exceeds allowed file size.');
