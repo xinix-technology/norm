@@ -94,8 +94,8 @@ class Reference extends Field
 
     public function prepare($value)
     {
-        if ($value instanceof \Norm\Model) {
-            $value = $value->getId();
+        if (isset($value['$id']) || $value instanceof \Norm\Model) {
+            $value = $value[$this['foreignKey']];
         }
 
         if (empty($value)) {

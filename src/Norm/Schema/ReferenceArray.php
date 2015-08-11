@@ -37,16 +37,20 @@ class ReferenceArray extends NormArray
         }
 
         if (isset($value['$id'])) {
-            $item =  Norm::factory($this['foreign'])->findOne(array(
-                $this['foreignKey'] => $value[$this['foreignKey']]
-            ));
-            return $item[$this['foreignKey']];
+            // $item =  Norm::factory($this['foreign'])->findOne(array(
+            //     $this['foreignKey'] => $value[$this['foreignKey']]
+            // ));
+            if (isset($value[$this['foreignKey']])) {
+                return $value[$this['foreignKey']];
+            }
         } else {
             $item = Norm::factory($this['foreign'])->newInstance();
             $item->set($value);
             $item->save();
             return $item[$this['foreignKey']];
         }
+
+        return null;
     }
 
     public function to($foreign, $foreignKey = null, $foreignLabel = null)
