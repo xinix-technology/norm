@@ -123,4 +123,104 @@ class MySQLDialect extends SQLDialect
         
         return $sql;
     }
+
+
+    public function grammarExpression($key, $value, $collection, &$data)
+    {
+        if ($key === '!or' || $key === '!and') {
+            $wheres = array();
+            foreach ($value as $subValues) {
+                $subWheres = array();
+
+                foreach ($subValues as $k => $v) {
+                    $subWheres[] = $this->grammarExpression($k, $v, $collection, $data);
+                }
+
+                switch (count($subWheres)) {
+                    case 0:
+                        break;
+                    case 1:
+                        $wheres[] = implode(' AND ', $subWheres);
+                        break;
+                    default:
+                        $wheres[] = '('.implode(' AND ', $subWheres).')';
+                        break;
+                }
+            }
+
+            return '('.implode(' '.strtoupper(substr($key, 1)).' ', $wheres).')';
+        }
+
+        $splitted = explode('!', $key, 2);
+
+        $field = $splitted[0];
+
+        $schema = $collection->schema($field);
+
+        if ($field == '$id') {
+            $field = 'id';
+        } elseif (strlen($field) > 0 && $field[0] === '$') {
+            $field = '_'.substr($field, 1);
+        }
+
+        $operator = '=';
+        $multiValue = false;
+        $fValue = $value;
+
+        if (isset($splitted[1])) {
+            switch ($splitted[1]) {
+                case 'like':
+                    $operator = 'LIKE';
+                    $fValue = "%$value%";
+                    break;
+                case 'lte':
+                    $operator = '<=';
+                    break;
+                case 'lt':
+                    $operator = '<';
+                    break;
+                case 'gte':
+                    $operator = '>=';
+                    break;
+                case 'gt':
+                    $operator = '>';
+                    break;
+                case 'regex':
+                    throw new Exception('Operator regex is not supported to query.');
+                case 'in':
+                case 'nin':
+                    $operator = $splitted[1];
+                break;
+
+                default:
+                    throw new Exception('Operator regex is not supported to query.');
+            }
+        }
+
+        //fix me : change from grammar expresiion old to new grammar expresiion for operator in or nin
+        if($operator == 'in' || $operator == 'nin') {
+            $fgroup = array();
+
+            foreach ($value as $k => $v) {
+                $v1 = $v;
+
+                if ($v instanceof Model) {
+                    $v1 = $v['$id'];
+                }
+
+                $this->expressionCounter++;
+                $data['f'.$this->expressionCounter] = $v1;
+                $fgroup[] = ':f'.$this->expressionCounter;
+            }
+
+            return '`'.$this->grammarEscape($field).'` '.$operator. ' ('.implode(', ', $fgroup).')';
+        }
+
+        $fk = 'f'.$this->expressionCounter++;
+        $data[$fk] = $fValue;s
+
+        return '`'.$this->grammarEscape($field).'` '.$operator.' :'.$fk;
+
+
+    }
 }
