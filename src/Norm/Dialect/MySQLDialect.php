@@ -217,7 +217,7 @@ class MySQLDialect extends SQLDialect
         }
 
         $fk = 'f'.$this->expressionCounter++;
-        $data[$fk] = $fValue;s
+        $data[$fk] = $fValue;
 
         return '`'.$this->grammarEscape($field).'` '.$operator.' :'.$fk;
 
