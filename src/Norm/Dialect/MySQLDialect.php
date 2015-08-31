@@ -153,7 +153,7 @@ class MySQLDialect extends SQLDialect
 
         $splitted = explode('!', $key, 2);
 
-        $field = $splitted[0];
+        $field = trim($splitted[0]);
 
         $schema = $collection->schema($field);
 
