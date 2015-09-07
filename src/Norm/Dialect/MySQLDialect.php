@@ -153,7 +153,7 @@ class MySQLDialect extends SQLDialect
 
         $splitted = explode('!', $key, 2);
 
-        $field = $splitted[0];
+        $field = trim($splitted[0]);
 
         $schema = $collection->schema($field);
 
@@ -217,7 +217,7 @@ class MySQLDialect extends SQLDialect
         }
 
         $fk = 'f'.$this->expressionCounter++;
-        $data[$fk] = $fValue;s
+        $data[$fk] = $fValue;
 
         return '`'.$this->grammarEscape($field).'` '.$operator.' :'.$fk;
 
