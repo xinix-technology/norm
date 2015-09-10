@@ -2,7 +2,7 @@
 
 namespace Norm\Observer;
 
-class Nested
+class Nestable
 {
     public function saved($model)
     {

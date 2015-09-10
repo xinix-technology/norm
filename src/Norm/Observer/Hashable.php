@@ -1,6 +1,6 @@
 <?php namespace Norm\Observer;
 
-class Hashed
+class Hashable
 {
     protected $options = array(
         'fields'  => array('password'),
@@ -27,5 +27,4 @@ class Hashed
             }
         }
     }
-
 }

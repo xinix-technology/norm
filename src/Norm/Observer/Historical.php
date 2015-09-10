@@ -10,7 +10,9 @@ class Historical
     public function initialized($collection)
     {
         $schema = NormArray::create('$history')->set('transient', true)->read(function ($model) {
-            return Norm::factory($model->getClass().'History')->find(array('model_id' => $model['$id']))->sort(array('$created_time' => -1))->toArray(true);
+            return Norm::factory($model->getClass().'History')
+                ->find(array('model_id' => $model['$id']))->sort(array('$created_time' => -1))
+                ->toArray(true);
         });
         $collection->schema('$history', $schema);
     }
@@ -99,11 +101,4 @@ class Historical
         $history['type'] = 'remove';
         $history->save();
     }
-
-    // public function attached($model)
-    // {
-    //     $model->format('plain', 'history', function ($value, $entry) {
-    //         return Norm::factory($entry->getClass().'History')->find(array('model_id' => $entry['$id']));
-    //     });
-    // }
 }
