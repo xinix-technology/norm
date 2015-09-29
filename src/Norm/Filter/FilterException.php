@@ -35,8 +35,8 @@
  */
 namespace Norm\Filter;
 
-use Bono\Exception\BonoException;
-use Bono\Exception\INotifiedException;
+// use Bono\Exception\BonoException;
+// use Bono\Exception\INotifiedException;
 
 /**
  *
@@ -50,7 +50,8 @@ use Bono\Exception\INotifiedException;
  * raise and children exceptions as array of exceptions raise on the same field context.
  *
  */
-class FilterException extends BonoException implements INotifiedException
+class FilterException extends \RuntimeException
+// extends BonoException implements INotifiedException
 {
     /**
      * Database field context where exception raise.
@@ -74,6 +75,12 @@ class FilterException extends BonoException implements INotifiedException
     protected $formatMessage;
 
     /**
+     * FilterException is nested exception
+     * @var array
+     */
+    protected $children = array();
+
+    /**
      * Factory method to create new exception
      *
      * @param  string $message Message of new exception
@@ -94,11 +101,11 @@ class FilterException extends BonoException implements INotifiedException
      * @param integer    $code
      * @param \Exception $previousException
      */
-    public function __construct($message = '', $code = 0, $previousException = null)
+    public function __construct($message = 'Caught filter exception', $code = 0, $previousException = null)
     {
         $this->formatMessage = $message;
 
-        $this->setStatus(400);
+        // $this->setStatus(400);
 
         parent::__construct($message, $code, $previousException);
     }
@@ -134,5 +141,20 @@ class FilterException extends BonoException implements INotifiedException
         $this->message = call_user_func_array('sprintf', $params);
 
         return $this;
+    }
+
+    public function setChildren($children)
+    {
+        $this->children = $children;
+    }
+
+    public function getChildren()
+    {
+        return $this->children;
+    }
+
+    public function hasChildren()
+    {
+        return !empty($this->children);
     }
 }

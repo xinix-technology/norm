@@ -110,9 +110,9 @@ class NormProvider extends \Bono\Provider\Provider
         }
 
         // DEPRECATED: norm.databases deprecated
-        if (!isset($this->options['datasources'])) {
-            $this->options['datasources'] = $this->app->config('norm.databases');
-        }
+        // if (!isset($this->options['datasources'])) {
+        //     $this->options['datasources'] = $this->app->config('norm.databases');
+        // }
 
         if (!isset($this->options['datasources'])) {
             throw new \Exception('[Norm] No data source configuration. Append "norm.datasources" bono configuration!');

@@ -11,7 +11,8 @@ class CollectionResolver
         'collectionPath' => null,
     );
 
-    public function __construct($options) {
+    public function __construct($options)
+    {
         $this->options = array_merge($this->options, $options ?: array());
     }
 

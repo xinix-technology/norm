@@ -15,6 +15,12 @@ use Norm\Connection;
 class Norm
 {
     /**
+     * Is norm initialized?
+     * @var boolean
+     */
+    public static $initialized = false;
+
+    /**
      * Register all connections.
      *
      * @var array
@@ -50,8 +56,14 @@ class Norm
      *
      * @return void
      */
-    public static function init($config, $collectionConfig = array())
+    public static function init($config = null, $collectionConfig = array())
     {
+        if (static::$initialized) {
+            return;
+        }
+
+        static::$initialized = true;
+
         $first = null;
 
         static::$collectionConfig = $collectionConfig;
@@ -72,19 +84,9 @@ class Norm
 
             $Driver = $value['driver'];
 
-            static::$connections[$key] = new $Driver($value);
+            $c = new $Driver($value);
 
-            if (!static::$connections[$key] instanceof Connection) {
-                throw new Exception('Norm connection ['.$key.'] should be instance of Connection');
-            }
-
-            if (!$first) {
-                $first = $key;
-            }
-        }
-
-        if (!static::$defaultConnection) {
-            static::$defaultConnection = $first;
+            static::registerConnection($key, $c);
         }
     }
 
@@ -200,6 +202,25 @@ class Norm
         }
         if (isset(static::$connections[$connectionName])) {
             return static::$connections[$connectionName];
+        }
+    }
+
+    /**
+     * Register new connection
+     * @param  [type] $name       [description]
+     * @param  [type] $connection [description]
+     * @return [type]             [description]
+     */
+    public static function registerConnection($name, $connection)
+    {
+        static::$connections[$name] = $connection;
+
+        if (!static::$connections[$name] instanceof Connection) {
+            throw new Exception('Norm connection ['.$name.'] should be instance of Connection');
+        }
+
+        if (!static::$defaultConnection) {
+            static::$defaultConnection = $name;
         }
     }
 
