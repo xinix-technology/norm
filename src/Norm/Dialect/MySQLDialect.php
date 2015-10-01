@@ -223,4 +223,30 @@ class MySQLDialect extends SQLDialect
 
 
     }
+
+    public function grammarUpdate($collectionName, $data)
+    {
+        $sets = array();
+        foreach ($data as $key => $value) {
+            if ($key === '$id') {
+                unset($data['$id']);
+                continue;
+            }
+
+            if ($key[0] === '$') {
+                $k = '_'.substr($key, 1);
+                $record[$k] = $value;
+                $sets[] = '`'.$k.'` = :'.$k;
+
+                unset($record[$key]);
+            } else {
+                $k = $key;
+                $sets[] = '`'.$k.'` = :'.$k;
+            }
+        }
+
+        $sql = 'UPDATE '.$this->grammarEscape($collectionName).' SET '.implode(', ', $sets) . ' WHERE id = :id';
+
+        return $sql;
+    }
 }
