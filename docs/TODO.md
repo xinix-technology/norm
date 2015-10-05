@@ -1,1 +1,7 @@
-- Cursor WILL HAVE (bulk) remove method.
+# GOAL
+
+- [ ] uncoupled between bono and norm
+
+# TODO
+
+- [ ]

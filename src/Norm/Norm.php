@@ -52,11 +52,10 @@ class Norm
      * Initialize framework from configuration. First connection registered from config will be the default connection.
      *
      * @param array $config
-     * @param array $collectionConfig
      *
      * @return void
      */
-    public static function init($config = null, $collectionConfig = array())
+    public static function init($options = [])
     {
         if (static::$initialized) {
             return;
@@ -64,29 +63,10 @@ class Norm
 
         static::$initialized = true;
 
-        $first = null;
+        static::$options = $options;
 
-        static::$collectionConfig = $collectionConfig;
-
-        if (empty($config)) {
-            return;
-        }
-
-        foreach ($config as $key => $value) {
-            $value['name'] = $key;
-
-            if (!isset($value['driver'])) {
-                throw new Exception(
-                    '[Norm] Cannot instantiate connection "'.$key.
-                    '", Driver "'.@$value['driver'].'" not found!'
-                );
-            }
-
-            $Driver = $value['driver'];
-
-            $c = new $Driver($value);
-
-            static::registerConnection($key, $c);
+        if (isset($options['collections'])) {
+            static::$collectionConfig = $options['collections'];
         }
     }
 
@@ -100,21 +80,43 @@ class Norm
      *
      * @return mixed
      */
-    public static function options($key, $value = ':get:')
+    public static function options($key, $value = null)
     {
-        if (is_array($key)) {
-            foreach ($key as $k => $v) {
-                static::$options($k, $v);
+
+        if (func_num_args() === 1) {
+            if (is_array($key)) {
+                foreach ($key as $k => $v) {
+                    static::$options($k, $v);
+                }
+            } else {
+                return isset(static::$options[$key]) ? static::$options[$key] : null;
             }
-
-            return;
+        } else {
+            static::$options[$key] = $value;
         }
+    }
 
-        if ($value === ':get:') {
-            return isset(static::$options[$key]) ? static::$options[$key] : null;
+    public static function render($template, $context = array())
+    {
+        try {
+            $renderer = Norm::options('renderer');
+            if (is_null($renderer)) {
+                throw new \Exception('Unset renderer for Norm');
+            }
+            return $renderer($template, $context);
+        } catch (\Exception $e) {
+            ob_end_clean();
+            $templateFile = __DIR__.'/../../templates/'.$template.'.php';
+            if (is_readable($templateFile)) {
+                ob_start();
+                extract($context);
+                include $templateFile;
+                $html = ob_get_clean();
+                return $html;
+            } else {
+                throw $e;
+            }
         }
-
-        static::$options[$key] = $value;
     }
 
     /**
@@ -189,7 +191,8 @@ class Norm
     }
 
     /**
-     * Get connection by its connection name, if no connection name provided then the function will return default connection.
+     * Get connection by its connection name, if no connection name provided
+     * then the function will return default connection.
      *
      * @param string $connectionName
      *
@@ -234,8 +237,15 @@ class Norm
         static::$defaultConnection = null;
     }
 
+    public static function translate($message)
+    {
+        $translator = Norm::options('translator');
+        return empty($translator) ? $message : call_user_func_array($translator, func_get_args());
+    }
+
     /**
-     * All static call of method will be straight through to the default connection method call with the same method name.
+     * All static call of method will be straight through to the default
+     * connection method call with the same method name.
      *
      * @param  string $method     Method name
      * @param  array  $parameters Parameters

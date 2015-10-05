@@ -44,7 +44,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     /**
      * Collection object of model.
      *
-     * @var \Bono\Collection
+     * @var \Norm\Collection
      */
     protected $collection;
 

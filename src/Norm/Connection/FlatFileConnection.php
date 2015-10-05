@@ -127,8 +127,8 @@ class FlatFileConnection extends Connection
         if (func_num_args() === 1) {
             $files = glob($this->dbPath.'/'.$collection.'/*'); // get all file names
 
-            foreach($files as $file) { // iterate files
-                if(is_file($file)) {
+            foreach ($files as $file) { // iterate files
+                if (is_file($file)) {
                     unlink($file); // delete file
                 }
             }

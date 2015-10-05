@@ -4,6 +4,7 @@ namespace Norm\Schema;
 
 use ROH\Util\Inflector;
 use Norm\Filter\Filter;
+use Norm\Norm;
 
 abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
 {
@@ -162,8 +163,7 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
 
     public function label($plain = false)
     {
-
-        $label = l($this['label']);
+        $label = Norm::translate($this['label']);
         if ($plain) {
             return $label;
         }
@@ -190,19 +190,15 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
         if (!empty($value)) {
             $value = htmlentities($value);
         }
-        return '<input type="text" name="'.$this['name'].'" value="'.$value.'" placeholder="'.l($this['label']).
+        return '<input type="text" name="'.$this['name'].'" value="'.$value.'" placeholder="'.Norm::translate($this['label']).
             '" autocomplete="off" />';
     }
 
     public function render($template, array $context = array())
     {
-        $app = \Bono\App::getInstance();
-
         $context['self'] = $this;
 
-        $template = $app->theme->resolve($template);
-
-        return $app->theme->partial($template, $context);
+        return Norm::render($template, $context);
     }
 
     public function current()

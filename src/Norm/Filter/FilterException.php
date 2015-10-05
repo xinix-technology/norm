@@ -35,9 +35,6 @@
  */
 namespace Norm\Filter;
 
-// use Bono\Exception\BonoException;
-// use Bono\Exception\INotifiedException;
-
 /**
  *
  * FilterException is official exception that raise on the failing of database
@@ -111,6 +108,24 @@ class FilterException extends \RuntimeException
     }
 
     /**
+     * Get context
+     * @return [type] [description]
+     */
+    public function getContext()
+    {
+        return $this->context;
+    }
+
+    /**
+     * Set context
+     * @param [type] $context [description]
+     */
+    public function setContext($context)
+    {
+        $this->context = $context;
+    }
+
+    /**
      * Set field context of exception
      *
      * @param string $context The field context
@@ -119,11 +134,11 @@ class FilterException extends \RuntimeException
      */
     public function context($context = null)
     {
-        if (is_null($context)) {
-            return $this->context;
+        if (func_num_args() === 0) {
+            return $this->getContext();
         }
 
-        $this->context = $context;
+        $this->setContext($context);
 
         return $this;
     }

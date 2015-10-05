@@ -49,7 +49,8 @@ class BonoConnection extends Connection
      *
      * @return array
      */
-    public function restGet($cursor) {
+    public function restGet($cursor)
+    {
         if ($cursor instanceof Cursor) {
             $name = $cursor->getCollection()->getName();
             $criteria = $cursor->getCriteria();

@@ -81,7 +81,8 @@ class OCIConnection extends Connection
     }
 
     /**
-     * Sync data to database. If it's new data, we insert it as new document, otherwise, if the document exists, we just update it.
+     * Sync data to database. If it's new data, we insert it as new document,
+     * otherwise, if the document exists, we just update it.
      *
      * @param Collection $collection
      * @param Model $model
