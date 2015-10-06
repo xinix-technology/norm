@@ -4,7 +4,6 @@ namespace Norm\Schema;
 
 use Norm\Norm;
 use Norm\Model;
-use Bono\App;
 
 class Reference extends Field
 {

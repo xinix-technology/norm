@@ -2,7 +2,6 @@
 
 namespace Norm\Schema;
 
-use Bono\App;
 use Norm\Norm;
 use Norm\Type\NormArray as TypeArray;
 
