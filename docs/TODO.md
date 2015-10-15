@@ -1,7 +1,3 @@
-# GOAL
-
-- [ ] uncoupled between bono and norm
-
 # TODO
 
-- [ ]
+- [ ] define todo here
