@@ -10,7 +10,7 @@ class Historical
     public function initialized($collection)
     {
         $schema = NormArray::create('$history')->set('transient', true)->read(function ($model) {
-            return Norm::factory($model->getClass().'History')
+            return Norm::factory($model->getId().'History')
                 ->find(array('model_id' => $model['$id']))->sort(array('$created_time' => -1))
                 ->toArray(true);
         });
@@ -19,7 +19,7 @@ class Historical
 
     public function saved($model)
     {
-        $histCollection = Norm::factory($model->getClass().'History');
+        $histCollection = Norm::factory($model->getId().'History');
         $newValues = $model->dump();
         $oldValues = $model->previous();
 
@@ -80,7 +80,7 @@ class Historical
 
 
             foreach ($delta as $key => $value) {
-                $histCollection = Norm::factory($model->getClass().'History');
+                $histCollection = Norm::factory($model->getId().'History');
                 $history = $histCollection->newInstance();
                 $history['model_id'] = $model['$id'];
                 $history['type'] = 'update';
@@ -94,7 +94,7 @@ class Historical
 
     public function removed($model)
     {
-        $histCollection = Norm::factory($model->getClass().'History');
+        $histCollection = Norm::factory($model->getId().'History');
 
         $history = $histCollection->newInstance();
         $history['model_id'] = $model['$id'];

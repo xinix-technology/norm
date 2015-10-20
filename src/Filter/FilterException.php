@@ -5,7 +5,7 @@
  *
  * MIT LICENSE
  *
- * Copyright (c) 2013 PT Sagara Xinix Solusitama
+ * Copyright (c) 2015 PT Sagara Xinix Solusitama
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -27,7 +27,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @author      Ganesha <reekoheek@gmail.com>
- * @copyright   2013 PT Sagara Xinix Solusitama
+ * @copyright   2015 PT Sagara Xinix Solusitama
  * @link        http://xinix.co.id/products/norm
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm\Filter

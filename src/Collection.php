@@ -1,5 +1,6 @@
 <?php namespace Norm;
 
+use InvalidArgumentException;
 use Norm\Model;
 use Norm\Cursor;
 use Norm\Type\Object;
@@ -11,19 +12,19 @@ use JsonKit\JsonSerializer;
  * The collection class that wraps models.
  *
  * @author      Ganesha <reekoheek@gmail.com>
- * @copyright   2013 PT Sagara Xinix Solusitama
+ * @copyright   2015 PT Sagara Xinix Solusitama
  * @link        http://xinix.co.id/products/norm Norm
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-class Collection extends Hookable implements JsonSerializer
+class Collection extends Base implements JsonSerializer
 {
     /**
-     * Logical class name
+     * Logical id
      *
      * @var string
      */
-    protected $clazz;
+    protected $id;
 
     /**
      * Data source representative name
@@ -51,7 +52,7 @@ class Collection extends Hookable implements JsonSerializer
      *
      * @var array
      */
-    protected $options;
+    // protected $options;
 
     /**
      * Collection data filters
@@ -65,28 +66,36 @@ class Collection extends Hookable implements JsonSerializer
      *
      * @var array
      */
-    protected $cache;
+    // protected $cache;
+
+    protected $primaryKey = 'id';
+
+    protected $modelClass = Model::class;
 
     /**
      * Constructor
      *
      * @param array $options
      */
-    public function __construct(array $options = array())
+    public function __construct($options = array())
     {
         if (!isset($options['name'])) {
-            throw new \Exception('[Norm/Collection] Missing name, check collection configuration!');
+            throw new InvalidArgumentException('Missing name, check collection configuration!');
         }
 
-        $this->clazz = Inflector::classify($options['name']);
-        $this->name = Inflector::tableize($this->clazz);
+        // if (!isset($options['connection'])) {
+        //     throw new InvalidArgumentException('Missing connection, check collection configuration!');
+        // }
 
-        if (isset($options['connection'])) {
-            $this->connection = $options['connection'];
-            unset($options['connection']);
+        $this->name = Inflector::classify($options['name']);
+        $this->id = isset($options['id']) ? $options['id'] : Inflector::tableize($this->name);
+        $this->connection = isset($options['connection']) ? $options['connection'] : null;
 
-            $options['debug'] = $this->connection->option('debug') ? true : false;
+        if (isset($options['model'])) {
+            $this->modelClass = $options['model'];
         }
+
+        // $options['debug'] = $this->connection->option('debug') ? true : false;
 
         if (isset($options['observers'])) {
             foreach ($options['observers'] as $Observer => $observerOptions) {
@@ -102,38 +111,33 @@ class Collection extends Hookable implements JsonSerializer
             }
         }
 
-        if (isset($options['schema'])) {
-            $this->schema = new Object($options['schema']);
-            unset($options['schema']);
-        } else {
-            $this->schema = new Object();
-        }
-
-        $this->options = $options;
+        $this->schema = new Object(isset($options['schema']) ? $options['schema'] : []);
+        // $this->options = $options;
 
         $this->applyHook('initialized', $this);
 
-        $this->resetCache();
+        // $this->resetCache();
     }
 
     /**
-     * Getter of collection name. Collection name usually mapped to table name or collection name
+     * Getter of collection name. Collection name usually mapped to table name or
+     * collection name
      *
      * @return string
      */
-    public function getName()
-    {
-        return $this->name;
-    }
+    // public function getName()
+    // {
+    //     return $this->name;
+    // }
 
     /**
      * Getter of collection class
      *
      * @return string
      */
-    public function getClass()
+    public function getId()
     {
-        return $this->clazz;
+        return $this->id;
     }
 
     /**
@@ -141,10 +145,10 @@ class Collection extends Hookable implements JsonSerializer
      *
      * @return Norm\Connection
      */
-    public function getConnection()
-    {
-        return $this->connection;
-    }
+    // public function getConnection()
+    // {
+    //     return $this->connection;
+    // }
 
     /**
      * Getter of collection option
@@ -153,36 +157,42 @@ class Collection extends Hookable implements JsonSerializer
      *
      * @return mixed
      */
-    public function option($key = null)
-    {
-        if (func_num_args() ===  0) {
-            return $this->options;
-        } elseif (isset($this->options[$key])) {
-            return $this->options[$key];
-        }
-    }
+    // public function option($key = null)
+    // {
+    //     if (func_num_args() ===  0) {
+    //         return $this->options;
+    //     } elseif (isset($this->options[$key])) {
+    //         return $this->options[$key];
+    //     }
+    // }
 
     /**
-     * Getter and setter of collection schema. If there is no argument specified, the method will set and override schema. If argument specified, method will act as getter to specific field schema.
+     * Getter and setter of collection schema. If there is no argument specified,
+     * the method will set and override schema. If argument specified, method will
+     * act as getter to specific field schema.
      *
      * @param string $schema
      *
      * @return mixed
      */
-    public function schema($key = null, $value = null)
+    public function getSchema($key = null)
     {
-        $numArgs = func_num_args();
-        if (0 === $numArgs) {
+        if (0 === func_num_args()) {
             return $this->schema;
-        } elseif (1 === $numArgs) {
-            if (is_array($key)) {
-                $this->schema = new Object($key);
-            } elseif ($this->schema->offsetExists($key)) {
-                return $this->schema[$key];
-            }
+        } else {
+            return $this->schema[$key];
+        }
+    }
+
+    public function withSchema($key, $value = null)
+    {
+        if (1 === func_num_args()) {
+            $this->schema = new Object($key);
         } else {
             $this->schema[$key] = $value;
         }
+
+        return $this;
     }
 
     /**
@@ -196,14 +206,8 @@ class Collection extends Hookable implements JsonSerializer
      */
     public function prepare($key, $value, $schema = null)
     {
-        if (is_null($schema)) {
-            $schema = $this->schema($key);
-            if (is_null($schema)) {
-                return $value;
-                // throw new \Exception('Cannot prepare data to set. Schema not found for key ['.$key.'].');
-            }
-        }
-        return $schema->prepare($value);
+        $schema = $this->getSchema($key) ?: $schema;
+        return is_null($schema) ? $value : $schema->prepare($value);
     }
 
     /**
@@ -215,25 +219,17 @@ class Collection extends Hookable implements JsonSerializer
      */
     public function attach($document)
     {
-        if (isset($this->connection)) {
-            $document = $this->connection->unmarshall($document);
-        }
+        // should be marshalled from connection already
+        // if (isset($this->connection)) {
+        //     $document = $this->connection->unmarshall($document);
+        // }
 
         // wrap document as object instance to make sure it can be override by hooks
         $document = new Object($document);
 
         $this->applyHook('attaching', $document);
 
-        if (isset($this->options['model'])) {
-            $Model = $this->options['model'];
-            $model = new $Model($document->toArray(), array(
-                'collection' => $this,
-            ));
-        } else {
-            $model = new Model($document->toArray(), array(
-                'collection' => $this,
-            ));
-        }
+        $model = new $this->modelClass($this, $document->toArray());
 
         $this->applyHook('attached', $model);
 
@@ -259,7 +255,7 @@ class Collection extends Hookable implements JsonSerializer
         $criteria = new Object($criteria);
 
         $this->applyHook('searching', $criteria);
-        $cursor = $this->connection->query($this, $criteria->toArray());
+        $cursor = new Cursor($this, $criteria->toArray());
         $this->applyHook('searched', $cursor);
 
         return $cursor;
@@ -274,42 +270,28 @@ class Collection extends Hookable implements JsonSerializer
      */
     public function findOne($criteria = array())
     {
-        $model = $this->fetchCache($criteria);
-
-        if (is_null($model)) {
-            $cursor = $this->find($criteria);
-            $model = $cursor->getNext();
-            $this->rememberCache($criteria, $model);
-        }
-
-        return $model;
+        return $this->find($criteria)
+            ->limit(1)
+            ->first();
     }
 
     /**
      * Create new instance of model
      *
-     * @param array|\Norm\Model $cloned Model to clone
+     * @param array|Norm\Model $attributes Model to clone
      *
-     * @return \Norm\Model
+     * @return Norm\Model
      */
-    public function newInstance($cloned = array())
+    public function newInstance(array $attributes = [])
     {
-        if ($cloned instanceof Model) {
-            $cloned = $cloned->toArray(Model::FETCH_PUBLISHED);
-        }
-
-        if (isset($this->options['model'])) {
-            $Model = $this->options['model'];
-            return new $Model($cloned, array('collection' => $this));
-        } else {
-            return new Model($cloned, array('collection' => $this));
-        }
+        return new $this->modelClass($this, $attributes);
     }
 
     /**
-     * Filter model data with functions to cleanse, prepare and validate data. When key argument specified, filter will run partially for specified key only.
+     * Filter model data with functions to cleanse, prepare and validate data.
+     * When key argument specified, filter will run partially for specified key only.
      *
-     * @param \Norm\Model   $model
+     * @param Norm\Model   $model
      *
      * @param string $key Key field of model
      *
@@ -318,7 +300,7 @@ class Collection extends Hookable implements JsonSerializer
     public function filter(Model $model, $key = null)
     {
         if (is_null($this->filter)) {
-            $this->filter = Filter::fromSchema($this->schema());
+            $this->filter = Filter::fromSchema($this->getSchema());
         }
 
         $this->applyHook('filtering', $model, $key);
@@ -331,7 +313,7 @@ class Collection extends Hookable implements JsonSerializer
     /**
      * Save model to persistent state
      *
-     * @param \Norm\Model $model
+     * @param Norm\Model $model
      * @param array       $options
      *
      * @return void
@@ -351,21 +333,21 @@ class Collection extends Hookable implements JsonSerializer
             $this->applyHook('saving', $model, $options);
         }
 
-        $modified = $this->connection->persist($this, $model->dump());
-        $model->setId($modified['$id']);
+        $modified = $this->connection->persist($this->getId(), $model->dump());
+        $model->sync($modified);
 
         if ($options['observer']) {
             $this->applyHook('saved', $model, $options);
         }
 
         $model->sync($modified);
-        $this->resetCache();
+        // $this->resetCache();
     }
 
     /**
      * Remove single model
      *
-     * @param \Norm\Model $model
+     * @param Norm\Model $model
      *
      * @return void
      */
@@ -380,7 +362,7 @@ class Collection extends Hookable implements JsonSerializer
             }
 
             $this->applyHook('removing', $model);
-            $result = $this->connection->remove($this, $model);
+            $result = $this->connection->remove($this->getId(), $model['$id']);
 
             if ($result) {
                 $model->reset();
@@ -391,7 +373,8 @@ class Collection extends Hookable implements JsonSerializer
     }
 
     /**
-     * Override this to add new functionality of observer to the collection, otherwise you are not necessarilly to know about this.
+     * Override this to add new functionality of observer to the collection,
+     * otherwise you are not necessarilly to know about this.
      * @param object $observer
      *
      * @return void
@@ -450,10 +433,10 @@ class Collection extends Hookable implements JsonSerializer
      *
      * @return void
      */
-    protected function resetCache()
-    {
-        $this->cache = array();
-    }
+    // protected function resetCache()
+    // {
+    //     $this->cache = array();
+    // }
 
     /**
      * Put item in cache bags.
@@ -461,16 +444,16 @@ class Collection extends Hookable implements JsonSerializer
      * @method rememberCache
      *
      * @param mixed       $criteria
-     * @param \Norm\Model $model    [description]
+     * @param Norm\Model $model    [description]
      *
      * @return void
      */
-    protected function rememberCache($criteria, $model)
-    {
-        $ser = serialize($criteria);
+    // protected function rememberCache($criteria, $model)
+    // {
+    //     $ser = serialize($criteria);
 
-        $this->cache[$ser] = $model;
-    }
+    //     $this->cache[$ser] = $model;
+    // }
 
     /**
      * Get item from cache.
@@ -479,19 +462,19 @@ class Collection extends Hookable implements JsonSerializer
      *
      * @param object $criteria
      *
-     * @return void|\Norm\Model
+     * @return void|Norm\Model
      */
-    protected function fetchCache($criteria)
-    {
-        $ser = serialize($criteria);
+    // protected function fetchCache($criteria)
+    // {
+    //     $ser = serialize($criteria);
 
-        if (isset($this->cache[$ser])) {
-            return $this->cache[$ser];
-        }
-    }
+    //     if (isset($this->cache[$ser])) {
+    //         return $this->cache[$ser];
+    //     }
+    // }
 
     /**
-     * Json serialization of this class.
+     * Json serialization of this id.
      *
      * @method jsonSerialize
      *
@@ -499,6 +482,33 @@ class Collection extends Hookable implements JsonSerializer
      */
     public function jsonSerialize()
     {
-        return $this->clazz;
+        return $this->id;
+    }
+
+    public function __call($method, $args)
+    {
+        if (is_null($this->connection)) {
+            throw new \Exception('Connection not found');
+        }
+
+        return call_user_func_array([$this->connection, $method], $args);
+    }
+
+    public function cursorRead($context, $position = 0)
+    {
+        if (is_null($this->connection)) {
+            throw new \Exception('No connection available');
+        }
+        $row = $this->connection->cursorRead($context, $position);
+        return is_null($row) ? $row : $this->attach($row);
+    }
+
+    public function __debugInfo()
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'connectionClass' => get_class($this->connection)
+        ];
     }
 }

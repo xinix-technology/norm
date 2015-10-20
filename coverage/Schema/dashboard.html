@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for /Users/jafar/Workspaces/php/lib/norm/src/Schema</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../css/bootstrap.min.css" rel="stylesheet">
+  <link href="../css/nv.d3.min.css" rel="stylesheet">
+  <link href="../css/style.css" rel="stylesheet">
+  <!--[if lt IE 9]>
+  <script src="../js/html5shiv.min.js"></script>
+  <script src="../js/respond.min.js"></script>
+  <![endif]-->
+ </head>
+ <body>
+  <header>
+   <div class="container">
+    <div class="row">
+     <div class="col-md-12">
+      <ol class="breadcrumb">
+        <li><a href="../index.html">/Users/jafar/Workspaces/php/lib/norm/src</a></li>
+        <li><a href="index.html">Schema</a></li>
+        <li class="active">(Dashboard)</li>
+
+      </ol>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="String.php.html#5">String</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#8">ReferenceArray</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Reference.php.html#8">Reference</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Text.php.html#5">Text</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Token.php.html#5">Token</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="UnsafeText.php.html#5">UnsafeText</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="UnsafeString.php.html#5">UnsafeString</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Password.php.html#7">Password</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Object.php.html#7">Object</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#9">Field</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DateTime.php.html#5">DateTime</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Date.php.html#5">Date</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="File.php.html#5">File</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Float.php.html#5">Float</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NormArray.php.html#7">NormArray</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Integer.php.html#5">Integer</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Boolean.php.html#5">Boolean</a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Field.php.html#9">Field</a></td><td class="text-right">2450</td></tr>
+       <tr><td><a href="Reference.php.html#8">Reference</a></td><td class="text-right">1640</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#8">ReferenceArray</a></td><td class="text-right">1482</td></tr>
+       <tr><td><a href="File.php.html#5">File</a></td><td class="text-right">210</td></tr>
+       <tr><td><a href="DateTime.php.html#5">DateTime</a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="NormArray.php.html#7">NormArray</a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="Date.php.html#5">Date</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Object.php.html#7">Object</a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="Password.php.html#7">Password</a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Boolean.php.html#5">Boolean</a></td><td class="text-right">20</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Reference.php.html#11"><abbr title="Reference::to">to</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Password.php.html#35"><abbr title="Password::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Password.php.html#30"><abbr title="Password::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Reference.php.html#30"><abbr title="Reference::by">by</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Reference.php.html#52"><abbr title="Reference::optionData">optionData</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Reference.php.html#94"><abbr title="Reference::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Reference.php.html#80"><abbr title="Reference::optionLabel">optionLabel</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Reference.php.html#71"><abbr title="Reference::optionValue">optionValue</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Password.php.html#19"><abbr title="Password::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Password.php.html#14"><abbr title="Password::formatPlain">formatPlain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NormArray.php.html#38"><abbr title="NormArray::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NormArray.php.html#23"><abbr title="NormArray::formatPlain">formatPlain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NormArray.php.html#10"><abbr title="NormArray::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NormArray.php.html#46"><abbr title="NormArray::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Object.php.html#10"><abbr title="Object::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Password.php.html#9"><abbr title="Password::toJSON">toJSON</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Object.php.html#39"><abbr title="Object::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Object.php.html#24"><abbr title="Object::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Reference.php.html#114"><abbr title="Reference::toJSON">toJSON</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Reference.php.html#143"><abbr title="Reference::format">format</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="String.php.html#7"><abbr title="String::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#145"><abbr title="ReferenceArray::toJSON">toJSON</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#137"><abbr title="ReferenceArray::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Text.php.html#8"><abbr title="Text::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Text.php.html#13"><abbr title="Text::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="UnsafeText.php.html#7"><abbr title="UnsafeText::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="UnsafeString.php.html#7"><abbr title="UnsafeString::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Token.php.html#7"><abbr title="Token::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#118"><abbr title="ReferenceArray::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#104"><abbr title="ReferenceArray::optionLabel">optionLabel</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#11"><abbr title="ReferenceArray::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Reference.php.html#182"><abbr title="Reference::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Reference.php.html#156"><abbr title="Reference::formatPlain">formatPlain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#32"><abbr title="ReferenceArray::prepareItem">prepareItem</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#55"><abbr title="ReferenceArray::to">to</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#95"><abbr title="ReferenceArray::optionValue">optionValue</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#74"><abbr title="ReferenceArray::optionData">optionData</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Integer.php.html#7"><abbr title="Integer::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Float.php.html#7"><abbr title="Float::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#66"><abbr title="Field::hasReader">hasReader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#56"><abbr title="Field::read">read</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#51"><abbr title="Field::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#71"><abbr title="Field::format">format</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#99"><abbr title="Field::filter">filter</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#136"><abbr title="Field::get">get</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#130"><abbr title="Field::set">set</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#125"><abbr title="Field::has">has</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#37"><abbr title="Field::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#22"><abbr title="Field::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Date.php.html#8"><abbr title="Date::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Boolean.php.html#20"><abbr title="Boolean::formatPlain">formatPlain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Boolean.php.html#12"><abbr title="Boolean::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Date.php.html#20"><abbr title="Date::formatPlain">formatPlain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Date.php.html#30"><abbr title="Date::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DateTime.php.html#35"><abbr title="DateTime::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DateTime.php.html#23"><abbr title="DateTime::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DateTime.php.html#7"><abbr title="DateTime::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#144"><abbr title="Field::offsetExists">offsetExists</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#149"><abbr title="Field::offsetGet">offsetGet</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#219"><abbr title="Field::valid">valid</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#214"><abbr title="Field::key">key</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#209"><abbr title="Field::next">next</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#224"><abbr title="Field::rewind">rewind</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#229"><abbr title="Field::jsonSerialize">jsonSerialize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="File.php.html#70"><abbr title="File::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="File.php.html#65"><abbr title="File::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="File.php.html#7"><abbr title="File::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#204"><abbr title="Field::current">current</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#197"><abbr title="Field::render">render</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#164"><abbr title="Field::label">label</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#159"><abbr title="Field::offsetUnset">offsetUnset</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#154"><abbr title="Field::offsetSet">offsetSet</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#173"><abbr title="Field::toJSON">toJSON</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#178"><abbr title="Field::formatPlain">formatPlain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#188"><abbr title="Field::formatInput">formatInput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Field.php.html#183"><abbr title="Field::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Boolean.php.html#7"><abbr title="Boolean::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="File.php.html#7"><abbr title="File::prepare">prepare</abbr></a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="Field.php.html#71"><abbr title="Field::format">format</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Reference.php.html#94"><abbr title="Reference::prepare">prepare</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#11"><abbr title="ReferenceArray::prepare">prepare</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Reference.php.html#156"><abbr title="Reference::formatPlain">formatPlain</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#74"><abbr title="ReferenceArray::optionData">optionData</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Reference.php.html#114"><abbr title="Reference::toJSON">toJSON</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#32"><abbr title="ReferenceArray::prepareItem">prepareItem</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Reference.php.html#52"><abbr title="Reference::optionData">optionData</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Field.php.html#99"><abbr title="Field::filter">filter</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#118"><abbr title="ReferenceArray::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#145"><abbr title="ReferenceArray::toJSON">toJSON</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="DateTime.php.html#7"><abbr title="DateTime::prepare">prepare</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Object.php.html#10"><abbr title="Object::prepare">prepare</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Field.php.html#37"><abbr title="Field::__construct">__construct</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="NormArray.php.html#10"><abbr title="NormArray::prepare">prepare</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Reference.php.html#11"><abbr title="Reference::to">to</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Password.php.html#35"><abbr title="Password::prepare">prepare</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Reference.php.html#143"><abbr title="Reference::format">format</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#55"><abbr title="ReferenceArray::to">to</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#104"><abbr title="ReferenceArray::optionLabel">optionLabel</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Reference.php.html#80"><abbr title="Reference::optionLabel">optionLabel</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="NormArray.php.html#46"><abbr title="NormArray::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="DateTime.php.html#35"><abbr title="DateTime::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Field.php.html#22"><abbr title="Field::create">create</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="DateTime.php.html#23"><abbr title="DateTime::formatInput">formatInput</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Date.php.html#30"><abbr title="Date::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Date.php.html#8"><abbr title="Date::formatInput">formatInput</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Date.php.html#20"><abbr title="Date::formatPlain">formatPlain</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Field.php.html#56"><abbr title="Field::read">read</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Field.php.html#164"><abbr title="Field::label">label</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="NormArray.php.html#23"><abbr title="NormArray::formatPlain">formatPlain</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ReferenceArray.php.html#95"><abbr title="ReferenceArray::optionValue">optionValue</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Reference.php.html#30"><abbr title="Reference::by">by</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Boolean.php.html#20"><abbr title="Boolean::formatPlain">formatPlain</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Object.php.html#39"><abbr title="Object::formatInput">formatInput</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="File.php.html#65"><abbr title="File::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Reference.php.html#71"><abbr title="Reference::optionValue">optionValue</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Object.php.html#24"><abbr title="Object::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Field.php.html#136"><abbr title="Field::get">get</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Field.php.html#66"><abbr title="Field::hasReader">hasReader</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Field.php.html#188"><abbr title="Field::formatInput">formatInput</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Field.php.html#183"><abbr title="Field::formatReadonly">formatReadonly</abbr></a></td><td class="text-right">6</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="http://github.com/sebastianbergmann/php-code-coverage" target="_top">PHP_CodeCoverage 3.0.1</a> using <a href="http://php.net/" target="_top">PHP 5.6.9</a> and <a href="http://phpunit.de/">PHPUnit 5.0.6</a> at Tue Oct 20 12:12:44 WIB 2015.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="../js/jquery.min.js" type="text/javascript"></script>
+  <script src="../js/bootstrap.min.js" type="text/javascript"></script>
+  <script src="../js/holder.min.js" type="text/javascript"></script>
+  <script src="../js/d3.min.js" type="text/javascript"></script>
+  <script src="../js/nv.d3.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([17,0,0,0,0,0,0,0,0,0,0,0], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([77,0,0,0,0,0,0,0,0,0,0,1], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(key, y, e, graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[0,4,"<a href=\"Boolean.php.html#5\">Boolean<\/a>"],[0,9,"<a href=\"Date.php.html#5\">Date<\/a>"],[0,11,"<a href=\"DateTime.php.html#5\">DateTime<\/a>"],[0,49,"<a href=\"Field.php.html#9\">Field<\/a>"],[0,14,"<a href=\"File.php.html#5\">File<\/a>"],[0,1,"<a href=\"Float.php.html#5\">Float<\/a>"],[0,1,"<a href=\"Integer.php.html#5\">Integer<\/a>"],[0,11,"<a href=\"NormArray.php.html#7\">NormArray<\/a>"],[0,8,"<a href=\"Object.php.html#7\">Object<\/a>"],[0,7,"<a href=\"Password.php.html#7\">Password<\/a>"],[0,40,"<a href=\"Reference.php.html#8\">Reference<\/a>"],[0,38,"<a href=\"ReferenceArray.php.html#8\">ReferenceArray<\/a>"],[0,1,"<a href=\"String.php.html#5\">String<\/a>"],[0,2,"<a href=\"Text.php.html#5\">Text<\/a>"],[0,1,"<a href=\"Token.php.html#5\">Token<\/a>"],[0,1,"<a href=\"UnsafeString.php.html#5\">UnsafeString<\/a>"],[0,1,"<a href=\"UnsafeText.php.html#5\">UnsafeText<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(key, y, e, graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[0,1,"<a href=\"Boolean.php.html#7\">Boolean::prepare<\/a>"],[0,1,"<a href=\"Boolean.php.html#12\">Boolean::formatInput<\/a>"],[0,2,"<a href=\"Boolean.php.html#20\">Boolean::formatPlain<\/a>"],[0,3,"<a href=\"Date.php.html#8\">Date::formatInput<\/a>"],[0,3,"<a href=\"Date.php.html#20\">Date::formatPlain<\/a>"],[0,3,"<a href=\"Date.php.html#30\">Date::formatReadonly<\/a>"],[0,5,"<a href=\"DateTime.php.html#7\">DateTime::prepare<\/a>"],[0,3,"<a href=\"DateTime.php.html#23\">DateTime::formatInput<\/a>"],[0,3,"<a href=\"DateTime.php.html#35\">DateTime::formatReadonly<\/a>"],[0,3,"<a href=\"Field.php.html#22\">Field::create<\/a>"],[0,4,"<a href=\"Field.php.html#37\">Field::__construct<\/a>"],[0,1,"<a href=\"Field.php.html#51\">Field::prepare<\/a>"],[0,3,"<a href=\"Field.php.html#56\">Field::read<\/a>"],[0,2,"<a href=\"Field.php.html#66\">Field::hasReader<\/a>"],[0,7,"<a href=\"Field.php.html#71\">Field::format<\/a>"],[0,5,"<a href=\"Field.php.html#99\">Field::filter<\/a>"],[0,1,"<a href=\"Field.php.html#125\">Field::has<\/a>"],[0,1,"<a href=\"Field.php.html#130\">Field::set<\/a>"],[0,2,"<a href=\"Field.php.html#136\">Field::get<\/a>"],[0,1,"<a href=\"Field.php.html#144\">Field::offsetExists<\/a>"],[0,1,"<a href=\"Field.php.html#149\">Field::offsetGet<\/a>"],[0,1,"<a href=\"Field.php.html#154\">Field::offsetSet<\/a>"],[0,1,"<a href=\"Field.php.html#159\">Field::offsetUnset<\/a>"],[0,3,"<a href=\"Field.php.html#164\">Field::label<\/a>"],[0,1,"<a href=\"Field.php.html#173\">Field::toJSON<\/a>"],[0,1,"<a href=\"Field.php.html#178\">Field::formatPlain<\/a>"],[0,2,"<a href=\"Field.php.html#183\">Field::formatReadonly<\/a>"],[0,2,"<a href=\"Field.php.html#188\">Field::formatInput<\/a>"],[0,1,"<a href=\"Field.php.html#197\">Field::render<\/a>"],[0,1,"<a href=\"Field.php.html#204\">Field::current<\/a>"],[0,1,"<a href=\"Field.php.html#209\">Field::next<\/a>"],[0,1,"<a href=\"Field.php.html#214\">Field::key<\/a>"],[0,1,"<a href=\"Field.php.html#219\">Field::valid<\/a>"],[0,1,"<a href=\"Field.php.html#224\">Field::rewind<\/a>"],[0,1,"<a href=\"Field.php.html#229\">Field::jsonSerialize<\/a>"],[0,11,"<a href=\"File.php.html#7\">File::prepare<\/a>"],[0,2,"<a href=\"File.php.html#65\">File::formatReadonly<\/a>"],[0,1,"<a href=\"File.php.html#70\">File::formatInput<\/a>"],[0,1,"<a href=\"Float.php.html#7\">Float::prepare<\/a>"],[0,1,"<a href=\"Integer.php.html#7\">Integer::prepare<\/a>"],[0,4,"<a href=\"NormArray.php.html#10\">NormArray::prepare<\/a>"],[0,3,"<a href=\"NormArray.php.html#23\">NormArray::formatPlain<\/a>"],[0,1,"<a href=\"NormArray.php.html#38\">NormArray::formatInput<\/a>"],[0,3,"<a href=\"NormArray.php.html#46\">NormArray::formatReadonly<\/a>"],[0,4,"<a href=\"Object.php.html#10\">Object::prepare<\/a>"],[0,2,"<a href=\"Object.php.html#24\">Object::formatReadonly<\/a>"],[0,2,"<a href=\"Object.php.html#39\">Object::formatInput<\/a>"],[0,1,"<a href=\"Password.php.html#9\">Password::toJSON<\/a>"],[0,1,"<a href=\"Password.php.html#14\">Password::formatPlain<\/a>"],[0,1,"<a href=\"Password.php.html#19\">Password::formatInput<\/a>"],[0,1,"<a href=\"Password.php.html#30\">Password::formatReadonly<\/a>"],[0,3,"<a href=\"Password.php.html#35\">Password::prepare<\/a>"],[0,3,"<a href=\"Reference.php.html#11\">Reference::to<\/a>"],[0,2,"<a href=\"Reference.php.html#30\">Reference::by<\/a>"],[100,1,"<a href=\"Reference.php.html#46\">Reference::findOptions<\/a>"],[0,5,"<a href=\"Reference.php.html#52\">Reference::optionData<\/a>"],[0,2,"<a href=\"Reference.php.html#71\">Reference::optionValue<\/a>"],[0,3,"<a href=\"Reference.php.html#80\">Reference::optionLabel<\/a>"],[0,7,"<a href=\"Reference.php.html#94\">Reference::prepare<\/a>"],[0,6,"<a href=\"Reference.php.html#114\">Reference::toJSON<\/a>"],[0,3,"<a href=\"Reference.php.html#143\">Reference::format<\/a>"],[0,7,"<a href=\"Reference.php.html#156\">Reference::formatPlain<\/a>"],[0,1,"<a href=\"Reference.php.html#182\">Reference::formatInput<\/a>"],[0,7,"<a href=\"ReferenceArray.php.html#11\">ReferenceArray::prepare<\/a>"],[0,6,"<a href=\"ReferenceArray.php.html#32\">ReferenceArray::prepareItem<\/a>"],[0,3,"<a href=\"ReferenceArray.php.html#55\">ReferenceArray::to<\/a>"],[0,6,"<a href=\"ReferenceArray.php.html#74\">ReferenceArray::optionData<\/a>"],[0,2,"<a href=\"ReferenceArray.php.html#95\">ReferenceArray::optionValue<\/a>"],[0,3,"<a href=\"ReferenceArray.php.html#104\">ReferenceArray::optionLabel<\/a>"],[0,5,"<a href=\"ReferenceArray.php.html#118\">ReferenceArray::formatReadonly<\/a>"],[0,1,"<a href=\"ReferenceArray.php.html#137\">ReferenceArray::formatInput<\/a>"],[0,5,"<a href=\"ReferenceArray.php.html#145\">ReferenceArray::toJSON<\/a>"],[0,1,"<a href=\"String.php.html#7\">String::prepare<\/a>"],[0,1,"<a href=\"Text.php.html#8\">Text::formatReadonly<\/a>"],[0,1,"<a href=\"Text.php.html#13\">Text::formatInput<\/a>"],[0,1,"<a href=\"Token.php.html#7\">Token::formatInput<\/a>"],[0,1,"<a href=\"UnsafeString.php.html#7\">UnsafeString::prepare<\/a>"],[0,1,"<a href=\"UnsafeText.php.html#7\">UnsafeText::prepare<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>

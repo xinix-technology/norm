@@ -5,18 +5,20 @@ namespace Norm;
 use Closure;
 use Norm\Norm;
 use Exception;
+use ArrayAccess;
 use JsonKit\JsonKit;
+use JsonKit\JsonSerializer;
 
 /**
  * Base class for hookable implementation
  *
  * @author      Ganesha <reekoheek@gmail.com>
- * @copyright   2013 PT Sagara Xinix Solusitama
+ * @copyright   2015 PT Sagara Xinix Solusitama
  * @link        http://xinix.co.id/products/norm Norm
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-class Model implements \JsonKit\JsonSerializer, \ArrayAccess
+class Model implements JsonSerializer, ArrayAccess
 {
 
     /**
@@ -44,7 +46,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     /**
      * Collection object of model.
      *
-     * @var \Norm\Collection
+     * @var Norm\Collection
      */
     protected $collection;
 
@@ -67,14 +69,14 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      *
      * @var int|string
      */
-    protected $id = null;
+    protected $id;
 
     /**
      * State of current document.
      *
      * @var string
      */
-    protected $state = '';
+    protected $state;
 
     /**
      * Constructor.
@@ -82,11 +84,9 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      * @param array  $attributes Attributes of model.
      * @param array  $options    Options to construct the model.
      */
-    public function __construct(array $attributes = array(), $options = array())
+    public function __construct(Collection $collection, array $attributes = [], array $options = [])
     {
-        if (isset($options['collection'])) {
-            $this->collection = $options['collection'];
-        }
+        $this->collection = $collection;
 
         $this->reset();
         $this->sync($attributes);
@@ -95,12 +95,12 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     /**
      * Getter for collection
      *
-     * @return \Norm\Collection
+     * @return Norm\Collection
      */
-    public function getCollection()
-    {
-        return $this->collection;
-    }
+    // public function collection
+    // {
+    //     return $this->collection;
+    // }
 
     /**
      * Reset model to deleted state
@@ -128,13 +128,13 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      *
      * @return int|string
      */
-    public function setId($givenId)
-    {
-        if (!isset($this->id)) {
-            $this->id = $givenId;
-        }
-        return $this->id;
-    }
+    // public function setId($givenId)
+    // {
+    //     if (!isset($this->id)) {
+    //         $this->id = $givenId;
+    //     }
+    //     return $this->id;
+    // }
 
     /**
      * Determine if offset is exist in attributes.
@@ -163,7 +163,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
             return $this->getId();
         }
 
-        $schema = $this->schema($key);
+        $schema = $this->collection->getSchema($key);
         if (isset($schema) and $schema->hasReader()) {
             return $schema->read($this);
         }
@@ -186,13 +186,11 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         }
 
         foreach ($this->attributes as $key => $value) {
-            $schema = $this->schema($key);
+            $schema = $this->collection->getSchema($key);
 
-            if (! empty($schema['transient'])) {
-                continue;
+            if (empty($schema['transient'])) {
+                $attributes[$key] = $value;
             }
-
-            $attributes[$key] = $value;
         }
 
         return $attributes;
@@ -206,16 +204,16 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      * @param string $key
      * @param mixed  $value
      */
-    public function add($key, $value)
-    {
-        if (! isset($this->attributes[$key])) {
-            $this->attributes[$key] = array();
-        }
+    // public function add($key, $value)
+    // {
+    //     if (! isset($this->attributes[$key])) {
+    //         $this->attributes[$key] = array();
+    //     }
 
-        $this->attributes[$key][] = $value;
+    //     $this->attributes[$key][] = $value;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     /**
      * Set attribute(s).
@@ -232,7 +230,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
                 }
             }
         } elseif ($key === '$id') {
-            throw new Exception('[Norm/Model] Restricting set for $id.');
+            throw new Exception('Restricting model to set for $id.');
         } else {
             $this->attributes[$key] = $this->prepare($key, $value);
         }
@@ -247,45 +245,19 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      *
      * @param string $key
      *
-     * @return \Norm\Model
+     * @return Norm\Model
      */
     public function clear($key = null)
     {
         if (func_num_args() === 0) {
             $this->attributes = array();
         } elseif ($key === '$id') {
-            throw new Exception('[Norm/Model] Restricting clear for $id.');
+            throw new Exception('Restricting model to clear for $id.');
         } else {
             unset($this->attributes[$key]);
         }
 
         return $this;
-    }
-
-    /**
-     * Sync the existing attributes with new values. After update or insert, this method used to modify the existing attributes.
-     *
-     * @param array $attributes
-     *
-     * @return void
-     */
-    public function sync($attributes)
-    {
-        if (isset($attributes['$id'])) {
-            $this->state = static::STATE_ATTACHED;
-            $this->id = $attributes['$id'];
-        } else {
-            foreach ($this->schema() as $key => $field) {
-                if ($field->has('default')) {
-                    $attributes[$key] = $field['default'];
-                }
-            }
-
-            $this->state = static::STATE_DETACHED;
-        }
-
-        $this->set($attributes);
-        $this->populateOld();
     }
 
     /**
@@ -362,7 +334,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
         }
 
         if ($fetchType === Model::FETCH_ALL or $fetchType === Model::FETCH_HIDDEN) {
-            $attributes['$type'] = $this->getClass();
+            $attributes['$type'] = $this->getCollectionId();
             $attributes['$id'] = $this->getId();
 
             foreach ($this->attributes as $key => $value) {
@@ -470,18 +442,6 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     }
 
     /**
-     * Set original attributes.
-     *
-     * @method populateOld
-     *
-     * @return void
-     */
-    protected function populateOld()
-    {
-        $this->oldAttributes = $this->attributes ?: array();
-    }
-
-    /**
      * Get original attributes
      *
      * @method previous
@@ -532,14 +492,10 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      *
      * @return mixed
      */
-    public function schema($key = null)
-    {
-        if (func_num_args() === 0) {
-            return $this->collection->schema();
-        } else {
-            return $this->collection->schema($key);
-        }
-    }
+    // public function getSchema($key = null)
+    // {
+    //     return $this->getSchema($key);
+    // }
 
     /**
      * Get schema configuration by offset name.
@@ -550,16 +506,16 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
      *
      * @return mixed
      */
-    public function schemaByIndex($index)
-    {
-        $schema = array();
+    // public function schemaByIndex($index)
+    // {
+    //     $schema = array();
 
-        foreach ($this->collection->schema() as $value) {
-            $schema[] = $value;
-        }
+    //     foreach ($this->collection->schema() as $value) {
+    //         $schema[] = $value;
+    //     }
 
-        return (empty($schema[$index])) ? null : $schema[$index];
-    }
+    //     return (empty($schema[$index])) ? null : $schema[$index];
+    // }
 
     /**
      * Format the model to HTML file. Bind it's attributes to view.
@@ -589,8 +545,7 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
                 if ($formatter instanceof Closure) {
                     return $formatter($this);
                 } elseif (is_string($formatter)) {
-
-                    $result = preg_replace_callback('/{(\w+)}/', function($matches) {
+                    $result = preg_replace_callback('/{(\w+)}/', function ($matches) {
                         return $this->format($matches[1]);
                     }, $formatter);
 
@@ -617,12 +572,52 @@ class Model implements \JsonKit\JsonSerializer, \ArrayAccess
     /**
      * Get implementation name.
      *
-     * @method getClass
+     * @method getCollectionId
      *
      * @return string
      */
-    public function getClass()
+    public function getCollectionId()
     {
-        return $this->collection->getClass();
+        return $this->collection->getId();
+    }
+
+    /**
+     * Sync the existing attributes with new values. After update or insert,
+     * this method used to modify the existing attributes.
+     *
+     * @param array $attributes
+     *
+     * @return void
+     */
+    public function sync(array $attributes)
+    {
+        if (isset($attributes['$id'])) {
+            $this->state = static::STATE_ATTACHED;
+            $this->id = $attributes['$id'];
+        } else {
+            // TODO is it necessary, because we will use observer for default value
+            // foreach ($this->collection->getSchema() as $key => $field) {
+            //     if ($field->has('default')) {
+            //         $attributes[$key] = $field['default'];
+            //     }
+            // }
+
+            $this->state = static::STATE_DETACHED;
+        }
+
+        $this->set($attributes);
+        $this->populateOld();
+    }
+
+    /**
+     * Set original attributes.
+     *
+     * @method populateOld
+     *
+     * @return void
+     */
+    protected function populateOld()
+    {
+        $this->oldAttributes = $this->attributes ?: array();
     }
 }

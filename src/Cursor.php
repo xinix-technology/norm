@@ -1,31 +1,31 @@
 <?php namespace Norm;
 
+use Iterator;
+use Countable;
+use InvalidArgumentException;
 use JsonKit\JsonSerializer;
 
 /**
  * Cursor abstract class.
  *
  * @author      Ganesha <reekoheek@gmail.com>
- * @copyright   2013 PT Sagara Xinix Solusitama
+ * @copyright   2015 PT Sagara Xinix Solusitama
  * @link        http://xinix.co.id/products/norm Norm
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-abstract class Cursor implements \Iterator, \Countable, JsonSerializer
+class Cursor implements Iterator, Countable, JsonSerializer
 {
-    /**
-     * Collection implementation
-     *
-     * @var \Norm\Collection
-     */
-    protected $collection;
+    const SORT_ASC = 1;
+
+    const SORT_DESC = -1;
 
     /**
-     * Norm Connection implementation
+     * Norm Collection implementation
      *
-     * @var \Norm\Connection
+     * @var Norm\Collection
      */
-    protected $connection;
+    protected $collection;
 
     /**
      * Criteria
@@ -39,14 +39,14 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
      *
      * @var int
      */
-    protected $limit;
+    protected $limit = 0;
 
     /**
      * Number of document we want to skip when fetching a document.
      *
      * @var int
      */
-    protected $skip;
+    protected $skip = 0;
 
     /**
      * Sorts criteria
@@ -56,36 +56,33 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
     protected $sorts;
 
     /**
+     * Query match
+     * @var string
+     */
+    protected $match;
+
+    protected $position = 0;
+
+    protected $context;
+
+    /**
      * Constructor
      *
-     * @param \Norm\Collection $collection
+     * @param Norm\Collection $collection
      *
      * @param array $criteria
      */
-    public function __construct(Collection $collection, $criteria = array())
+    public function __construct(Collection $collection, array $criteria = [])
     {
         $this->collection = $collection;
-        $this->connection = $collection->getConnection();
-
-        if (is_null($this->connection)) {
-            throw new \Exception('[Norm/Cursor] Collection does not have connection, check your configuration!');
-        }
-
-        if ($criteria === null) {
-            $criteria = array();
-        }
-
-        $this->criteria = $this->translateCriteria($criteria);
+        $this->criteria = $criteria;
     }
 
-    /**
-     * Getter for collection
-     *
-     * @return Norm\Collection
-     */
-    public function getCollection()
+    // getter / setter *********************************************************
+
+    public function getCollectionId()
     {
-        return $this->collection;
+        return $this->collection->getId();
     }
 
     /**
@@ -99,41 +96,19 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
     }
 
     /**
-     * Return the next object to which this cursor points, and advance the cursor
-     *
-     * @return \Norm\Model
-     */
-    public function getNext()
-    {
-        $this->next();
-
-        return $this->current();
-    }
-
-    /**
-     * Serialize instance to json
-     *
-     * @return array
-     */
-    public function jsonSerialize()
-    {
-        return $this->toArray();
-    }
-
-
-    /**
      * When argument specified will set new limit otherwise will return existing limit
      *
      * @param integer $limit
      *
      * @return mixed When argument specified will return limit otherwise return chainable object
      */
-    public function limit($limit = 0)
+    public function getLimit()
     {
-        if (func_num_args() === 0) {
-            return $this->limit;
-        }
+        return $this->limit;
+    }
 
+    public function limit($limit)
+    {
         $this->limit = $limit;
 
         return $this;
@@ -146,12 +121,13 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
      *
      * @return mixed When argument specified will return skip otherwise return chainable object
      */
-    public function skip($skip = 0)
+    public function getSkip()
     {
-        if (func_num_args() === 0) {
-            return $this->skip;
-        }
+        return $this->skip;
+    }
 
+    public function skip($skip)
+    {
         $this->skip = $skip;
 
         return $this;
@@ -164,21 +140,14 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
      *
      * @return mixed When argument specified will return sorts otherwise return chainable object
      */
-    public function sort(array $sorts = array())
+    public function getSort()
     {
-        if (func_num_args() === 0) {
-            return $this->sorts;
-        }
+        return $this->sorts;
+    }
 
-        $this->sorts = array();
-
-        foreach ($sorts as $key => $value) {
-            if ($key[0] === '$') {
-                $key[0] = '_';
-            }
-
-            $this->sorts[$key] = $value;
-        }
+    public function sort(array $sorts)
+    {
+        $this->sorts = $sorts;
 
         return $this;
     }
@@ -188,29 +157,30 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
      *
      * @param string $q String to query
      *
-     * @return \Norm\Cursor Chainable object
+     * @return Norm\Cursor Chainable object
      */
-    public function match($q)
+    public function getMatch()
     {
-        if (is_null($q)) {
-            return $this;
-        }
+        return $this->match;
+    }
 
-        $orCriteria = array();
-
-        $schema = $this->collection->schema();
-
-        if (empty($schema)) {
-            throw new \Exception('[Norm\Cursor] Cannot use match for schemaless collection');
-        }
-
-        foreach ($schema as $key => $value) {
-            $orCriteria[] = array($key.'!like' => $q);
-        }
-
-        $this->criteria = $this->translateCriteria(array('!or' => $orCriteria));
+    public function match($match)
+    {
+        $this->match = $match;
 
         return $this;
+    }
+
+    // accessor ****************************************************************
+
+    /**
+     * Serialize instance to json
+     *
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
     }
 
     /**
@@ -222,36 +192,28 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
      */
     public function toArray($plain = false)
     {
-        $result = array();
-
+        $result = [];
         foreach ($this as $key => $value) {
             if ($plain) {
                 $result[] = $value->toArray();
             } else {
-                $result[] = $this->connection->unmarshall($value);
+                // throw new \Exception('why collection unmarshall here?');
+                // $result[] = $this->collection->unmarshall($value);
+                $result[] = $value;
             }
         }
-
         return $result;
     }
 
-    /**
-     * Return number of documents available. When foundOnly true will return found document only
-     *
-     * @param boolean $foundOnly
-     *
-     * @return integer
-     */
-    abstract public function count($foundOnly = false);
+    // behavior ****************************************************************
 
-    /**
-     * Translate criteria into accepted criteria for specific system.
-     *
-     * @param array $criteria Norm criteria
-     *
-     * @return mixed Specific system criteria
-     */
-    abstract public function translateCriteria(array $criteria = array());
+    public function getContext()
+    {
+        if (is_null($this->context)) {
+            $this->context = $this->collection->cursorFetch($this);
+        }
+        return $this->context;
+    }
 
     /**
      * Get specific distinct key from cursor result
@@ -260,5 +222,53 @@ abstract class Cursor implements \Iterator, \Countable, JsonSerializer
      *
      * @return array
      */
-    abstract public function distinct($key);
+    public function distinct($key)
+    {
+        return $this->collection->cursorDistinct($this, $key);
+    }
+
+    public function current()
+    {
+        return $this->collection->cursorRead($this->getContext(), $this->position);
+    }
+
+    public function next()
+    {
+        if ($this->valid()) {
+            $this->position++;
+        }
+    }
+
+    public function key()
+    {
+        return $this->position;
+    }
+
+    public function valid()
+    {
+
+        $row = $this->current();
+        return (is_null($row)) ? false : true;
+    }
+
+    public function rewind()
+    {
+        $this->position = 0;
+    }
+
+    public function count()
+    {
+        return $this->size(true);
+    }
+
+    public function size($respectLimitSkip = false)
+    {
+        return $this->collection->cursorSize($this, $respectLimitSkip);
+    }
+
+    public function first()
+    {
+        $this->rewind();
+        return $this->current();
+    }
 }
