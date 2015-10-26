@@ -38,7 +38,9 @@ class NormTest extends PHPUnit_Framework_TestCase
     {
         $norm = new Norm();
 
-        $resolver = $this->getMock('stdClass');
+        $resolver = function () {
+
+        };
         $retval = $norm->addResolver($resolver);
 
         $this->assertEquals($norm, $retval, '#addResolver should be chainable');
@@ -48,7 +50,7 @@ class NormTest extends PHPUnit_Framework_TestCase
     {
         $norm = new Norm();
 
-        $default = $this->getMock('stdClass');
+        $default = [];
         $retval = $norm->setDefault($default);
 
         $this->assertEquals($norm, $retval, '#setDefault should be chainable');
@@ -60,8 +62,9 @@ class NormTest extends PHPUnit_Framework_TestCase
             'first' => $this->getMock(Connection::class),
         ];
 
-        $default = $this->getMock('stdClass');
-        $resolver = $this->getMock('stdClass');
+        $default = [];
+        $resolver = function () {
+        };
 
         $norm = new Norm([
             'connections' => $connections,
@@ -78,16 +81,16 @@ class NormTest extends PHPUnit_Framework_TestCase
 
     public function testFactoryUseResolvers()
     {
-        $resolverHandlerMock = $this->getMock('stdClass', ['resolve']);
-        $resolverHandlerMock->expects($this->at(0))
+        $resolverHandler = $this->getMock('stdClass', ['resolve']);
+        $resolverHandler->expects($this->at(0))
              ->method('resolve');
-        $resolverHandlerMock->expects($this->at(1))
+        $resolverHandler->expects($this->at(1))
              ->method('resolve')->will($this->returnValue([]));
-        $resolverHandlerMock->expects($this->at(2))
+        $resolverHandler->expects($this->at(2))
              ->method('resolve');
 
-        $resolverWrapper = function ($id) use ($resolverHandlerMock) {
-            return call_user_func_array([$resolverHandlerMock, 'resolve'], func_get_args());
+        $resolverWrapper = function ($id) use ($resolverHandler) {
+            return call_user_func_array([$resolverHandler, 'resolve'], func_get_args());
         };
 
         $norm = new Norm([

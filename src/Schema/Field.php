@@ -46,6 +46,11 @@ abstract class Field extends UtilCollection
         $this->schema = $schema;
 
         $this['name'] = $name;
+
+        if ($this['name'][0] === '$') {
+            $this->hidden();
+        }
+
         if (is_null($this['label'])) {
             $this['label'] = Inflector::humanize($this['name']);
         }

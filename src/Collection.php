@@ -1,9 +1,8 @@
 <?php
 namespace Norm;
 
-// use JsonKit\JsonSerializer;
-use Exception;
 use InvalidArgumentException;
+use Norm\Exception\NormException;
 use Norm\Model;
 use Norm\Cursor;
 use Norm\Schema;
@@ -12,6 +11,7 @@ use ROH\Util\Options;
 use ROH\Util\Thing;
 use ROH\Util\Inflector;
 use ROH\Util\Collection as UtilCollection;
+use ROH\Util\Composition;
 
 /**
  * The collection class that wraps models.
@@ -22,10 +22,10 @@ use ROH\Util\Collection as UtilCollection;
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-class Collection extends Base
-// remove implementation of jsonserialize, if we need add again
-// implements JsonSerializer
+class Collection
 {
+    protected $compositions = [];
+
     protected $norm;
     /**
      * Logical id
@@ -116,21 +116,18 @@ class Collection extends Base
             $this->schema->withFormatter($options['format']);
         }
 
-
-        // $this->resetCache();
+        $context = new UtilCollection([
+            'collection' => $this,
+        ]);
+        $this->apply('initialize', $context);
     }
 
     public function withConnection(Connection $connection)
     {
-        $clone = clone $this;
-        $clone->connection = $connection;
+        $this->connection = $connection;
 
-        $context = new UtilCollection([
-            'collection' => $clone,
-        ]);
-        $this->apply('initialize', $context);
 
-        return $clone;
+        return $this;
     }
 
     /**
@@ -167,7 +164,7 @@ class Collection extends Base
     protected function getConnection()
     {
         if (is_null($this->connection)) {
-            throw new Exception('Connection not found');
+            throw new NormException('Connection not found');
         }
         return $this->connection;
     }
@@ -369,7 +366,7 @@ class Collection extends Base
         } else {
             // avoid remove empty model
             if (is_null($model)) {
-                throw new Exception('Cannot remove null model');
+                throw new NormException('Cannot remove null model');
             }
 
             $context = new UtilCollection([
@@ -448,7 +445,7 @@ class Collection extends Base
             return call_user_func_array([$this->norm, $method], $args);
         }
 
-        throw new \Exception('Undefined method or method handler: '. $method);
+        throw new InvalidArgumentException('Undefined method or method handler: '. $method);
     }
 
     public function cursorRead($context, $position = 0)
@@ -472,5 +469,33 @@ class Collection extends Base
             'name' => $this->name,
             'connectionClass' => $this->connection ? get_class($this->connection) : null,
         ];
+    }
+
+    public function compose($key, $value)
+    {
+        $this->getComposition($key)
+            ->compose($value);
+
+        return $this;
+    }
+
+    public function getComposition($key)
+    {
+        if (!isset($this->compositions[$key])) {
+            $this->compositions[$key] = new Composition();
+        }
+
+        return $this->compositions[$key];
+    }
+
+    public function apply($key, $context = null, $callback = null)
+    {
+        $composition = $this->getComposition($key);
+
+        if (func_num_args() > 2) {
+            $composition->withCore($callback);
+        }
+
+        return $composition->apply($context);
     }
 }

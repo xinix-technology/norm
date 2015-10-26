@@ -3,6 +3,9 @@ namespace Norm;
 
 use Exception;
 use InvalidArgumentException;
+use Iterator;
+use Countable;
+use JsonKit\JsonSerializer;
 
 /**
  * Cursor abstract class.
@@ -13,7 +16,7 @@ use InvalidArgumentException;
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-class Cursor implements CursorInterface
+class Cursor implements Iterator, Countable, JsonSerializer
 {
     const SORT_ASC = 1;
 
@@ -196,7 +199,6 @@ class Cursor implements CursorInterface
             if ($plain) {
                 $result[] = $value->toArray();
             } else {
-                // throw new Exception('why collection unmarshall here?');
                 // $result[] = $this->collection->unmarshall($value);
                 $result[] = $value;
             }

@@ -45,8 +45,6 @@ class PDO extends Connection
             ThePDO::ATTR_ERRMODE => ThePDO::ERRMODE_EXCEPTION,
             ThePDO::ATTR_EMULATE_PREPARES => false,
         ];
-
-        parent::__construct($options);
     }
 
     public function getRaw()

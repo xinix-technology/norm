@@ -1,7 +1,7 @@
 <?php
 namespace Norm;
 
-use Exception;
+use Norm\Exception\NormException;
 use Norm\Model;
 use Norm\Collection;
 use ROH\Util\Collection as UtilCollection;
@@ -104,7 +104,7 @@ class Schema extends UtilCollection
         $formatter = $this->getFormatter($format ?: '');
 
         if (is_null($formatter)) {
-            throw new Exception('Formatter '.$format.' not found');
+            throw new NormException('Formatter '.$format.' not found');
         }
 
         return $formatter($model);

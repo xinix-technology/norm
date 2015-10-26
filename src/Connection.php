@@ -17,7 +17,7 @@ use Norm\Cursor;
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-abstract class Connection extends Base
+abstract class Connection
 {
     protected $id;
 
@@ -49,17 +49,6 @@ abstract class Connection extends Base
             return $this->persist($collectionId, $row);
         }, $rows);
     }
-
-    /**
-     * Setter for raw-type of connection
-     *
-     * @param mixed $raw New raw connection
-     */
-    // public function setRaw($raw)
-    // {
-    //     $this->raw = $raw;
-    //     return $this;
-    // }
 
     /**
      * Getter for raw-type of connection

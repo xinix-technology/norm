@@ -1,18 +1,15 @@
 <?php
 namespace Norm\Adapter;
 
-use Exception;
 use InvalidArgumentException;
 use Norm\Cursor;
-use Norm\Connection;
-use Norm\Type\Object;
 use Rhumsaa\Uuid\Uuid;
 
 class File extends Memory
 {
     protected $dataDir;
 
-    public function __construct($options = array())
+    public function __construct(array $options = [])
     {
 
         if (!isset($options['dataDir'])) {
@@ -22,8 +19,6 @@ class File extends Memory
         }
 
         $this->dataDir = $options['dataDir'];
-
-        parent::__construct($options);
     }
 
     public function persist($collectionName, array $row)
@@ -54,7 +49,7 @@ class File extends Memory
 
     public function cursorDistinct(Cursor $cursor)
     {
-        throw new Exception('Unimplemented yet!');
+        throw new \Exception('Unimplemented yet!');
     }
 
     public function cursorFetch(Cursor $cursor)

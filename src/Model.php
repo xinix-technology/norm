@@ -2,10 +2,8 @@
 
 namespace Norm;
 
-use Closure;
-use Norm\Norm;
-use Exception;
 use ArrayAccess;
+use Norm\Exception\NormException;
 use JsonKit\JsonKit;
 use JsonKit\JsonSerializer;
 
@@ -230,7 +228,7 @@ class Model implements JsonSerializer, ArrayAccess
                 }
             }
         } elseif ($key === '$id') {
-            throw new Exception('Restricting model to set for $id.');
+            throw new NormException('Restricting model to set for $id.');
         } else {
             $this->attributes[$key] = $this->getSchema()[$key]->prepare($value);
         }
@@ -252,7 +250,7 @@ class Model implements JsonSerializer, ArrayAccess
         if (func_num_args() === 0) {
             $this->attributes = array();
         } elseif ($key === '$id') {
-            throw new Exception('Restricting model to clear for $id.');
+            throw new NormException('Restricting model to clear for $id.');
         } else {
             unset($this->attributes[$key]);
         }
@@ -399,9 +397,10 @@ class Model implements JsonSerializer, ArrayAccess
      */
     public function jsonSerialize()
     {
-        if (! Norm::options('include')) {
-            return $this->toArray();
-        }
+        // FIXME revisit this later
+        // if (! Norm::options('include')) {
+        //     return $this->toArray();
+        // }
 
         $destination = array();
         $source =  $this->toArray();

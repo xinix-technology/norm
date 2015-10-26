@@ -2,13 +2,13 @@
 namespace Norm\Adapter;
 
 use MongoId;
-use Exception;
 use MongoDate;
 use MongoClient;
 use Norm\Connection;
 use Norm\Cursor;
 use ROH\Util\Options;
-use ROH\Util\Collection;
+use ROH\Util\Collection as UtilCollection;
+use Norm\Exception\NormException;
 use Norm\Type\DateTime as NormDateTime;
 
 class Mongo extends Connection
@@ -69,7 +69,7 @@ class Mongo extends Connection
             $retval = $this->getRaw()->$collectionName->insert($marshalledRow);
 
             if (!$retval['ok']) {
-                throw new Exception($retval['errmsg']);
+                throw new NormException($retval['errmsg']);
             }
         }
 
@@ -81,13 +81,13 @@ class Mongo extends Connection
         $result = $this->getRaw()->$collectionName->remove(['_id' => new MongoId($rowId)]);
 
         if ((int) $result['ok'] !== 1) {
-            throw new Exception($result['errmsg']);
+            throw new NormException($result['errmsg']);
         }
     }
 
     public function cursorDistinct(Cursor $cursor)
     {
-        throw new Exception('Unimplemented yet!');
+        throw new \Exception('Unimplemented yet!');
     }
 
     public function cursorFetch(Cursor $cursor)
@@ -119,7 +119,7 @@ class Mongo extends Connection
 
     public function cursorSize(Cursor $cursor, $withLimitSkip = false)
     {
-        throw new Exception('Unimplemented yet!');
+        throw new \Exception('Unimplemented yet!');
     }
 
     public function cursorRead($context, $position = 0)
@@ -134,7 +134,7 @@ class Mongo extends Connection
                     $context->next();
                 }
             } elseif ($position < $ctxInfo['at']) {
-                throw new Exception('Unimplemented backward');
+                throw new \Exception('Unimplemented backward');
             }
         }
 

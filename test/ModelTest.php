@@ -50,7 +50,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
         }));
         $norm = new Norm([
             'connections' => [
-                $connection,
+                'connection' => $connection,
             ]
         ]);
 

@@ -1,10 +1,9 @@
 <?php
 namespace Norm\Adapter;
 
-use Exception;
 use Norm\Cursor;
 use Norm\Connection;
-use Norm\Collection;
+use Norm\Exception\NormException;
 use Rhumsaa\Uuid\Uuid;
 
 class Memory extends Connection
@@ -43,7 +42,7 @@ class Memory extends Connection
 
     public function cursorDistinct(Cursor $cursor)
     {
-        throw new Exception('Unimplemented yet!');
+        throw new \Exception('Unimplemented yet!');
     }
 
     public function cursorFetch(Cursor $cursor)
@@ -172,7 +171,7 @@ class Memory extends Connection
                         }
                         break;
                     default:
-                        throw new Exception("Operator '$operator' is not implemented yet!");
+                        throw new NormException("Operator '$operator' is not implemented yet!");
                 }
             }
         }
