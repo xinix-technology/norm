@@ -32,8 +32,7 @@
     "autoload": {
         "psr-4": {
             "Norm\\Test\\": "test/",
-            "Norm\\": "src/",
-            "ROH\\Util\\": "/Users/jafar/Workspaces/php/lib/php-util/src/ROH/Util/"
+            "Norm\\": "src/"
         }
     }
 }

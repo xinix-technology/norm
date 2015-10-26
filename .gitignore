@@ -1,9 +1,8 @@
-/vendor/*
-/composer.lock
-/project.sublime-*
-/norm.sublime-*
+/vendor
+/*.sublime-*
 /docs/api
 /sqlnet.log
 /old
 /db-files
 /coverage
+/composer-*.json
