@@ -31,7 +31,11 @@ class PDOTest extends PHPUnit_Framework_TestCase
             'lname TEXT',
         ];
         $sql = sprintf('CREATE TABLE foo (%s)', implode(', ', $columns));
-        $raw = $this->norm->getConnection('sqlite')->getRaw();
+        try {
+            $raw = $this->norm->getConnection('sqlite')->getRaw();
+        } catch (\Exception $e) {
+            $this->markTestSkipped($e->getMessage());
+        }
         $raw->exec($sql);
 
         $model = $this->norm->factory('Foo')->newInstance();
