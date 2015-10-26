@@ -16,6 +16,9 @@ class MongoTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
+        if (!class_exists('\\MongoClient')) {
+            $this->markTestSkipped('Mongo client not found.');
+        }
         try {
             new MongoClient('mongodb://'.MongoClient::DEFAULT_HOST.':'.MongoClient::DEFAULT_PORT);
         } catch (MongoConnectionException $e) {
