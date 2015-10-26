@@ -1,6 +1,7 @@
-<?php namespace Norm\Type;
+<?php
+namespace Norm\Type;
 
-use stdClass;
+use ROH\Util\Collection;
 
 /**
  * Collection abstract class.
@@ -12,24 +13,6 @@ use stdClass;
  */
 class Object extends Collection
 {
-    /**
-     * Convert this class to a standard object.
-     *
-     * @return \stdClass
-     */
-    public function toObject()
-    {
-        $obj = new stdClass();
-
-        if (! empty($this->attributes)) {
-            foreach ($this->attributes as $key => $value) {
-                $obj->$key = $value;
-            }
-        }
-
-        return $obj;
-    }
-
     /**
      * {@inheritDoc}
      */

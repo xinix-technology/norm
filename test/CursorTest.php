@@ -5,8 +5,9 @@ use ArrayAccess;
 use Norm\Cursor;
 use Norm\Connection;
 use Norm\Collection;
+use PHPUnit_Framework_TestCase;
 
-class CursorTest extends \PHPUnit_Framework_TestCase
+class CursorTest extends PHPUnit_Framework_TestCase
 {
     public function mockCollectionWithRows($rows)
     {
@@ -20,6 +21,7 @@ class CursorTest extends \PHPUnit_Framework_TestCase
                 'unmarshall',
             ],
             [
+                null,
                 ['name' => 'Test']
             ]
         );
@@ -72,7 +74,7 @@ class CursorTest extends \PHPUnit_Framework_TestCase
         $collection = $this->mockCollectionWithRows([]);
 
         $cursor = new Cursor($collection);
-        $this->assertEquals(0, $cursor->getLimit(), 'default limit = 0');
+        $this->assertEquals(-1, $cursor->getLimit(), 'default limit = 0');
 
         $retval = $cursor->limit(10);
         $this->assertEquals(10, $cursor->getLimit());
@@ -177,8 +179,7 @@ class CursorTest extends \PHPUnit_Framework_TestCase
             $row,
         ]);
         $cursor = new Cursor($collection);
-        // var_dump('xx', $cursor->toArray()[0]['name']);
-        // exit;
+
         $this->assertEquals($row, $cursor->toArray()[0]);
         $this->assertEquals($rowArr, $cursor->toArray(true)[0]);
     }

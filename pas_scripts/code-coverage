@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 rm -rf ./coverage
 mkdir ./coverage
 ./vendor/bin/phpunit --whitelist=./src/ --coverage-html=./coverage test

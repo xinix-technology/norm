@@ -1,26 +1,42 @@
 <?php
-
 namespace Norm\Observer;
 
-use Norm\Schema\DateTime;
+use DateTime as NDateTime;
+use Norm\Schema\DateTime as SchemaDateTime;
+use ROH\Util\Options;
 
 class Timestampable
 {
-    public function initialized($collection)
+    protected $options;
+
+    public function __construct($options = [])
     {
-        $collection->schema('$created_time', DateTime::create('$created_time'));
-        $collection->schema('$updated_time', DateTime::create('$updated_time'));
+        $this->options = Options::create([
+            'createdKey' => '$created_time',
+            'updatedKey' => '$updated_time',
+        ])->merge($options);
     }
 
-    public function saving($model)
+    public function initialize($context, $next)
     {
-        $now = new \DateTime();
+        $context['collection']->getSchema()
+            ->withField($this->options['createdKey'], SchemaDateTime::create())
+            ->withField($this->options['updatedKey'], SchemaDateTime::create());
 
-        if ($model->isNew()) {
-            $model['$updated_time'] = $now;
-            $model['$created_time'] = $now;
+        $next($context);
+    }
+
+    public function save($context, $next)
+    {
+        $now = new NDateTime();
+
+        if ($context['model']->isNew()) {
+            $context['model'][$this->options['updatedKey']] = $now;
+            $context['model'][$this->options['createdKey']] = $now;
         } else {
-            $model['$updated_time'] = $now;
+            $context['model'][$this->options['updatedKey']] = $now;
         }
+
+        $next($context);
     }
 }

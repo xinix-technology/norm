@@ -1,3 +1,4 @@
 # TODO
 
-- [ ] define todo here
+- [ ] confirmation should use transient field ~xxx
+- [ ] ~xxx as transient

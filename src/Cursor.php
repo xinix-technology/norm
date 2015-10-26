@@ -1,9 +1,8 @@
-<?php namespace Norm;
+<?php
+namespace Norm;
 
-use Iterator;
-use Countable;
+use Exception;
 use InvalidArgumentException;
-use JsonKit\JsonSerializer;
 
 /**
  * Cursor abstract class.
@@ -14,7 +13,7 @@ use JsonKit\JsonSerializer;
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-class Cursor implements Iterator, Countable, JsonSerializer
+class Cursor implements CursorInterface
 {
     const SORT_ASC = 1;
 
@@ -39,7 +38,7 @@ class Cursor implements Iterator, Countable, JsonSerializer
      *
      * @var int
      */
-    protected $limit = 0;
+    protected $limit = -1;
 
     /**
      * Number of document we want to skip when fetching a document.
@@ -197,7 +196,7 @@ class Cursor implements Iterator, Countable, JsonSerializer
             if ($plain) {
                 $result[] = $value->toArray();
             } else {
-                // throw new \Exception('why collection unmarshall here?');
+                // throw new Exception('why collection unmarshall here?');
                 // $result[] = $this->collection->unmarshall($value);
                 $result[] = $value;
             }

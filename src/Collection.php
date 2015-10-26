@@ -1,12 +1,17 @@
-<?php namespace Norm;
+<?php
+namespace Norm;
 
+// use JsonKit\JsonSerializer;
+use Exception;
 use InvalidArgumentException;
 use Norm\Model;
 use Norm\Cursor;
-use Norm\Type\Object;
-use Norm\Filter\Filter;
+use Norm\Schema;
+use Norm\Filter;
+use ROH\Util\Options;
+use ROH\Util\Thing;
 use ROH\Util\Inflector;
-use JsonKit\JsonSerializer;
+use ROH\Util\Collection as UtilCollection;
 
 /**
  * The collection class that wraps models.
@@ -17,8 +22,11 @@ use JsonKit\JsonSerializer;
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-class Collection extends Base implements JsonSerializer
+class Collection extends Base
+// remove implementation of jsonserialize, if we need add again
+// implements JsonSerializer
 {
+    protected $norm;
     /**
      * Logical id
      *
@@ -43,7 +51,7 @@ class Collection extends Base implements JsonSerializer
     /**
      * Schema
      *
-     * @var Norm\Type\Object
+     * @var ROH\Util\Collection
      */
     protected $schema;
 
@@ -70,53 +78,59 @@ class Collection extends Base implements JsonSerializer
 
     protected $primaryKey = 'id';
 
-    protected $modelClass = Model::class;
+    protected $modelClass;
 
     /**
      * Constructor
      *
      * @param array $options
      */
-    public function __construct($options = array())
+    public function __construct($norm, $options = array())
     {
+        if (isset($norm) && !($norm instanceof Norm)) {
+            throw new InvalidArgumentException('First arguments must be instance of Norm\Norm');
+        }
+
         if (!isset($options['name'])) {
             throw new InvalidArgumentException('Missing name, check collection configuration!');
         }
 
-        // if (!isset($options['connection'])) {
-        //     throw new InvalidArgumentException('Missing connection, check collection configuration!');
-        // }
+        $this->norm = $norm;
+
+        $options = Options::create([
+            'schema' => [],
+            'model' => Model::class,
+            'observers' => [],
+        ])->merge($options);
 
         $this->name = Inflector::classify($options['name']);
         $this->id = isset($options['id']) ? $options['id'] : Inflector::tableize($this->name);
-        $this->connection = isset($options['connection']) ? $options['connection'] : null;
+        $this->modelClass = $options['model'];
 
-        if (isset($options['model'])) {
-            $this->modelClass = $options['model'];
+        foreach ($options['observers'] as $observer) {
+            $this->observe((new Thing($observer))->getHandler());
         }
 
-        // $options['debug'] = $this->connection->option('debug') ? true : false;
-
-        if (isset($options['observers'])) {
-            foreach ($options['observers'] as $Observer => $observerOptions) {
-                if (is_int($Observer)) {
-                    $Observer = $observerOptions;
-                    $observerOptions = null;
-                }
-
-                if (is_string($Observer)) {
-                    $Observer = new $Observer($observerOptions);
-                }
-                $this->observe($Observer);
-            }
+        $this->schema = new Schema($this, $options['schema']);
+        if (isset($options['format'])) {
+            $this->schema->withFormatter($options['format']);
         }
 
-        $this->schema = new Object(isset($options['schema']) ? $options['schema'] : []);
-        // $this->options = $options;
-
-        $this->applyHook('initialized', $this);
 
         // $this->resetCache();
+    }
+
+    public function withConnection(Connection $connection)
+    {
+        $clone = clone $this;
+        $clone->connection = $connection;
+
+        $context = new UtilCollection([
+            'collection' => $clone,
+        ]);
+        $this->apply('initialize', $context);
+
+        return $clone;
     }
 
     /**
@@ -140,15 +154,23 @@ class Collection extends Base implements JsonSerializer
         return $this->id;
     }
 
+    public function getName()
+    {
+        return $this->name;
+    }
+
     /**
      * Getter of connection
      *
      * @return Norm\Connection
      */
-    // public function getConnection()
-    // {
-    //     return $this->connection;
-    // }
+    protected function getConnection()
+    {
+        if (is_null($this->connection)) {
+            throw new Exception('Connection not found');
+        }
+        return $this->connection;
+    }
 
     /**
      * Getter of collection option
@@ -175,39 +197,25 @@ class Collection extends Base implements JsonSerializer
      *
      * @return mixed
      */
-    public function getSchema($key = null)
+    public function getSchema()
     {
-        if (0 === func_num_args()) {
-            return $this->schema;
-        } else {
-            return $this->schema[$key];
-        }
+        return $this->schema;
     }
 
-    public function withSchema($key, $value = null)
+    public function withSchema($schema)
     {
-        if (1 === func_num_args()) {
-            $this->schema = new Object($key);
-        } else {
-            $this->schema[$key] = $value;
-        }
+        $this->schema = new Schema($this, $schema);
 
         return $this;
     }
 
-    /**
-     * Prepare data value for specific field name
-     *
-     * @param  string             $key    Field name
-     * @param  mixed              $value  Original data value
-     * @param  Norm\Schema\Field  $schema If specified will override default schema
-     *
-     * @return mixed Prepared data value
-     */
-    public function prepare($key, $value, $schema = null)
+    public function getFilter()
     {
-        $schema = $this->getSchema($key) ?: $schema;
-        return is_null($schema) ? $value : $schema->prepare($value);
+        if (is_null($this->filter)) {
+            $this->filter = new Filter($this, $this->schema->getFilterRules());
+        }
+
+        return $this->filter;
     }
 
     /**
@@ -219,21 +227,19 @@ class Collection extends Base implements JsonSerializer
      */
     public function attach($document)
     {
-        // should be marshalled from connection already
-        // if (isset($this->connection)) {
-        //     $document = $this->connection->unmarshall($document);
-        // }
+        // document should already marshalled from connection
 
         // wrap document as object instance to make sure it can be override by hooks
-        $document = new Object($document);
+        $context = new UtilCollection([
+            'collection' => $this,
+            'document' => $document,
+        ]);
 
-        $this->applyHook('attaching', $document);
+        $this->apply('attach', $context, function ($context) {
+            $context['model'] = new $this->modelClass($this, $context['document']);
+        });
 
-        $model = new $this->modelClass($this, $document->toArray());
-
-        $this->applyHook('attached', $model);
-
-        return $model;
+        return $context['model'];
     }
 
     /**
@@ -245,20 +251,23 @@ class Collection extends Base implements JsonSerializer
      */
     public function find($criteria = array())
     {
-        if (!is_array($criteria)) {
+        if (!is_null($criteria) && !is_array($criteria)) {
             $criteria = array(
                 '$id' => $criteria,
             );
         }
 
         // wrap criteria as object instance to make sure it can be override by hooks
-        $criteria = new Object($criteria);
+        $context = new UtilCollection([
+            'collection' => $this,
+            'criteria' => $criteria ?: [],
+        ]);
 
-        $this->applyHook('searching', $criteria);
-        $cursor = new Cursor($this, $criteria->toArray());
-        $this->applyHook('searched', $cursor);
+        $this->apply('search', $context, function ($context) {
+            $context['cursor'] = new Cursor($this, $context['criteria']);
+        });
 
-        return $cursor;
+        return $context['cursor'];
     }
 
     /**
@@ -299,15 +308,15 @@ class Collection extends Base implements JsonSerializer
      */
     public function filter(Model $model, $key = null)
     {
-        if (is_null($this->filter)) {
-            $this->filter = Filter::fromSchema($this->getSchema());
-        }
+        $context = new UtilCollection([
+            'collection' => $this,
+            'model' => $model,
+            'key' => $key,
+        ]);
 
-        $this->applyHook('filtering', $model, $key);
-        $result = $this->filter->run($model, $key);
-        $this->applyHook('filtered', $model, $key);
-
-        return $result;
+        return $this->apply('filter', $context, function ($context) {
+            return $this->getFilter()->run($context['model'], $context['key']);
+        });
     }
 
     /**
@@ -318,30 +327,32 @@ class Collection extends Base implements JsonSerializer
      *
      * @return void
      */
-    public function save(Model $model, $options = array())
+    public function save(Model $model, $options = [])
     {
-        $options = array_merge(array(
+        $options = array_merge([
             'filter' => true,
             'observer' => true,
-        ), $options);
+        ], $options);
 
         if ($options['filter']) {
             $this->filter($model);
         }
 
+        $save = function ($context) {
+            $context['modified'] = $this->getConnection()->persist($this->getId(), $context['model']->dump());
+        };
+
+        $context = new UtilCollection([
+            'collection' => $this,
+            'model' => $model,
+        ]);
+
         if ($options['observer']) {
-            $this->applyHook('saving', $model, $options);
+            $this->apply('save', $context, $save);
+        } else {
+            $save($context);
         }
-
-        $modified = $this->connection->persist($this->getId(), $model->dump());
-        $model->sync($modified);
-
-        if ($options['observer']) {
-            $this->applyHook('saved', $model, $options);
-        }
-
-        $model->sync($modified);
-        // $this->resetCache();
+        $context['model']->sync($context['modified']);
     }
 
     /**
@@ -354,21 +365,24 @@ class Collection extends Base implements JsonSerializer
     public function remove(Model $model = null)
     {
         if (func_num_args() === 0) {
-            $this->connection->remove($this);
+            $this->getConnection()->remove($this);
         } else {
             // avoid remove empty model
             if (is_null($model)) {
-                throw new \Exception('[Norm/Collection] Cannot remove null model');
+                throw new Exception('Cannot remove null model');
             }
 
-            $this->applyHook('removing', $model);
-            $result = $this->connection->remove($this->getId(), $model['$id']);
+            $context = new UtilCollection([
+                'collection' => $this,
+                'model' => $model,
+            ]);
 
-            if ($result) {
-                $model->reset();
-            }
-
-            $this->applyHook('removed', $model);
+            $this->apply('remove', $context, function ($context) {
+                $result = $this->getConnection()->remove($this->getId(), $context['model']['$id']);
+                if ($result) {
+                    $context['model']->reset();
+                }
+            });
         }
     }
 
@@ -379,99 +393,33 @@ class Collection extends Base implements JsonSerializer
      *
      * @return void
      */
-    protected function observe($observer)
+    public function observe($observer)
     {
-        if (method_exists($observer, 'saving')) {
-            $this->hook('saving', array($observer, 'saving'));
+
+        if (method_exists($observer, 'save')) {
+            $this->compose('save', array($observer, 'save'));
         }
 
-        if (method_exists($observer, 'saved')) {
-            $this->hook('saved', array($observer, 'saved'));
+        if (method_exists($observer, 'filter')) {
+            $this->compose('filter', array($observer, 'filter'));
         }
 
-        if (method_exists($observer, 'filtering')) {
-            $this->hook('filtering', array($observer, 'filtering'));
+        if (method_exists($observer, 'remove')) {
+            $this->compose('remove', array($observer, 'remove'));
         }
 
-        if (method_exists($observer, 'filtered')) {
-            $this->hook('filtered', array($observer, 'filtered'));
+        if (method_exists($observer, 'search')) {
+            $this->compose('search', array($observer, 'search'));
         }
 
-        if (method_exists($observer, 'removing')) {
-            $this->hook('removing', array($observer, 'removing'));
+        if (method_exists($observer, 'attach')) {
+            $this->compose('attach', array($observer, 'attach'));
         }
 
-        if (method_exists($observer, 'removed')) {
-            $this->hook('removed', array($observer, 'removed'));
-        }
-
-        if (method_exists($observer, 'searching')) {
-            $this->hook('searching', array($observer, 'searching'));
-        }
-
-        if (method_exists($observer, 'searched')) {
-            $this->hook('searched', array($observer, 'searched'));
-        }
-
-        if (method_exists($observer, 'attaching')) {
-            $this->hook('attaching', array($observer, 'attaching'));
-        }
-
-        if (method_exists($observer, 'attached')) {
-            $this->hook('attached', array($observer, 'attached'));
-        }
-
-        if (method_exists($observer, 'initialized')) {
-            $this->hook('initialized', array($observer, 'initialized'));
+        if (method_exists($observer, 'initialize')) {
+            $this->compose('initialize', array($observer, 'initialize'));
         }
     }
-
-    /**
-     * Reset Cache
-     *
-     * @method resetCache
-     *
-     * @return void
-     */
-    // protected function resetCache()
-    // {
-    //     $this->cache = array();
-    // }
-
-    /**
-     * Put item in cache bags.
-     *
-     * @method rememberCache
-     *
-     * @param mixed       $criteria
-     * @param Norm\Model $model    [description]
-     *
-     * @return void
-     */
-    // protected function rememberCache($criteria, $model)
-    // {
-    //     $ser = serialize($criteria);
-
-    //     $this->cache[$ser] = $model;
-    // }
-
-    /**
-     * Get item from cache.
-     *
-     * @method fetchCache
-     *
-     * @param object $criteria
-     *
-     * @return void|Norm\Model
-     */
-    // protected function fetchCache($criteria)
-    // {
-    //     $ser = serialize($criteria);
-
-    //     if (isset($this->cache[$ser])) {
-    //         return $this->cache[$ser];
-    //     }
-    // }
 
     /**
      * Json serialization of this id.
@@ -480,27 +428,41 @@ class Collection extends Base implements JsonSerializer
      *
      * @return string
      */
-    public function jsonSerialize()
-    {
-        return $this->id;
-    }
+    // public function jsonSerialize()
+    // {
+    //     return $this->id;
+    // }
 
     public function __call($method, $args)
     {
-        if (is_null($this->connection)) {
-            throw new \Exception('Connection not found');
+        $connectionMethods = [
+            'cursorDistinct', 'cursorFetch', 'cursorSize', 'cursorRead'
+        ];
+        $normMethods = [
+            'translate',
+            'render'
+        ];
+        if (in_array($method, $connectionMethods)) {
+            return call_user_func_array([$this->getConnection(), $method], $args);
+        } elseif (in_array($method, $normMethods)) {
+            return call_user_func_array([$this->norm, $method], $args);
         }
 
-        return call_user_func_array([$this->connection, $method], $args);
+        throw new \Exception('Undefined method or method handler: '. $method);
     }
 
     public function cursorRead($context, $position = 0)
     {
-        if (is_null($this->connection)) {
-            throw new \Exception('No connection available');
-        }
-        $row = $this->connection->cursorRead($context, $position);
+        $row = $this->getConnection()->cursorRead($context, $position);
         return is_null($row) ? $row : $this->attach($row);
+    }
+
+    public function factory($collectionId = null, $connectionId = null)
+    {
+        if (is_null($collectionId)) {
+            return $this;
+        }
+        return $this->norm->factory($collectionId, $connectionId ?: $this->getConnection()->getId());
     }
 
     public function __debugInfo()
@@ -508,7 +470,7 @@ class Collection extends Base implements JsonSerializer
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'connectionClass' => get_class($this->connection)
+            'connectionClass' => $this->connection ? get_class($this->connection) : null,
         ];
     }
 }

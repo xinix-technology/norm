@@ -2,113 +2,112 @@
 
 namespace Norm\Schema;
 
-use Norm\Norm;
+use Exception;
+use ArrayAccess;
 use Norm\Model;
+use Norm\Collection;
+use Closure;
+use InvalidArgumentException;
+use ROH\Util\StringFormatter;
 
 class Reference extends Field
 {
+    protected $options;
 
-    public function to($foreign, $foreignKey = null, $foreignLabel = null)
+    public function to($foreign, $foreignLabel = null)
     {
-        $argc = func_num_args();
-        if ($argc === 1) {
-            $this['foreignKey']  = '$id';
-            $this['foreignLabel']  = 'name';
-        } elseif ($argc === 2) {
-            $this['foreignKey'] = '$id';
-            $this['foreignLabel'] = $foreignKey;
-        } else {
-            $this['foreignKey'] = $foreignKey;
-            $this['foreignLabel'] = $foreignLabel;
+        if (!is_callable($foreign) &&
+            !is_array($foreign) &&
+            !is_string($foreign) &&
+            !($foreign instanceof Collection)
+        ) {
+            throw new InvalidArgumentException('Foreign must be instance of string, array, callable or Collection');
         }
 
-        $this['foreign'] = $foreign;
+        if (!is_null($foreignLabel) && !is_string($foreignLabel) && !is_callable($foreignLabel)) {
+            throw new InvalidArgumentException('Foreign label must be instance of string or callable');
+        }
+
+        if (is_callable($foreign)) {
+            $this['foreign'] = $foreign;
+        } elseif (is_array($foreign)) {
+            $this->options = $foreign;
+            $this['foreign'] = [$this, 'fetchForeign'];
+        } else {
+            $foreign = explode(':', $foreign);
+            $this['foreignCollectionId'] = $foreign[0];
+            $this['foreignKey'] = isset($foreign[1]) ? $foreign[1] : '$id';
+            $this['foreign'] = [$this, 'fetchForeign'];
+        }
+
+
+        $this['foreignLabel'] = is_callable($foreignLabel) ?
+            $foreignLabel :
+            function ($model) use ($foreignLabel) {
+                if (empty($foreignLabel)) {
+                    return $model->format();
+                } else {
+                    $formatter = new StringFormatter($foreignLabel);
+                    if ($formatter->isStatic()) {
+                        return $model[$foreignLabel];
+                    } else {
+                        return $formatter->format($model);
+                    }
+                }
+            };
 
         return $this;
     }
 
-    public function by($byCriteria, $bySort = null)
+    public function withSort($sort = [])
     {
-        $this['byCriteria'] = $byCriteria;
-        if ($bySort) {
-            $this['bySort'] = $bySort;
-        }
+        $this['foreignSort'] = $sort;
         return $this;
     }
 
-    /**
-     * [findOptions description]
-     * @return [type] [description]
-     *
-     * @deprecated use Reference::optionData() instead.
-     *
-     */
-    public function findOptions()
+    public function withCriteria($criteria = [])
     {
-        trigger_error(__METHOD__.' is deprecated.', E_USER_DEPRECATED);
-        return $this->optionData();
+        $this['foreignCriteria'] = $criteria;
+        return $this;
     }
 
-    public function optionData()
+    public function fetchForeign($id = null)
     {
-        if (!is_string($this['foreign'])) {
-            return val($this['foreign']) ?: array();
+        if (is_null($this->options)) {
+            $this->options = [];
+
+            $cursor = $this->factory($this['foreignCollectionId'])
+                ->find($this['foreignCriteria']);
+            if ($this['foreignSort']) {
+                $cursor->sort($this['foreignSort']);
+            }
+            foreach ($cursor as $model) {
+                $this->options[$model[$this['foreignKey']]] = $this['foreignLabel']($model);
+            }
         }
 
-        if (is_null($this['byCriteria'])) {
-            $cursor =  Norm::factory($this['foreign'])->find();
+        if (0 === func_num_args()) {
+            return $this->options;
+        } elseif (is_null($id)) {
+            return null;
         } else {
-            $cursor =  Norm::factory($this['foreign'])->find(val($this['byCriteria']));
+            return $this->options[$id];
         }
-
-        if (isset($this['bySort'])) {
-            $cursor->sort($this['bySort']);
-        }
-
-        return $cursor;
-    }
-
-    public function optionValue($key, $entry)
-    {
-        if (is_scalar($entry)) {
-            return $key;
-        } else {
-            return $entry[$this['foreignKey']];
-        }
-    }
-
-    public function optionLabel($key, $entry)
-    {
-        if (is_scalar($entry)) {
-            $label = $entry;
-        } elseif ($this['foreignLabel'] instanceof \Closure) {
-            $getLabel = $this['foreignLabel'];
-            $label = $getLabel($entry);
-        } else {
-            $label = $entry[$this['foreignLabel']];
-        }
-
-        return $label;
     }
 
     public function prepare($value)
     {
-        if (isset($value['$id']) || $value instanceof \Norm\Model) {
-            $value = $value[$this['foreignKey']];
-        }
+        $value = $value ?: null;
 
-        if (empty($value)) {
-            $value = null;
-        }
-
-        if (is_string($this['foreign']) && !is_null($this['foreignKey'])) {
-            $field = @Norm::factory($this['foreign'])->schema($this['foreignKey']);
-            if ($field) {
-                $value = $field->prepare($value);
+        if (is_array($value) || $value instanceof ArrayAccess) {
+            if (isset($value['$id'])) {
+                return $value['$id'];
+            } else {
+                throw new \Exception('Unable to get reference id from value');
             }
+        } else {
+            return $value;
         }
-
-        return $value;
     }
 
     public function toJSON($value)
@@ -140,51 +139,26 @@ class Reference extends Field
         return $value;
     }
 
-    public function format($name, $valueOrCallable, $entry = null)
+    public function format($name, $valueOrCallable, $model = null)
     {
         if (is_null($this['foreign'])) {
-            throw new \Exception('Reference schema should invoke Reference::to()');
+            throw new Exception('Reference schema should invoke Reference::to()');
         }
 
-        if (func_num_args() === 3) {
-            return parent::format($name, $valueOrCallable, $entry);
-        } else {
-            return parent::format($name, $valueOrCallable);
-        }
+        return parent::format($name, $valueOrCallable, $model);
     }
 
-    public function formatPlain($value, $entry = null)
+    public function formatPlain($value, $model = null)
     {
-        $value = $this->prepare($value);
-
-        $label = '';
-        if (is_null($value)) {
-            return null;
-        } elseif (is_array($this['foreign'])) {
-            if (isset($this['foreign'][$value])) {
-                $label = $this['foreign'][$value];
-            }
-        } elseif (is_callable($this['foreign'])) {
-            $label = $this['foreign']($value);
-        } else {
-            $foreignEntry = Norm::factory($this['foreign'])->findOne(array($this['foreignKey'] => $value));
-
-            if (is_string($this['foreignLabel'])) {
-                $label = $foreignEntry[$this['foreignLabel']];
-            } elseif (is_callable($this['foreignLabel'])) {
-                $getLabel = $this['foreignLabel'];
-                $label = $getLabel($foreignEntry);
-            }
-        }
-        return $label;
+        return $this['foreign']($value);
     }
 
-    public function formatInput($value, $entry = null)
+    public function formatInput($value, $model = null)
     {
         return $this->render('_schema/reference/input', array(
             'self' => $this,
             'value' => $value,
-            'entry' => $entry,
+            'entry' => $model,
         ));
     }
 }

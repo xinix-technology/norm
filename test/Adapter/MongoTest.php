@@ -2,17 +2,25 @@
 namespace Norm\Test\Adapter;
 
 use DateTime;
+use MongoId;
+use MongoClient;
+use MongoConnectionException;
 use Norm\Cursor;
 use Norm\Norm as TheNorm;
 use Norm\Adapter\Mongo;
-use MongoId;
+use PHPUnit_Framework_TestCase;
 
-class MongoTest extends \PHPUnit_Framework_TestCase
+class MongoTest extends PHPUnit_Framework_TestCase
 {
     protected $norm;
 
     public function setUp()
     {
+        try {
+            new MongoClient('mongodb://'.MongoClient::DEFAULT_HOST.':'.MongoClient::DEFAULT_PORT);
+        } catch (MongoConnectionException $e) {
+            $this->markTestSkipped('Mongo server is not available.');
+        }
 
         $this->norm = new TheNorm([
             'connections' => [

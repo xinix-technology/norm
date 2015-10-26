@@ -4,7 +4,7 @@ namespace Norm\Schema;
 
 class Token extends String
 {
-    public function formatInput($value, $entry = null)
+    public function formatInput($value, $model = null)
     {
         $uniqueId = uniqid($this['name'].'_');
         // FIXME should be overriden for UX

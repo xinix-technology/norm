@@ -1,13 +1,14 @@
 <?php
 namespace Norm\Adapter;
 
-use Norm\Connection;
-use Norm\Cursor;
-use ROH\Util\Options;
-use MongoClient;
 use MongoId;
 use Exception;
 use MongoDate;
+use MongoClient;
+use Norm\Connection;
+use Norm\Cursor;
+use ROH\Util\Options;
+use ROH\Util\Collection;
 use Norm\Type\DateTime as NormDateTime;
 
 class Mongo extends Connection
@@ -21,7 +22,7 @@ class Mongo extends Connection
             'port' => MongoClient::DEFAULT_PORT,
         ])->merge($options);
 
-        if (is_null($options['database'])) {
+        if (!isset($options['database'])) {
             throw new InvalidArgumentException('Missing database name for Mongo connection, '.
                 'please check your configuration');
         }
@@ -52,7 +53,6 @@ class Mongo extends Connection
     public function persist($collectionName, array $row)
     {
         $marshalledRow = $this->marshall($row);
-        // exit;
 
         if (isset($row['$id'])) {
             $criteria = array(
@@ -87,7 +87,7 @@ class Mongo extends Connection
 
     public function cursorDistinct(Cursor $cursor)
     {
-        throw new \Exception('Unimplemented yet!');
+        throw new Exception('Unimplemented yet!');
     }
 
     public function cursorFetch(Cursor $cursor)
@@ -119,7 +119,7 @@ class Mongo extends Connection
 
     public function cursorSize(Cursor $cursor, $withLimitSkip = false)
     {
-        throw new \Exception('Unimplemented yet!');
+        throw new Exception('Unimplemented yet!');
     }
 
     public function cursorRead($context, $position = 0)
@@ -134,7 +134,7 @@ class Mongo extends Connection
                     $context->next();
                 }
             } elseif ($position < $ctxInfo['at']) {
-                throw new \Exception('Unimplemented backward');
+                throw new Exception('Unimplemented backward');
             }
         }
 
@@ -173,10 +173,8 @@ class Mongo extends Connection
     {
         if ($object instanceof NormDateTime) {
             return new MongoDate($object->getTimestamp());
-        } elseif ($object instanceof NormArray) {
+        } elseif ($object instanceof UtilCollection) {
             return $object->toArray();
-        } elseif ($object instanceof Object) {
-            return $object->toObject();
         } else {
             return parent::marshall($object);
         }

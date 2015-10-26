@@ -2,50 +2,72 @@
 
 namespace Norm\Schema;
 
+use Closure;
+use Exception;
+use InvalidArgumentException;
 use ROH\Util\Inflector;
-use Norm\Filter\Filter;
+use ROH\Util\Collection as UtilCollection;
 use Norm\Norm;
+use Norm\Filter;
 
-abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
+abstract class Field extends UtilCollection
 {
+    protected $schema;
 
-    static protected $instances = array();
+    protected $filter = [];
 
-    protected $attributes = array();
-
-    protected $filter = array();
-
-    protected $formats = array();
+    protected $formatters;
 
     protected $reader;
 
-    public static function create($name = '', $label = null)
+    public static function create($label = null)
     {
         $Field = get_called_class();
 
-        if (empty($name)) {
-            if (!isset(static::$instances[$Field])) {
-                static::$instances[$Field] = new $Field($name, $label);
-            }
-
-            return static::$instances[$Field];
-        }
-
-        return new $Field($name, $label);
+        return new $Field($label);
     }
 
-    public function __construct($name = null, $label = null)
+    public function __construct($label = null)
     {
-        if (is_null($label)) {
-            $label = Inflector::humanize($name);
+        $this['name'] = '';
+        $this['label'] = $label;
+
+        $this->formatters = [
+            'readonly' => [$this, 'formatReadonly'],
+            'input' => [$this, 'formatInput'],
+            'plain' => [$this, 'formatPlain'],
+        ];
+
+        parent::__construct();
+    }
+
+    public function forSchema($schema, $name)
+    {
+        $this->schema = $schema;
+
+        $this['name'] = $name;
+        if (is_null($this['label'])) {
+            $this['label'] = Inflector::humanize($this['name']);
         }
 
-        $this->set('name', $name);
-        $this->set('label', $label);
 
-        if (!empty($name) && $name[0] === '$') {
-            $this->set('hidden', true);
+        return $this;
+    }
+
+    public function factory($collectionId = null, $connectionId = null)
+    {
+        if (is_null($this->schema)) {
+            throw new InvalidArgumentException('Schema is undefined');
         }
+        return $this->schema->factory($collectionId, $connectionId);
+    }
+
+    public function translate($message)
+    {
+        if (is_null($this->schema)) {
+            throw new InvalidArgumentException('Schema is undefined');
+        }
+        return $this->schema->translate($message);
     }
 
     public function prepare($value)
@@ -53,64 +75,54 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
         return filter_var($value, FILTER_SANITIZE_STRING);
     }
 
-    public function read($valueOrCallable)
+    public function read($model)
     {
-        if (is_callable($valueOrCallable)) {
-            $this->reader = $valueOrCallable;
-            return $this;
-        } elseif (is_callable($this->reader)) {
-            return call_user_func($this->reader, $valueOrCallable);
-        }
+        $reader = $this->reader;
+        return $reader($model);
+    }
+
+    public function withReader($reader)
+    {
+        $this->reader = $reader;
+        return $this;
     }
 
     public function hasReader()
     {
-        return $this->reader ? true : false;
+        return isset($this->reader);
     }
 
-    public function format($name, $valueOrCallable, $entry = null)
+    public function getFormatter($format)
     {
-        if ($name === 'input' && $this['readonly']) {
-            $name = 'readonly';
+        return isset($this->formatters[$format]) ? $this->formatters[$format] : null;
+    }
+
+    public function format($format, $value, $model = null)
+    {
+        if ($format === 'input' && $this['readonly']) {
+            $format = 'readonly';
         }
 
-        // set new format
-        if (func_num_args() === 2 && $valueOrCallable instanceof \Closure) {
-            $this->formats[$name] = $valueOrCallable;
-            return $this;
-        }
-
-        // extract formatter function
-        if (isset($this->formats[$name])) {
-            $fn = $this->formats[$name];
-        } else {
-            $method = 'format'.strtoupper($name[0]).substr($name, 1);
-            $fn = array($this, $method);
-        }
-
-        // get formatted value
-        if (is_callable($fn)) {
-            return call_user_func($fn, $valueOrCallable, $entry);
-        } else {
-            throw new \Exception("[Norm/Field] Formatter not found. [$method]");
+        $formatter = $this->getFormatter($format);
+        if (isset($formatter)) {
+            return $formatter($this->prepare($value), $model);
         }
     }
 
-    public function filter()
+    public function getFilter()
     {
-        if (func_num_args() == 0) {
-            return $this->filter;
-        }
+        return $this->filter;
+    }
 
+    public function withFilter()
+    {
         $filters = func_get_args();
         foreach ($filters as $filter) {
             if (is_string($filter)) {
                 $filter = explode('|', $filter);
                 foreach ($filter as $f) {
-                    $baseF = explode(':', trim($f));
-                    $baseF = $baseF[0];
-                    $this['filter'.strtoupper($baseF[0]).substr($baseF, 1)] = true;
-
+                    $farr = explode(':', $f);
+                    $this['filter.' . $farr[0]] = array_slice($farr, 1);
                     $this->filter[] = $f;
                 }
             } else {
@@ -119,7 +131,6 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
         }
 
         return $this;
-
     }
 
     public function has($k)
@@ -163,11 +174,11 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
 
     public function label($plain = false)
     {
-        $label = Norm::translate($this['label']);
+        $label = $this->translate($this['label']);
         if ($plain) {
             return $label;
         }
-        return '<label>'.$label.($this['filterRequired'] ? '*' : '').'</label>';
+        return '<label>'.$label.(isset($this['filter.required']) ? '*' : '').'</label>';
     }
 
     public function toJSON($value)
@@ -175,30 +186,34 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
         return $value;
     }
 
-    public function formatPlain($value, $entry = null)
+    public function formatPlain($value, $model = null)
     {
         return $value;
     }
 
-    public function formatReadonly($value, $entry = null)
+    public function formatReadonly($value, $model = null)
     {
-        return "<span class=\"field\">".($this->formatPlain($value, $entry) ?: '&nbsp;')."</span>";
+        return "<span class=\"field\">".($this->formatPlain($value, $model) ?: '&nbsp;')."</span>";
     }
 
-    public function formatInput($value, $entry = null)
+    public function formatInput($value, $model = null)
     {
         if (!empty($value)) {
             $value = htmlentities($value);
         }
-        return '<input type="text" name="'.$this['name'].'" value="'.$value.'" placeholder="'.Norm::translate($this['label']).
-            '" autocomplete="off" />';
+        return '<input type="text" name="'.$this['name'].'" value="'.$value.'" placeholder="' .
+            $this->translate($this['label']). '" autocomplete="off" />';
     }
 
     public function render($template, array $context = array())
     {
+        if (is_null($this->schema)) {
+            throw new InvalidArgumentException('Schema is undefined');
+        }
+
         $context['self'] = $this;
 
-        return Norm::render($template, $context);
+        return $this->schema->render($template, $context);
     }
 
     public function current()
@@ -229,5 +244,17 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
     public function jsonSerialize()
     {
         return $this->attributes;
+    }
+
+    public function transient($transient = true)
+    {
+        $this['transient'] = $transient;
+        return $this;
+    }
+
+    public function hidden($hidden = true)
+    {
+        $this['hidden'] = $hidden;
+        return $this;
     }
 }

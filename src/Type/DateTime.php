@@ -1,8 +1,9 @@
-<?php namespace Norm\Type;
+<?php
+namespace Norm\Type;
 
 use Norm\Norm;
 use DateTimeZone;
-use DateTime as DT;
+use DateTime as NDateTime;
 use JsonKit\JsonSerializer;
 
 /**
@@ -13,7 +14,7 @@ use JsonKit\JsonSerializer;
  * @link      http://xinix.co.id/products/norm Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
-class DateTime extends DT implements JsonSerializer
+class DateTime extends NDateTime implements JsonSerializer
 {
     /**
      * Formatting date time implementation.

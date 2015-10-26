@@ -2,29 +2,32 @@
 
 namespace Norm\Schema;
 
+use DateTimeZone;
+use DateTime as NDateTime;
+use Norm\Type\DateTime as TypeDateTime;
+
 class DateTime extends Field
 {
     public function prepare($value)
     {
         if (empty($value)) {
             return null;
-        } elseif ($value instanceof \Norm\Type\DateTime) {
+        } elseif ($value instanceof TypeDateTime) {
             return $value;
-        } elseif ($value instanceof \DateTime) {
+        } elseif ($value instanceof NDateTime) {
             $t = $value->format('c');
         } elseif (is_string($value)) {
             $t = date('c', strtotime($value));
         } else {
             $t = date('c', (int) $value);
         }
-        return new \Norm\Type\DateTime($t);
+        return new TypeDateTime($t);
     }
 
-    public function formatInput($value, $entry = null)
+    public function formatInput($value, $model = null)
     {
-        $value = $this->prepare($value);
         if ($value) {
-            $value->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
+            $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));
         }
 
         return '<input type="datetime-local" name="'.$this['name'].'" value="'.
@@ -32,21 +35,20 @@ class DateTime extends Field
             $this['label'].'" autocomplete="off" />';
     }
 
-    public function formatReadonly($value, $entry = null)
+    public function formatReadonly($value, $model = null)
     {
-        $value = $this->prepare($value);
         if ($value) {
-            $value->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
+            $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));
         }
 
         return '<span class="field">'.($value ? $value->format('c') : '&nbsp;').'</span>';
     }
 
     // DEPRECATED replaced by Field::render
-    // public function cell($value, $entry = null)
+    // public function cell($value, $model = null)
     // {
     //     if ($this->has('cellFormat') && $format = $this['cellFormat']) {
-    //         return $format($value, $entry);
+    //         return $format($value, $model);
     //     }
     //     return $value->format('Y-m-d H:i:s a');
     // }

@@ -5,7 +5,7 @@ namespace Norm;
 use InvalidArgumentException;
 use ArrayAccess;
 use Norm\Type\DateTime;
-use Norm\Type\NormArray;
+use Norm\Type\ArrayList;
 use Norm\Cursor;
 
 /**
@@ -19,6 +19,8 @@ use Norm\Cursor;
  */
 abstract class Connection extends Base
 {
+    protected $id;
+
     protected $raw;
 
     /**
@@ -69,6 +71,17 @@ abstract class Connection extends Base
         return $this->raw;
     }
 
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    public function withId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
     /**
      * Unmarshall single assoc from data source to norm friendly associative array.
      * The unmarshall process is necessary due to different data type provided
@@ -87,19 +100,31 @@ abstract class Connection extends Base
             throw new InvalidArgumentException('Unmarshall only accept array or ArrayAccess');
         }
 
-        if (isset($assoc['id'])) {
-            $assoc['$id'] = $assoc['id'];
-            unset($assoc['id']);
-        }
-
+        $result = [];
         foreach ($assoc as $key => $value) {
             if ($key[0] === '_') {
                 $key[0] = '$';
-                $assoc[$key] = $value;
+                $result[$key] = $value;
+            } elseif ($key === 'id') {
+                $result['$id'] = $assoc['id'];
+            } else {
+                $result[$key] = $value;
             }
         }
+        return $result;
 
-        return $assoc;
+        // if (isset($assoc['id'])) {
+        //     $assoc['$id'] = $assoc['id'];
+        //     unset($assoc['id']);
+        // }
+
+        // foreach ($assoc as $key => $value) {
+        //     if ($key[0] === '_') {
+        //         $key[0] = '$';
+        //         $assoc[$key] = $value;
+        //     }
+        // }
+        // return $assoc;
     }
 
     /**
@@ -113,26 +138,29 @@ abstract class Connection extends Base
      *
      * @return mixed Friendly data source object
      */
-    public function marshall($object)
+    public function marshall($object, $primaryKey = null)
     {
         if (is_array($object)) {
             $result = array();
 
             foreach ($object as $key => $value) {
                 if ($key[0] === '$') {
-                    if ($key === '$id' || $key === '$type') {
+                    if (($key === '$id' && is_null($primaryKey)) || $key === '$type') {
                         continue;
+                    } elseif ($key === '$id') {
+                        $result[$primaryKey] = $this->marshall($value);
+                    } else {
+                        $result['_'.substr($key, 1)] = $this->marshall($value);
                     }
-
-                    $result['_'.substr($key, 1)] = $this->marshall($value);
                 } else {
                     $result[$key] = $this->marshall($value);
                 }
             }
+
             return $result;
         } elseif ($object instanceof DateTime) {
             return $object->format('c');
-        } elseif ($object instanceof NormArray) {
+        } elseif ($object instanceof ArrayList) {
             return json_encode($object->toArray());
         } elseif (method_exists($object, 'marshall')) {
             return $object->marshall();

@@ -1,13 +1,13 @@
 <?php
 namespace Norm\Adapter;
 
+use Exception;
+use InvalidArgumentException;
 use PDO as ThePDO;
 use Norm\Cursor;
 use Norm\Connection;
 use Norm\Dialect\MySql;
 use Norm\Dialect\Sqlite;
-use Exception;
-use InvalidArgumentException;
 use ROH\Util\Collection;
 
 class PDO extends Connection
@@ -94,7 +94,7 @@ class PDO extends Connection
 
     public function cursorDistinct(Cursor $cursor)
     {
-        throw new \Exception('Unimplemented yet!');
+        throw new Exception('Unimplemented yet!');
     }
 
     public function cursorFetch(Cursor $cursor)
@@ -111,7 +111,7 @@ class PDO extends Connection
 
     public function cursorSize(Cursor $cursor, $withLimitSkip = false)
     {
-        throw new \Exception('Unimplemented yet!');
+        throw new Exception('Unimplemented yet!');
     }
 
     public function cursorRead($context, $position = 0)
@@ -133,7 +133,7 @@ class PDO extends Connection
                 }
             }
         } else {
-            throw new \Exception('Unimplemented yet!');
+            throw new Exception('Unimplemented yet!');
         }
     }
 

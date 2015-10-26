@@ -5,3 +5,5 @@
 /docs/api
 /sqlnet.log
 /old
+/db-files
+/coverage

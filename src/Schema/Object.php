@@ -21,9 +21,8 @@ class Object extends Field
         return new TypeObject($value);
     }
 
-    public function formatReadonly($value, $entry = null)
+    public function formatReadonly($value, $model = null)
     {
-        $value = $this->prepare($value);
         if (isset($value)) {
             // TODO this checking should available on JsonKit
             // if (substr(phpversion(), 0, 3) === '5.3') {
@@ -33,12 +32,11 @@ class Object extends Field
             // }
         }
 
-        return parent::formatReadonly($value, $entry);
+        return parent::formatReadonly($value, $model);
     }
 
-    public function formatInput($value, $entry = null)
+    public function formatInput($value, $model = null)
     {
-        $value = $this->prepare($value);
         if (isset($value)) {
             // TODO this checking should available on JsonKit
             // if (substr(phpversion(), 0, 3) === '5.3') {

@@ -2,19 +2,22 @@
 namespace Norm\Test;
 
 use Norm\Collection;
-use Norm\Type\Object;
+use Norm\Schema;
+use Norm\Schema\Unknown;
+use ROH\Util\Collection as UtilCollection;
+use PHPUnit_Framework_TestCase;
 
-class CollectionTest extends \PHPUnit_Framework_TestCase
+class CollectionTest extends PHPUnit_Framework_TestCase
 {
     public function testGetId()
     {
-        $collection = new Collection([
+        $collection = new Collection(null, [
             'name' => 'Test'
         ]);
 
         $this->assertEquals('test', $collection->getId());
 
-        $collection = new Collection([
+        $collection = new Collection(null, [
             'name' => 'Try',
             'id' => 'try',
         ]);
@@ -22,54 +25,33 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('try', $collection->getId());
     }
 
-    // public function testGetConnection()
-    // {
-    //     $connection = new \stdClass();
-    //     $collection = new Collection([
-    //         'name' => 'Test',
-    //         'connection' => $connection
-    //     ]);
-
-    //     $this->assertEquals($connection, $collection->getConnection());
-    // }
-
     public function testGetSchema()
     {
-        $collection = new Collection([
+        $collection = new Collection(null, [
             'name' => 'Test'
         ]);
 
-        $this->assertInstanceOf(Object::class, $collection->getSchema());
-        $this->assertEquals(null, $collection->getSchema('tryme'));
+        $this->assertInstanceOf(Schema::class, $collection->getSchema());
+        $this->assertInstanceOf(Unknown::class, $collection->getSchema()['tryme']);
     }
 
     public function testWithSchema()
     {
-        $collection = new Collection([
+        $collection = new Collection(null, [
             'name' => 'Test'
         ]);
 
         $result = $collection->withSchema([
-            'foo' => 'bar'
+            'foo' => $this->getMock(Unknown::class)
         ]);
 
         $this->assertEquals($collection, $result);
-        $this->assertEquals('bar', $collection->getSchema('foo'));
-    }
-
-    public function testPrepare()
-    {
-        $collection = new Collection([
-            'name' => 'Test'
-        ]);
-
-        $result = $collection->prepare('key', 'value');
-        $this->assertEquals('value', $result);
+        $this->assertInstanceOf(Unknown::class, $collection->getSchema()['foo']);
     }
 
     public function testAttach()
     {
-        $collection = new Collection([
+        $collection = new Collection(null, [
             'name' => 'Test',
         ]);
 
@@ -77,7 +59,5 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
             'fname' => 'John',
             'lname' => 'Doe'
         ]);
-
-        // var_dump($result);
     }
 }

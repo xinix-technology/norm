@@ -147,7 +147,7 @@ class Model implements JsonSerializer, ArrayAccess
      */
     public function has($offset)
     {
-        return array_key_exists($offset, $this->attributes);
+        return isset($this->attributes[$offset]);
     }
 
     /**
@@ -163,9 +163,9 @@ class Model implements JsonSerializer, ArrayAccess
             return $this->getId();
         }
 
-        $schema = $this->collection->getSchema($key);
-        if (isset($schema) and $schema->hasReader()) {
-            return $schema->read($this);
+        $field = $this->getSchema()[$key];
+        if ($field->hasReader()) {
+            return $field->read($this);
         }
         return isset($this->attributes[$key]) ? $this->attributes[$key] : null;
     }
@@ -186,9 +186,9 @@ class Model implements JsonSerializer, ArrayAccess
         }
 
         foreach ($this->attributes as $key => $value) {
-            $schema = $this->collection->getSchema($key);
+            $schema = $this->collection->getSchema()[$key];
 
-            if (empty($schema['transient'])) {
+            if (is_null($schema['transient'])) {
                 $attributes[$key] = $value;
             }
         }
@@ -232,7 +232,7 @@ class Model implements JsonSerializer, ArrayAccess
         } elseif ($key === '$id') {
             throw new Exception('Restricting model to set for $id.');
         } else {
-            $this->attributes[$key] = $this->prepare($key, $value);
+            $this->attributes[$key] = $this->getSchema()[$key]->prepare($value);
         }
 
         return $this;
@@ -258,26 +258,6 @@ class Model implements JsonSerializer, ArrayAccess
         }
 
         return $this;
-    }
-
-    /**
-     * Prepare model to be sync'd.
-     *
-     * @method prepare
-     *
-     * @param string $key
-     * @param string $value
-     * @param mixed  $schema
-     *
-     * @return [type]
-     */
-    public function prepare($key, $value, $schema = null)
-    {
-        if ($this->collection) {
-            return $this->collection->prepare($key, $value, $schema);
-        } else {
-            return $value;
-        }
     }
 
     /**
@@ -334,7 +314,7 @@ class Model implements JsonSerializer, ArrayAccess
         }
 
         if ($fetchType === Model::FETCH_ALL or $fetchType === Model::FETCH_HIDDEN) {
-            $attributes['$type'] = $this->getCollectionId();
+            $attributes['$type'] = $this->collection->getName();
             $attributes['$id'] = $this->getId();
 
             foreach ($this->attributes as $key => $value) {
@@ -527,46 +507,9 @@ class Model implements JsonSerializer, ArrayAccess
      *
      * @return mixed
      */
-    public function format($field = null, $format = null)
+    public function format($format = null)
     {
-        $numArgs = func_num_args();
-
-        if ($numArgs === 0) {
-            $formatter = $this->collection->option('format');
-
-            if (is_null($formatter)) {
-                $schema = $this->schemaByIndex(0);
-                if (!is_null($schema)) {
-                    return (isset($this[$schema['name']])) ? val($this[$schema['name']]) : null;
-                } else {
-                    return '-- no formatter and schema --';
-                }
-            } else {
-                if ($formatter instanceof Closure) {
-                    return $formatter($this);
-                } elseif (is_string($formatter)) {
-                    $result = preg_replace_callback('/{(\w+)}/', function ($matches) {
-                        return $this->format($matches[1]);
-                    }, $formatter);
-
-                    return $result;
-                } else {
-                    throw new Exception('Unknown format for Model formatter.');
-                }
-            }
-        } else {
-            $format = $format ?: 'plain';
-
-            $schema = $this->schema($field);
-
-            // TODO return value if no formatter or just throw exception?
-            if (is_null($schema)) {
-                throw new Exception("[Norm/Model] No formatter [$format] for field [$field].");
-            } else {
-                $value = isset($this[$field]) ? val($this[$field]) : null;
-                return $schema->format($format, $value, $this);
-            }
-        }
+        return $this->getSchema()->format($this, $format);
     }
 
     /**
@@ -595,13 +538,6 @@ class Model implements JsonSerializer, ArrayAccess
             $this->state = static::STATE_ATTACHED;
             $this->id = $attributes['$id'];
         } else {
-            // TODO is it necessary, because we will use observer for default value
-            // foreach ($this->collection->getSchema() as $key => $field) {
-            //     if ($field->has('default')) {
-            //         $attributes[$key] = $field['default'];
-            //     }
-            // }
-
             $this->state = static::STATE_DETACHED;
         }
 
@@ -619,5 +555,15 @@ class Model implements JsonSerializer, ArrayAccess
     protected function populateOld()
     {
         $this->oldAttributes = $this->attributes ?: array();
+    }
+
+    public function getSchema()
+    {
+        return $this->collection->getSchema();
+    }
+
+    public function __debugInfo()
+    {
+        return $this->toArray();
     }
 }

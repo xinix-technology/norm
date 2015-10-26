@@ -7,8 +7,9 @@ use Exception;
 use Norm\Connection;
 use Norm\Collection;
 use Norm\Cursor;
+use PHPUnit_Framework_TestCase;
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase
+class ConnectionTest extends PHPUnit_Framework_TestCase
 {
     public function mockConnectionWithRows($rows)
     {

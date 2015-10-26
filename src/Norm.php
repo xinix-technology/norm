@@ -1,8 +1,10 @@
 <?php
 namespace Norm;
 
-use ROH\Util\Options;
+use Exception;
+use InvalidArgumentException;
 use ROH\Util\Thing;
+use ROH\Util\Options;
 
 class Norm
 {
@@ -14,13 +16,19 @@ class Norm
 
     protected $resolvers = [];
 
-    protected $mapping = [];
+    // protected $mapping = [];
+
+    protected $translator;
+
+    protected $renderer;
+
+    protected $collections = [];
 
     public function __construct($options = array())
     {
         if (isset($options['connections'])) {
             foreach ($options['connections'] as $id => $connection) {
-                $this->add($id, $connection);
+                $this->add($id, (new Thing($connection))->getHandler());
             }
         }
 
@@ -30,34 +38,35 @@ class Norm
             }
 
             if (isset($options['collections']['resolvers']) && is_array($options['collections']['resolvers'])) {
-                $this->resolvers = $options['collections']['resolvers'];
+                foreach ($options['collections']['resolvers'] as $resolver) {
+                    $this->addResolver($resolver);
+                }
             }
         }
     }
 
-    public function add($id, $connection)
+    public function add($id, Connection $connection)
     {
-        $this->connections[$id] = (new Thing($connection))->getHandler();
+        $this->connections[$id] = $connection;
+        $connection->withId($id);
         if (is_null($this->useConnection)) {
             $this->useConnection = $id;
         }
+
         return $this;
     }
 
     public function getConnection($id = null)
     {
-        return isset($this->connections[$id ?: $this->useConnection]) ? $this->connections[$id ?: $this->useConnection] : null;
+        return isset($this->connections[$id ?: $this->useConnection]) ?
+            $this->connections[$id ?: $this->useConnection] :
+            null;
     }
 
     public function addResolver($resolver)
     {
-        $this->resolvers[] = $resolver;
+        $this->resolvers[] = (new Thing($resolver))->getHandler();
         return $this;
-    }
-
-    public function getResolvers()
-    {
-        return $this->resolvers;
     }
 
     public function setDefault($default)
@@ -66,41 +75,84 @@ class Norm
         return $this;
     }
 
-    public function getDefault()
+    public function factory($collectionId, $connectionId = '')
     {
-        return $this->default;
-    }
-
-    public function factory($name, $conId = null)
-    {
-        $connection = $this->getConnection($conId ?: $this->useConnection);
-        if (is_null($connection)) {
-            throw new \Exception('No connection available to create collection');
+        if (!is_string($collectionId) || !is_string($connectionId)) {
+            throw new InvalidArgumentException('Collection and Connection Id must be string');
         }
 
-        $options = Options::create($this->default)
-            ->merge([
-                'name' => $name,
-                'connection' => $connection,
-            ]);
+        $connection = $this->getConnection($connectionId ?: $this->useConnection);
+        if (is_null($connection)) {
+            throw new Exception('No connection available to create collection');
+        }
 
-        $found = false;
-        foreach ($this->resolvers as $resolver) {
-            $resolved = $resolver($name);
-            if (isset($resolved)) {
-                $options->merge($resolved);
-                $found = true;
-                break;
+        if (!isset($this->collections[$collectionId])) {
+            $options = Options::create($this->default)
+                ->merge([
+                    'name' => $collectionId,
+                ]);
+
+            $found = false;
+            foreach ($this->resolvers as $resolver) {
+                $resolved = $resolver($collectionId);
+                if (isset($resolved)) {
+                    $options->merge($resolved);
+                    $found = true;
+                    break;
+                }
+            }
+
+            $this->collections[$collectionId] = [
+                'proto' => new Collection($this, $options),
+                'mapping' => [],
+            ];
+        }
+
+        if (!isset($this->collections[$collectionId]['mapping'][$connectionId])) {
+            $this->collections[$collectionId]['mapping'][$connectionId] = $this->collections[$collectionId]['proto']
+                ->withConnection($connection);
+        }
+
+        return $this->collections[$collectionId]['mapping'][$connectionId];
+    }
+
+    public function translate($message)
+    {
+        return empty($this->translator) ? $message : call_user_func_array($this->translator, func_get_args());
+    }
+
+    public function render($template, $context = array())
+    {
+        try {
+            if (is_null($this->renderer)) {
+                throw new Exception('Unset renderer for Norm');
+            }
+            return $this->renderer($template, $context);
+        } catch (Exception $e) {
+            $templateFile = __DIR__.'/../templates/'.$template.'.php';
+            if (is_readable($templateFile)) {
+                ob_start();
+                extract($context);
+                include $templateFile;
+                $html = ob_get_clean();
+                return $html;
+            } else {
+                throw $e;
             }
         }
-
-        $collection = new Collection($options);
-        return $collection;
     }
 
-    public function __invoke($name, $conId = null)
+    public function __invoke($name, $connectionId = null)
     {
-        return $this->factory($name, $conId);
+        return $this->factory($name, $connectionId);
+    }
+
+    public function __debugInfo()
+    {
+        return [
+            'use' => $this->useConnection,
+            'connections' => $this->connections,
+        ];
     }
 }
 
@@ -202,10 +254,10 @@ class Norm
 //         try {
 //             $renderer = Norm::options('renderer');
 //             if (is_null($renderer)) {
-//                 throw new \Exception('Unset renderer for Norm');
+//                 throw new Exception('Unset renderer for Norm');
 //             }
 //             return $renderer($template, $context);
-//         } catch (\Exception $e) {
+//         } catch (Exception $e) {
 //             ob_end_clean();
 //             $templateFile = __DIR__.'/../../templates/'.$template.'.php';
 //             if (is_readable($templateFile)) {

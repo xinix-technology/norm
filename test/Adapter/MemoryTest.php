@@ -5,8 +5,9 @@ use DateTime;
 use Norm\Cursor;
 use Norm\Norm as TheNorm;
 use Norm\Adapter\Memory;
+use PHPUnit_Framework_TestCase;
 
-class MemoryTest extends \PHPUnit_Framework_TestCase
+class MemoryTest extends PHPUnit_Framework_TestCase
 {
     protected $norm;
 

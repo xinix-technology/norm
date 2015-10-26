@@ -1,6 +1,8 @@
 <?php
 namespace Norm\Dialect;
 
+use Exception;
+
 class Sql
 {
     public function esc($str)
@@ -52,7 +54,7 @@ class Sql
     public function grammarDelete($collectionName, $id)
     {
         if (is_array($id)) {
-            throw new \Exception('Unimplemented yet');
+            throw new Exception('Unimplemented yet');
         } else {
             return sprintf(
                 'DELETE FROM %s WHERE %s = :id',
@@ -64,21 +66,21 @@ class Sql
 
     public function grammarCount($collectionName, $options = [])
     {
-        throw new \Exception('Unimplemented');
+        throw new Exception('Unimplemented');
     }
 
     public function grammarDistinct($collectionName, $options = [])
     {
-        throw new \Exception('Unimplemented');
+        throw new Exception('Unimplemented');
     }
 
     public function grammarExpression($collectionName, $options = [])
     {
-        throw new \Exception('Unimplemented');
+        throw new Exception('Unimplemented');
     }
 
     public function grammarDDL($collectionName, $options = [])
     {
-        throw new \Exception('Unimplemented');
+        throw new Exception('Unimplemented');
     }
 }

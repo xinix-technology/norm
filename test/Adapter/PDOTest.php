@@ -5,8 +5,9 @@ namespace Norm\Test\Adapter;
 use Norm\Adapter\PDO;
 use Norm\Norm as TheNorm;
 use Norm\Cursor;
+use PHPUnit_Framework_TestCase;
 
-class PDOTest extends \PHPUnit_Framework_TestCase
+class PDOTest extends PHPUnit_Framework_TestCase
 {
     protected $norm;
 

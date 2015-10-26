@@ -1,10 +1,10 @@
 <?php
 namespace Norm\Adapter;
 
+use Exception;
+use Norm\Cursor;
 use Norm\Connection;
 use Norm\Collection;
-use Norm\Cursor;
-
 use Rhumsaa\Uuid\Uuid;
 
 class Memory extends Connection
@@ -43,28 +43,71 @@ class Memory extends Connection
 
     public function cursorDistinct(Cursor $cursor)
     {
-        throw new \Exception('Unimplemented yet!');
+        throw new Exception('Unimplemented yet!');
     }
 
     public function cursorFetch(Cursor $cursor)
     {
-        $criteria = $cursor->getCriteria();
+        $criteria = $this->marshall($cursor->getCriteria(), 'id');
+
+        $query = array(
+            'criteria' => $criteria,
+            'limit' => $cursor->getLimit(),
+            'skip' => $cursor->getSkip(),
+            'sort' => $cursor->getSort(),
+        );
 
         $collectionId = $cursor->getCollectionId();
         $contextAll = isset($this->context[$collectionId]) ? $this->context[$collectionId] : [];
         $context = [];
+
+        $i = 0;
+        $skip = 0;
         foreach ($contextAll as $key => $value) {
-            if ($this->criteriaMatch($value, $criteria)) {
+            if ($this->criteriaMatch($value, $query['criteria'])) {
+                if (isset($query['skip']) && $query['skip'] > $skip) {
+                    $skip++;
+                    continue;
+                }
+
                 $context[] = $value;
+
+                $i++;
+                if (isset($query['limit']) && $query['limit'] == $i) {
+                    break;
+                }
             }
         }
+
+        $sortValues = $query['sort'];
+        if (empty($sortValues)) {
+            return $context;
+        }
+
+        usort($context, function ($a, $b) use ($sortValues) {
+            $context = 0;
+            foreach ($sortValues as $sortKey => $sortVal) {
+                $aKey = isset($a[$sortKey]) ? $a[$sortKey] : null;
+                $bKey = isset($b[$sortKey]) ? $b[$sortKey] : null;
+                $context = strcmp($aKey, $bKey) * $sortVal * -1;
+                if ($context !== 0) {
+                    break;
+                }
+            }
+            return $context;
+        });
 
         return $context;
     }
 
     public function cursorSize(Cursor $cursor, $withLimitSkip = false)
     {
-        throw new \Exception('Unimplemented yet!');
+        $clone = clone $cursor;
+        if ($withLimitSkip) {
+            return count($clone->toArray());
+        } else {
+            $clone->limit(-1)->skip(0);
+        }
     }
 
     public function cursorRead($context, $position = 0)
@@ -75,18 +118,62 @@ class Memory extends Connection
     protected function criteriaMatch($value, $criteria)
     {
         foreach ($criteria as $ck => $cv) {
-            $query = explode('!', $ck);
-            $op = isset($query[1]) ? $query[1] : 'eq';
-            $key = $query[0];
-
-            switch ($op) {
-                case 'eq':
-                    if ($value[$key] !== $cv) {
-                        return false;
+            if ($ck === '!or') {
+                $valid = false;
+                foreach ($cv as $subCriteria) {
+                    if ($this->criteriaMatch($value, $subCriteria)) {
+                        $valid = true;
+                        break;
                     }
-                    break;
-                default:
-                    throw new \Exception('Unimplemented');
+                }
+                if (!$valid) {
+                    return false;
+                }
+            } else {
+                $query = explode('!', $ck);
+                $op = isset($query[1]) ? $query[1] : 'eq';
+                $key = $query[0];
+
+                $rowValue = isset($value[$key]) ? $value[$key] : null;
+                switch ($op) {
+                    case 'eq':
+                        if ($cv !== $rowValue) {
+                            return false;
+                        }
+                        break;
+                    case 'ne':
+                        if ($cv == $rowValue) {
+                            return false;
+                        }
+                        break;
+                    case 'lt':
+                        if ($cv >= $rowValue) {
+                            return false;
+                        }
+                        break;
+                    case 'lte':
+                        if ($cv > $rowValue) {
+                            return false;
+                        }
+                        break;
+                    case 'gt':
+                        if ($cv <= $rowValue) {
+                            return false;
+                        }
+                        break;
+                    case 'gte':
+                        if ($cv < $rowValue) {
+                            return false;
+                        }
+                        break;
+                    case 'in':
+                        if (!in_array($rowValue, $cv)) {
+                            return false;
+                        }
+                        break;
+                    default:
+                        throw new Exception("Operator '$operator' is not implemented yet!");
+                }
             }
         }
         return true;

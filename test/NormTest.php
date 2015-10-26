@@ -4,9 +4,11 @@ namespace Norm\Test;
 
 use stdClass;
 use Norm\Norm;
+use Norm\Connection;
 use Norm\Collection;
+use PHPUnit_Framework_TestCase;
 
-class NormTest extends \PHPUnit_Framework_TestCase
+class NormTest extends PHPUnit_Framework_TestCase
 {
     public function __construct()
     {
@@ -17,9 +19,8 @@ class NormTest extends \PHPUnit_Framework_TestCase
     {
         $norm = new Norm();
 
-        $stub = new stdClass();
+        $stub = $this->getMock(Connection::class);
         $norm->add('first', $stub);
-
         $this->assertEquals($stub, $norm->getConnection('first'));
     }
 
@@ -27,7 +28,7 @@ class NormTest extends \PHPUnit_Framework_TestCase
     {
         $norm = new Norm();
 
-        $stub = $this->getMockBuilder('stdClass')->getMock();
+        $stub = $this->getMock(Connection::class);
         $retval = $norm->add('first', $stub);
 
         $this->assertEquals($norm, $retval, '#add should be chainable');
@@ -37,54 +38,42 @@ class NormTest extends \PHPUnit_Framework_TestCase
     {
         $norm = new Norm();
 
-        $stub = $this->getMockBuilder('stdClass')->getMock();
-        $retval = $norm->addResolver($stub);
+        $resolver = $this->getMock('stdClass');
+        $retval = $norm->addResolver($resolver);
 
         $this->assertEquals($norm, $retval, '#addResolver should be chainable');
-        $this->assertEquals(
-            $stub,
-            $norm->getResolvers()[0],
-            '#getResolver should return the same value set with #addResolver'
-        );
     }
 
     public function testCanSetAndGetDefault()
     {
         $norm = new Norm();
 
-        $stub = $this->getMockBuilder('stdClass')->getMock();
-        $retval = $norm->setDefault($stub);
+        $default = $this->getMock('stdClass');
+        $retval = $norm->setDefault($default);
 
         $this->assertEquals($norm, $retval, '#setDefault should be chainable');
-        $this->assertEquals(
-            $stub,
-            $norm->getDefault(),
-            '#getDefault should return the same value set with #setDefault'
-        );
     }
 
     public function testConstructWithOptions()
     {
-        $connectionsStub = [
-            'first' => new stdClass(),
+        $connections = [
+            'first' => $this->getMock(Connection::class),
         ];
 
-        $defaultStub = $this->getMockBuilder('stdClass')->getMock();
-        $resolverStub = $this->getMockBuilder('stdClass')->getMock();
+        $default = $this->getMock('stdClass');
+        $resolver = $this->getMock('stdClass');
 
         $norm = new Norm([
-            'connections' => $connectionsStub,
+            'connections' => $connections,
             'collections' => [
-                'default' => $defaultStub,
+                'default' => $default,
                 'resolvers' => [
-                    $resolverStub
+                    $resolver
                 ]
             ]
         ]);
 
-        $this->assertEquals($connectionsStub['first'], $norm->getConnection('first'));
-        $this->assertEquals($defaultStub, $norm->getDefault());
-        $this->assertEquals($resolverStub, $norm->getResolvers()[0]);
+        $this->assertEquals($connections['first'], $norm->getConnection('first'));
     }
 
     public function testFactoryUseResolvers()
@@ -103,7 +92,7 @@ class NormTest extends \PHPUnit_Framework_TestCase
 
         $norm = new Norm([
             'connections' => [
-                'null' => new \stdClass(),
+                'null' => $this->getMock(Connection::class),
             ],
             'collections' => [
                 'resolvers' => [

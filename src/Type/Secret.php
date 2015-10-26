@@ -1,4 +1,5 @@
-<?php namespace Norm\Type;
+<?php
+namespace Norm\Type;
 
 use JsonKit\JsonSerializer;
 
@@ -52,7 +53,7 @@ class Secret implements JsonSerializer
     /**
      * Marshal single object from norm to the proper data accepted by data source. Sometimes data source expects object to be persisted to it in specific form, this method will transform associative array from Norm into this specific form.
      *
-     * @see \Norm\Connection::unmarshall()
+     * @see Norm\Connection::unmarshall()
      *
      * @return mixed Friendly data source object
      */
