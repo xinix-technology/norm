@@ -129,6 +129,9 @@ abstract class SQLDialect
                 case 'lte':
                     $operator = '<=';
                     break;
+                case 'ne':
+                    $operator = '!=';
+                    break;
                 case 'lt':
                     $operator = '<';
                     break;

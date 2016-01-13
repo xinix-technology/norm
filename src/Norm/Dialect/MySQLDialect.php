@@ -2,7 +2,7 @@
 
 use Norm\Collection;
 use Norm\Cursor;
-
+use Exception;
 class MySQLDialect extends SQLDialect
 {
     protected $FIELD_MAP = array(
@@ -175,6 +175,9 @@ class MySQLDialect extends SQLDialect
                     break;
                 case 'lte':
                     $operator = '<=';
+                    break;
+                case 'ne':
+                    $operator = '!=';
                     break;
                 case 'lt':
                     $operator = '<';
