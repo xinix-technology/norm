@@ -12,11 +12,10 @@ various data store, such as PDO, PHP-MongoDB, etc.
 
 To see the API Documentation you have to generate the API Documentation first.
 
+```bash
+npm i 
+gulp update
+gulp doc
+
 ```
 
-composer update
-./vendor/bin/phpdoc.php -d ./src/ -t ./docs/api/
-
-```
-
-2014
