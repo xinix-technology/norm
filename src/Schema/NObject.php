@@ -4,7 +4,7 @@ namespace Norm\Schema;
 
 use Norm\Type\Object as TypeObject;
 
-class Object extends Field
+class NObject extends NField
 {
 
     public function prepare($value)

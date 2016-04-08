@@ -8,19 +8,19 @@ $uniqid = uniqid('ref-array-');
   <div class="container">
     <?php if (!empty($value)): ?>
     <?php foreach ($value as $k => $v): ?>
-      <?php echo $self->render('_schema/reference/input', array(
+      <?php echo $self->render('_schema/reference/input', [
             'name' => $self['name'].'[]',
             'value' => $v,
             // 'entry' => '',
-        )); ?>
+        ]); ?>
     <?php endforeach ?>
     <?php endif ?>
 
-    <?php echo $self->render('_schema/reference/input', array(
+    <?php echo $self->render('_schema/reference/input', [
             'name' => $self['name'].'[]',
             'value' => '',
             // 'entry' => '',
-        )); ?>
+        ]); ?>
   </div>
   <a href="#" class="button">Add</a>
 

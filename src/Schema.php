@@ -4,13 +4,12 @@ namespace Norm;
 use Norm\Exception\NormException;
 use Norm\Model;
 use Norm\Collection;
-use ROH\Util\Collection as UtilCollection;
 use ROH\Util\StringFormatter;
-use Norm\Schema\Unknown;
-use Norm\Schema\Field;
+use Norm\Schema\NUnknown;
+use Norm\Schema\NField;
 use InvalidArgumentException;
 
-class Schema extends UtilCollection
+class Schema extends Normable
 {
     protected $collection;
 
@@ -18,34 +17,36 @@ class Schema extends UtilCollection
 
     protected $firstKey;
 
-    public function __construct(Collection $collection, $fields = array())
+    public function __construct(Repository $repository, Collection $collection, array $fields = [])
     {
         $this->collection = $collection;
 
-        parent::__construct();
+        parent::__construct($repository);
 
-        foreach ($fields as $key => $field) {
-            $this->withField($key, $field);
+        foreach ($fields as $field) {
+            $this->addField($field);
         }
 
         $this->formatters = [
-            '' => [$this, 'defaultFormatter'],
+            'plain' => [$this, 'formatPlain'],
         ];
     }
 
-    public function withField($key, $field)
+    public function addField($meta)
     {
-        if (!($field instanceof Field)) {
-            throw new InvalidArgumentException('Field for schema must be instance of Field');
+        if ($meta instanceof NField) {
+            $field = $meta;
+        } else {
+            $field = $this->resolve($meta, [
+                'schema' => $this,
+            ]);
         }
+
+        $this[$field['name']] = $field;
 
         if (is_null($this->firstKey)) {
-            $this->firstKey = $key;
+            $this->firstKey = $field['name'];
         }
-
-        $field->forSchema($this, $key);
-
-        $this[$key] = $field;
 
         return $this;
     }
@@ -58,15 +59,15 @@ class Schema extends UtilCollection
                 continue;
             }
 
-            $rules[$k] = array(
+            $rules[$k] = [
                 'label' => $field['label'],
                 'filters' => $field->getFilter(),
-            );
+            ];
         }
         return $rules;
     }
 
-    public function defaultFormatter($model)
+    public function formatPlain($model)
     {
         return $model[$this->firstKey];
     }
@@ -76,7 +77,7 @@ class Schema extends UtilCollection
         return isset($this->formatters[$format]) ? $this->formatters[$format] : null;
     }
 
-    public function withFormatter($format, $formatter)
+    public function addFormatter($format, $formatter)
     {
         if (is_string($formatter)) {
             $fmt = function ($model) use ($formatter) {
@@ -99,37 +100,33 @@ class Schema extends UtilCollection
         return $fmt;
     }
 
-    public function format(Model $model, $format = null)
+    public function format($format, Model $model)
     {
         $formatter = $this->getFormatter($format ?: '');
 
         if (is_null($formatter)) {
-            throw new NormException('Formatter '.$format.' not found');
+            throw new NormException('Formatter ' . $format . ' not found');
         }
 
         return $formatter($model);
     }
 
-    public function factory($collectionId = null, $connectionId = null)
-    {
-        return $this->collection->factory($collectionId, $connectionId);
-    }
-
-    public function translate($message)
-    {
-        return $this->collection->translate($message);
-    }
-
-    public function render($template, array $context = array())
-    {
-        return $this->collection->render($template, $context);
-    }
-
     public function offsetGet($key)
     {
         if (!$this->offsetExists($key)) {
-            $this->attributes[$key] = (new Unknown())->forSchema($this, $key);
+            // $this->attributes[$key] =
+            return new NUnknown($this->repository, $this, [
+                'name' => $key
+            ]);
         }
         return $this->attributes[$key];
+    }
+
+    public function factory($collectionId = '', $connectionId = '')
+    {
+        if ('' === $collectionId) {
+            return $this->collection;
+        }
+        return $this->repository->factory($collectionId, $connectionId);
     }
 }

@@ -12,13 +12,13 @@ abstract class AbstractObserverTest extends PHPUnit_Framework_TestCase
     public function getCollection($observer)
     {
         $connection = new Memory();
-        $norm = new Norm([
+        $repository = new Norm([
             'connections' => [
                 "memory" => $connection,
             ],
         ]);
 
-        return (new Collection($norm, [
+        return (new Collection($repository, [
             'name' => 'Foo',
             'observers' => [
                 $observer

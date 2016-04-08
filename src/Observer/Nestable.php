@@ -2,14 +2,14 @@
 
 namespace Norm\Observer;
 
-use Norm\Schema\Integer;
+use Norm\Schema\NInteger;
 
 class Nestable
 {
     public function initialize($context)
     {
-        $context['collection']->getSchema()->withField('$lft', Integer::create())
-            ->withField('$rgt', Integer::create());
+        $context['collection']->getSchema()->withField('$lft', NInteger::create())
+            ->withField('$rgt', NInteger::create());
     }
 
     public function save($context, $next)

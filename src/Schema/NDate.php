@@ -4,7 +4,7 @@ namespace Norm\Schema;
 
 use DateTimeZone;
 
-class Date extends DateTime
+class NDate extends DateTime
 {
 
     public function formatInput($value, $model = null)

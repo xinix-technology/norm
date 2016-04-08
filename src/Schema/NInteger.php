@@ -2,10 +2,10 @@
 
 namespace Norm\Schema;
 
-class UnsafeString extends String
+class NInteger extends NField
 {
     public function prepare($value)
     {
-        return utf8_encode($value);
+        return (int) $value;
     }
 }

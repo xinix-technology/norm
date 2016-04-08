@@ -3,17 +3,17 @@ namespace Norm\Test\Adapter;
 
 use DateTime;
 use Norm\Cursor;
-use Norm\Norm as TheNorm;
+use Norm\Repository;
 use Norm\Adapter\Memory;
 use PHPUnit_Framework_TestCase;
 
 class MemoryTest extends PHPUnit_Framework_TestCase
 {
-    protected $norm;
+    protected $repository;
 
     public function setUp()
     {
-        $this->norm = new TheNorm([
+        $this->repository = new Repository([
             'connections' => [
                 'memory' => [
                     'class' => Memory::class
@@ -21,24 +21,24 @@ class MemoryTest extends PHPUnit_Framework_TestCase
             ]
         ]);
 
-        $model = $this->norm->factory('Foo')->newInstance();
+        $model = $this->repository->factory('Foo')->newInstance();
         $model->set(['fname' => 'Jane', 'lname' => 'Doe']);
         $model->save();
-        $model = $this->norm->factory('Foo')->newInstance();
+        $model = $this->repository->factory('Foo')->newInstance();
         $model->set(['fname' => 'Ganesha', 'lname' => 'M']);
         $model->save();
     }
 
     public function testSearch()
     {
-        $cursor = $this->norm->factory('Foo')->find();
+        $cursor = $this->repository->factory('Foo')->find();
 
         $this->assertInstanceOf(Cursor::class, $cursor);
     }
 
     public function testCreate()
     {
-        $model = $this->norm->factory('Foo')->newInstance();
+        $model = $this->repository->factory('Foo')->newInstance();
         $model->set([
             'fname' => 'John',
             'lname' => 'Doe',
@@ -46,7 +46,7 @@ class MemoryTest extends PHPUnit_Framework_TestCase
         $model->save();
 
         $this->assertEquals(
-            $this->norm->getConnection('memory')->getContext()['foo'][$model['$id']]['id'],
+            $this->repository->getConnection('memory')->getContext()['foo'][$model['$id']]['id'],
             $model['$id']
         );
     }
@@ -55,26 +55,26 @@ class MemoryTest extends PHPUnit_Framework_TestCase
     {
         $this->testCreate();
 
-        $model = $this->norm->factory('Foo')->findOne(['fname' => 'John']);
+        $model = $this->repository->factory('Foo')->findOne(['fname' => 'John']);
         $this->assertEquals('Doe', $model['lname']);
 
-        $this->assertEquals(3, count($this->norm->getConnection('memory')->getContext()['foo']));
+        $this->assertEquals(3, count($this->repository->getConnection('memory')->getContext()['foo']));
     }
 
     public function testUpdate()
     {
-        $model = $this->norm->factory('Foo')->findOne(['fname' => 'Ganesha']);
+        $model = $this->repository->factory('Foo')->findOne(['fname' => 'Ganesha']);
         $model['fname'] = 'Rob';
         $model->save();
 
-        $this->assertEquals('Rob', $this->norm->getConnection('memory')->getContext()['foo'][$model['$id']]['fname']);
+        $this->assertEquals('Rob', $this->repository->getConnection('memory')->getContext()['foo'][$model['$id']]['fname']);
     }
 
     public function testDelete()
     {
-        $model = $this->norm->factory('Foo')->findOne(['fname' => 'Ganesha']);
+        $model = $this->repository->factory('Foo')->findOne(['fname' => 'Ganesha']);
         $model->remove();
 
-        $this->assertEquals(1, count($this->norm->getConnection('memory')->getContext()['foo']));
+        $this->assertEquals(1, count($this->repository->getConnection('memory')->getContext()['foo']));
     }
 }

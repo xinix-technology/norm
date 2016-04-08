@@ -3,10 +3,10 @@
 namespace Norm\Schema;
 
 use DateTimeZone;
-use DateTime as NDateTime;
+use DateTime;
 use Norm\Type\DateTime as TypeDateTime;
 
-class DateTime extends Field
+class NDateTime extends NField
 {
     public function prepare($value)
     {
@@ -14,14 +14,14 @@ class DateTime extends Field
             return null;
         } elseif ($value instanceof TypeDateTime) {
             return $value;
-        } elseif ($value instanceof NDateTime) {
+        } elseif ($value instanceof DateTime) {
             $t = $value->format('c');
         } elseif (is_string($value)) {
             $t = date('c', strtotime($value));
         } else {
             $t = date('c', (int) $value);
         }
-        return new TypeDateTime($t);
+        return new TypeDateTime($this->repository, $t);
     }
 
     public function formatInput($value, $model = null)

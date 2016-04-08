@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-class String extends Field
+class NString extends NField
 {
     public function prepare($value)
     {

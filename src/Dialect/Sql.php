@@ -12,8 +12,8 @@ class Sql
 
     public function grammarInsert($collectionName, $data)
     {
-        $fields = array();
-        $placeholders = array();
+        $fields = [];
+        $placeholders = [];
 
         foreach ($data as $key => $value) {
             $fields[] = $this->esc($key);
@@ -39,7 +39,7 @@ class Sql
 
     public function grammarUpdate($collectionName, $data)
     {
-        $sets = array();
+        $sets = [];
         foreach ($data as $key => $value) {
             $sets[] = $key.' = :'.$key;
         }

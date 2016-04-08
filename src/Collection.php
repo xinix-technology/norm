@@ -1,14 +1,12 @@
 <?php
 namespace Norm;
 
-use InvalidArgumentException;
 use Norm\Exception\NormException;
 use Norm\Model;
 use Norm\Cursor;
 use Norm\Schema;
 use Norm\Filter;
 use ROH\Util\Options;
-use ROH\Util\Thing;
 use ROH\Util\Inflector;
 use ROH\Util\Collection as UtilCollection;
 use ROH\Util\Composition;
@@ -22,11 +20,11 @@ use ROH\Util\Composition;
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-class Collection
+class Collection extends Normable
 {
     protected $compositions = [];
 
-    protected $norm;
+    protected $repository;
     /**
      * Logical id
      *
@@ -85,17 +83,14 @@ class Collection
      *
      * @param array $options
      */
-    public function __construct($norm, $options = array())
+    public function __construct(Repository $repository, Connection $connection, $options = [])
     {
-        if (isset($norm) && !($norm instanceof Norm)) {
-            throw new InvalidArgumentException('First arguments must be instance of Norm\Norm');
-        }
-
         if (!isset($options['name'])) {
-            throw new InvalidArgumentException('Missing name, check collection configuration!');
+            throw new NormException('Missing name, check collection configuration!');
         }
 
-        $this->norm = $norm;
+        $this->repository = $repository;
+        $this->connection = $connection;
 
         $options = Options::create([
             'schema' => [],
@@ -107,13 +102,16 @@ class Collection
         $this->id = isset($options['id']) ? $options['id'] : Inflector::tableize($this->name);
         $this->modelClass = $options['model'];
 
-        foreach ($options['observers'] as $observer) {
-            $this->observe((new Thing($observer))->getHandler());
+        foreach ($options['observers'] as $meta) {
+            $this->observe($this->resolve($meta));
         }
 
-        $this->schema = new Schema($this, $options['schema']);
+        $this->schema = $this->resolve(Schema::class, [
+            'collection' => $this,
+            'fields' => $options['schema']
+        ]); //new Schema($this, $options['schema']);
         if (isset($options['format'])) {
-            $this->schema->withFormatter($options['format']);
+            $this->schema->addFormatter($options['format']);
         }
 
         $context = new UtilCollection([
@@ -122,13 +120,12 @@ class Collection
         $this->apply('initialize', $context);
     }
 
-    public function withConnection(Connection $connection)
-    {
-        $this->connection = $connection;
+    // public function withConnection(Connection $connection)
+    // {
+    //     $this->connection = $connection;
 
-
-        return $this;
-    }
+    //     return $this;
+    // }
 
     /**
      * Getter of collection name. Collection name usually mapped to table name or
@@ -199,12 +196,12 @@ class Collection
         return $this->schema;
     }
 
-    public function withSchema($schema)
-    {
-        $this->schema = new Schema($this, $schema);
+    // public function withSchema($schema)
+    // {
+    //     $this->schema = new Schema($this, $schema);
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getFilter()
     {
@@ -246,12 +243,12 @@ class Collection
      *
      * @return Norm\Cursor
      */
-    public function find($criteria = array())
+    public function find($criteria = [])
     {
         if (!is_null($criteria) && !is_array($criteria)) {
-            $criteria = array(
+            $criteria = [
                 '$id' => $criteria,
-            );
+            ];
         }
 
         // wrap criteria as object instance to make sure it can be override by hooks
@@ -274,7 +271,7 @@ class Collection
      *
      * @return Norm\Model
      */
-    public function findOne($criteria = array())
+    public function findOne($criteria = [])
     {
         return $this->find($criteria)
             ->limit(1)
@@ -394,27 +391,27 @@ class Collection
     {
 
         if (method_exists($observer, 'save')) {
-            $this->compose('save', array($observer, 'save'));
+            $this->compose('save', [$observer, 'save']);
         }
 
         if (method_exists($observer, 'filter')) {
-            $this->compose('filter', array($observer, 'filter'));
+            $this->compose('filter', [$observer, 'filter']);
         }
 
         if (method_exists($observer, 'remove')) {
-            $this->compose('remove', array($observer, 'remove'));
+            $this->compose('remove', [$observer, 'remove']);
         }
 
         if (method_exists($observer, 'search')) {
-            $this->compose('search', array($observer, 'search'));
+            $this->compose('search', [$observer, 'search']);
         }
 
         if (method_exists($observer, 'attach')) {
-            $this->compose('attach', array($observer, 'attach'));
+            $this->compose('attach', [$observer, 'attach']);
         }
 
         if (method_exists($observer, 'initialize')) {
-            $this->compose('initialize', array($observer, 'initialize'));
+            $this->compose('initialize', [$observer, 'initialize']);
         }
     }
 
@@ -432,20 +429,15 @@ class Collection
 
     public function __call($method, $args)
     {
-        $connectionMethods = [
-            'cursorDistinct', 'cursorFetch', 'cursorSize', 'cursorRead'
-        ];
-        $normMethods = [
-            'translate',
-            'render'
-        ];
-        if (in_array($method, $connectionMethods)) {
-            return call_user_func_array([$this->getConnection(), $method], $args);
-        } elseif (in_array($method, $normMethods)) {
-            return call_user_func_array([$this->norm, $method], $args);
+        switch ($method) {
+            case 'cursorDistinct':
+            case 'cursorFetch':
+            case 'cursorSize':
+            case 'cursorRead':
+                return call_user_func_array([$this->getConnection(), $method], $args);
+            default:
+                throw new NormException('Collection does not have method ' . $method);
         }
-
-        throw new InvalidArgumentException('Undefined method or method handler: '. $method);
     }
 
     public function cursorRead($context, $position = 0)
@@ -459,7 +451,7 @@ class Collection
         if (is_null($collectionId)) {
             return $this;
         }
-        return $this->norm->factory($collectionId, $connectionId ?: $this->getConnection()->getId());
+        return $this->repository->factory($collectionId, $connectionId ?: $this->getConnection()->getId());
     }
 
     public function __debugInfo()
@@ -493,7 +485,7 @@ class Collection
         $composition = $this->getComposition($key);
 
         if (func_num_args() > 2) {
-            $composition->withCore($callback);
+            $composition->setCore($callback);
         }
 
         return $composition->apply($context);

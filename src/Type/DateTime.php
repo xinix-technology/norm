@@ -1,10 +1,10 @@
 <?php
 namespace Norm\Type;
 
-use Norm\Norm;
 use DateTimeZone;
 use DateTime as NDateTime;
 use JsonKit\JsonSerializer;
+use Norm\Repository;
 
 /**
  * Collection abstract class.
@@ -16,6 +16,14 @@ use JsonKit\JsonSerializer;
  */
 class DateTime extends NDateTime implements JsonSerializer
 {
+    protected $repository;
+
+    function __construct(Repository $repository, $t)
+    {
+        $this->repository = $repository;
+        parent::__construct($t);
+    }
+
     /**
      * Formatting date time implementation.
      *
@@ -52,8 +60,8 @@ class DateTime extends NDateTime implements JsonSerializer
      */
     public function jsonSerialize()
     {
-        if ($tz = Norm::options('tz')) {
-            $this->setTimezone(new DateTimeZone($tz));
+        if (null !== $this->repository->getAttribute('timezone')) {
+            $this->setTimezone(new DateTimeZone($this->repository->getAttribute('timezone')));
         }
 
         return $this->format('c');
@@ -66,8 +74,9 @@ class DateTime extends NDateTime implements JsonSerializer
      */
     public function __toString()
     {
-        if ($tz = Norm::options('tz')) {
-            $this->setTimezone(new DateTimeZone($tz));
+
+        if (null !== $this->repository->getAttribute('timezone')) {
+            $this->setTimezone(new DateTimeZone($this->repository->getAttribute('timezone')));
         }
 
         return $this->format('c');

@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-class Float extends Field
+class NFloat extends NField
 {
     public function prepare($value)
     {

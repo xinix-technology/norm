@@ -4,7 +4,7 @@ namespace Norm\Schema;
 
 use Norm\Type\Secret as Secret;
 
-class Password extends Field
+class NPassword extends NField
 {
     public function toJSON($value)
     {
@@ -18,13 +18,9 @@ class Password extends Field
 
     public function formatInput($value, $model = null)
     {
-        return '
-            <div class="row">
-                <input class="span-6" type="password" name="'.$this['name'].
-                '" value="" placeholder="Password" autocomplete="off" /><input class="span-6" type="password" name="'.
-                $this['name'].'_confirmation" value="" placeholder="Password confirmation" autocomplete="off" />
-            </div>
-        ';
+        return $this->render('__norm__/npassword/input', [
+            'self' => $this,
+        ]);
     }
 
     public function formatReadonly($value, $model = null)

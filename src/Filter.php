@@ -4,7 +4,6 @@ namespace Norm;
 use Exception;
 use ArrayAccess;
 use InvalidArgumentException;
-use ROH\Util\Thing;
 use ROH\Util\Collection as UtilCollection;
 use Norm\Exception\SkipException;
 use Norm\Exception\FilterException;
@@ -145,7 +144,18 @@ class Filter
             return $filter[0]($val, $opts);
         }
 
-        throw new FatalException('Ineligible filter function '.print_r($filter, 1));
+        $message = 'Ineligible filter ';
+        if ($filter[2] === 's') {
+            $message .= $filter[0];
+        } else {
+            $message .= '{callable}';
+        }
+        $message .= ' for ';
+        if ($data instanceof Model) {
+            $message .= $data->getCollectionName().'::';
+        }
+        $message .= $k;
+        throw new FatalException($message);
     }
 
     public function run($data, $key = null)
@@ -157,9 +167,9 @@ class Filter
         if (is_null($key)) {
             $rules = $this->rules;
         } elseif (isset($this->rules[$key])) {
-            $rules = array(
+            $rules = [
                 $key => $this->rules[$key]
-            );
+            ];
         }
 
         if (is_array($rules)) {
@@ -207,7 +217,7 @@ class Filter
     {
         if (is_null($value) || $value === '') {
             throw FilterException::create($opts['key'], 'Field %s is required')
-                ->withArgs($this->getLabel($opts['key']));
+                ->setArgs($this->getLabel($opts['key']));
         }
 
         return $value;
@@ -223,10 +233,33 @@ class Filter
 
         if ($value.'' !== $opts['data'][$opts['key'].'_confirmation']) {
             throw FilterException::create($opts['key'], 'Field %s must be confirmed')
-                ->withArgs($this->getLabel($opts['key']));
+                ->setArgs($this->getLabel($opts['key']));
         }
 
         unset($opts['data'][$opts['key'].'_confirmation']);
+
+        return $value;
+    }
+
+    public function filterSalt($value, $opts)
+    {
+        if ($value) {
+            $config = $this->getAttribute('salt');
+            if (isset($config)) {
+                $method = 'md5';
+                if (is_string($config)) {
+                    $key = $config;
+                } else {
+                    list($method, $key) = $config;
+                }
+
+                if (empty($key)) {
+                    throw new \Exception('You should define salt key in order to use salt.');
+                }
+
+                $value = $method($value.$key);
+            }
+        }
 
         return $value;
     }
@@ -252,7 +285,7 @@ class Filter
 
         if (isset($model) && $model['$id'] != $opts['data']['$id']) {
             throw FilterException::create($opts['key'], 'Field %s must be unique')
-                ->withArgs($this->getLabel($opts['key']));
+                ->setArgs($this->getLabel($opts['key']));
         }
 
         return $value;
@@ -266,7 +299,7 @@ class Filter
 
         if (!empty($opts['data'][$opts['arguments'][0]]) && (is_null($value) || $value === '')) {
             throw FilterException::create($opts['key'], 'Field %s is required')
-                ->withArgs($this->getLabel($opts['key']));
+                ->setArgs($this->getLabel($opts['key']));
         }
 
         return $value;
@@ -281,7 +314,7 @@ class Filter
 
         if (empty($opts['data'][$opts['arguments'][0]]) && (is_null($value) || $value === '')) {
             throw FilterException::create($opts['key'], 'Field %s is required')
-                ->withArgs($this->getLabel($opts['key']));
+                ->setArgs($this->getLabel($opts['key']));
         }
 
         return $value;
@@ -296,12 +329,12 @@ class Filter
 
         if ($value < $opts['arguments'][0]) {
             throw FilterException::create($opts['key'], 'Field %s less than '.$opts['arguments'][0])
-                ->withArgs($this->getLabel($opts['key']));
+                ->setArgs($this->getLabel($opts['key']));
         }
 
         return $value;
-
     }
+
 
     public function filterIp($value, $opts)
     {
@@ -311,7 +344,7 @@ class Filter
 
         if (!empty($value) && !filter_var($value, FILTER_VALIDATE_IP)) {
             throw FilterException::create($opts['key'], 'Field %s is not valid IP Address')
-                ->withArgs($this->getLabel($opts['key']));
+                ->setArgs($this->getLabel($opts['key']));
         }
 
         return $value;
@@ -325,7 +358,7 @@ class Filter
 
         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
             throw FilterException::create($opts['key'], 'Field %s is not valid email')
-                ->withArgs($this->getLabel($opts['key']));
+                ->setArgs($this->getLabel($opts['key']));
         }
 
         return $value;
@@ -348,5 +381,10 @@ class Filter
         }
 
         return $value;
+    }
+
+    public function getAttribute($key)
+    {
+        return $this->collection->getAttribute($key);
     }
 }

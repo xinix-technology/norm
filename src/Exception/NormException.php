@@ -1,5 +1,5 @@
 <?php
-namespace Bono\Exception;
+namespace Norm\Exception;
 
 use RuntimeException;
 

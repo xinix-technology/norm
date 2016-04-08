@@ -2,7 +2,7 @@
 namespace Norm\Test\Adapter;
 
 use Norm\Cursor;
-use Norm\Norm as TheNorm;
+use Norm\Repository;
 use Norm\Adapter\File;
 use FilesystemIterator;
 use PHPUnit_Framework_TestCase;
@@ -23,13 +23,13 @@ if (!function_exists('rrmdir')) {
 
 class FileTest extends PHPUnit_Framework_TestCase
 {
-    protected $norm;
+    protected $repository;
 
     public function setUp()
     {
         @rrmdir('db-files');
 
-        $this->norm = new TheNorm([
+        $this->repository = new Repository([
             'connections' => [
                 'file' => [
                     'class' => File::class,
@@ -40,24 +40,28 @@ class FileTest extends PHPUnit_Framework_TestCase
             ]
         ]);
 
-        $model = $this->norm->factory('Foo')->newInstance();
+        $model = $this->repository->factory('Foo')->newInstance();
         $model->set(['fname' => 'Jane', 'lname' => 'Doe']);
         $model->save();
-        $model = $this->norm->factory('Foo')->newInstance();
+        $model = $this->repository->factory('Foo')->newInstance();
         $model->set(['fname' => 'Ganesha', 'lname' => 'M']);
         $model->save();
     }
 
+    public function tearDown() {
+        @rrmdir('db-files');
+    }
+
     public function testSearch()
     {
-        $cursor = $this->norm->factory('Foo')->find();
+        $cursor = $this->repository->factory('Foo')->find();
 
         $this->assertInstanceOf(Cursor::class, $cursor);
     }
 
     public function testCreate()
     {
-        $model = $this->norm->factory('Foo')->newInstance();
+        $model = $this->repository->factory('Foo')->newInstance();
         $model->set([
             'fname' => 'John',
             'lname' => 'Doe',
@@ -76,7 +80,7 @@ class FileTest extends PHPUnit_Framework_TestCase
     {
         $this->testCreate();
 
-        $model = $this->norm->factory('Foo')->findOne(['fname' => 'John']);
+        $model = $this->repository->factory('Foo')->findOne(['fname' => 'John']);
         $this->assertEquals('Doe', $model['lname']);
 
         $fi = new FilesystemIterator('db-files/foo', FilesystemIterator::SKIP_DOTS);
@@ -85,7 +89,7 @@ class FileTest extends PHPUnit_Framework_TestCase
 
     public function testUpdate()
     {
-        $model = $this->norm->factory('Foo')->findOne(['fname' => 'Ganesha']);
+        $model = $this->repository->factory('Foo')->findOne(['fname' => 'Ganesha']);
         $model['fname'] = 'Rob';
         $model->save();
 
@@ -96,7 +100,7 @@ class FileTest extends PHPUnit_Framework_TestCase
 
     public function testDelete()
     {
-        $model = $this->norm->factory('Foo')->findOne(['fname' => 'Ganesha']);
+        $model = $this->repository->factory('Foo')->findOne(['fname' => 'Ganesha']);
         $model->remove();
 
         $fi = new FilesystemIterator('db-files/foo', FilesystemIterator::SKIP_DOTS);

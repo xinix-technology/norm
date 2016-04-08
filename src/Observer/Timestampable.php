@@ -1,8 +1,8 @@
 <?php
 namespace Norm\Observer;
 
-use DateTime as NDateTime;
-use Norm\Schema\DateTime as SchemaDateTime;
+use DateTime;
+use Norm\Schema\NDateTime;
 use ROH\Util\Options;
 
 class Timestampable
@@ -20,15 +20,23 @@ class Timestampable
     public function initialize($context, $next)
     {
         $context['collection']->getSchema()
-            ->withField($this->options['createdKey'], SchemaDateTime::create())
-            ->withField($this->options['updatedKey'], SchemaDateTime::create());
+            ->addField([ NDateTime::class, [
+                'options' => [
+                    'name' => $this->options['createdKey']
+                ]
+            ]])
+            ->addField([ NDateTime::class, [
+                'options' => [
+                    'name' => $this->options['updatedKey']
+                ]
+            ]]);
 
         $next($context);
     }
 
     public function save($context, $next)
     {
-        $now = new NDateTime();
+        $now = new DateTime();
 
         if ($context['model']->isNew()) {
             $context['model'][$this->options['updatedKey']] = $now;

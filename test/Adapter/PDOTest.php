@@ -3,18 +3,18 @@
 namespace Norm\Test\Adapter;
 
 use Norm\Adapter\PDO;
-use Norm\Norm as TheNorm;
+use Norm\Repository;
 use Norm\Cursor;
 use PHPUnit_Framework_TestCase;
 
 class PDOTest extends PHPUnit_Framework_TestCase
 {
-    protected $norm;
+    protected $repository;
 
     public function setUp()
     {
 
-        $this->norm = new TheNorm([
+        $this->repository = new Repository([
             'connections' => [
                 'sqlite' => [
                     'class' => PDO::class,
@@ -32,23 +32,23 @@ class PDOTest extends PHPUnit_Framework_TestCase
         ];
         $sql = sprintf('CREATE TABLE foo (%s)', implode(', ', $columns));
         try {
-            $raw = $this->norm->getConnection('sqlite')->getRaw();
+            $raw = $this->repository->getConnection('sqlite')->getRaw();
         } catch (\Exception $e) {
             $this->markTestSkipped($e->getMessage());
         }
         $raw->exec($sql);
 
-        $model = $this->norm->factory('Foo')->newInstance();
+        $model = $this->repository->factory('Foo')->newInstance();
         $model->set(['fname' => 'Jane', 'lname' => 'Doe']);
         $model->save();
-        $model = $this->norm->factory('Foo')->newInstance();
+        $model = $this->repository->factory('Foo')->newInstance();
         $model->set(['fname' => 'Ganesha', 'lname' => 'M']);
         $model->save();
     }
 
     public function testSearch()
     {
-        $cursor = $this->norm->factory('Foo')->find();
+        $cursor = $this->repository->factory('Foo')->find();
 
         $i = 0;
         foreach ($cursor as $row) {
@@ -60,14 +60,14 @@ class PDOTest extends PHPUnit_Framework_TestCase
 
     public function testCreate()
     {
-        $model = $this->norm->factory('Foo')->newInstance();
+        $model = $this->repository->factory('Foo')->newInstance();
         $model->set([
             'fname' => 'John',
             'lname' => 'Doe',
         ]);
         $model->save();
 
-        $statement = $this->norm->getConnection()->getRaw()
+        $statement = $this->repository->getConnection()->getRaw()
             ->prepare('SELECT * FROM foo WHERE id = ?');
         $statement->execute([$model['$id']]);
         $expected = $statement->fetch(\PDO::FETCH_ASSOC);
@@ -82,17 +82,17 @@ class PDOTest extends PHPUnit_Framework_TestCase
     {
         $this->testCreate();
 
-        $model = $this->norm->factory('Foo')->findOne(['fname' => 'John']);
+        $model = $this->repository->factory('Foo')->findOne(['fname' => 'John']);
         $this->assertEquals('Doe', $model['lname']);
     }
 
     public function testUpdate()
     {
-        $model = $this->norm->factory('Foo')->findOne(['fname' => 'Ganesha']);
+        $model = $this->repository->factory('Foo')->findOne(['fname' => 'Ganesha']);
         $model['fname'] = 'Rob';
         $model->save();
 
-        $statement = $this->norm->getConnection()->getRaw()
+        $statement = $this->repository->getConnection()->getRaw()
             ->prepare('SELECT * FROM foo WHERE id = ?');
         $statement->execute([$model['$id']]);
         $expected = $statement->fetch(\PDO::FETCH_ASSOC);
@@ -102,10 +102,10 @@ class PDOTest extends PHPUnit_Framework_TestCase
 
     public function testDelete()
     {
-        $model = $this->norm->factory('Foo')->findOne(['fname' => 'Ganesha']);
+        $model = $this->repository->factory('Foo')->findOne(['fname' => 'Ganesha']);
         $model->remove();
 
-        $statement = $this->norm->getConnection()->getRaw()
+        $statement = $this->repository->getConnection()->getRaw()
             ->prepare('SELECT COUNT(*) FROM foo');
         $statement->execute();
         $count = $statement->fetch()[0];

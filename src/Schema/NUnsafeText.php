@@ -2,10 +2,10 @@
 
 namespace Norm\Schema;
 
-class Integer extends Field
+class NUnsafeText extends Text
 {
     public function prepare($value)
     {
-        return (int) $value;
+        return utf8_encode($value);
     }
 }

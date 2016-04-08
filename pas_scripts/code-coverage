@@ -1,8 +1,0 @@
-#!/bin/bash
-
-rm -rf ./coverage
-mkdir ./coverage
-./vendor/bin/phpunit --whitelist=./src/ --coverage-html=./coverage test
-
-# ./vendor/bin/phpunit --whitelist=./src/ --coverage-text=./coverage.txt test
-# rm ./coverage.txt

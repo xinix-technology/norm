@@ -12,10 +12,10 @@ use ROH\Util\Collection;
 
 class PDO extends Connection
 {
-    protected $DIALECT_MAP = array(
+    protected $DIALECT_MAP = [
         'mysql' => MySql::class,
         'sqlite' => Sqlite::class,
-    );
+    ];
 
     protected $prefix;
 
@@ -135,7 +135,7 @@ class PDO extends Connection
         }
     }
 
-    protected function execute($sql, array $data = array())
+    protected function execute($sql, array $data = [])
     {
         $statement = $this->getRaw()->prepare($sql);
 

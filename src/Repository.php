@@ -1,14 +1,14 @@
 <?php
 namespace Norm;
 
-use Exception;
-use InvalidArgumentException;
 use Norm\Exception\NormException;
-use ROH\Util\Thing;
 use ROH\Util\Options;
+use ROH\Util\Injector;
 
-class Norm
+class Repository extends Injector
 {
+    const TEMPLATE_PATH = __DIR__ . '/../templates/';
+
     protected $useConnection;
 
     protected $default;
@@ -23,11 +23,19 @@ class Norm
 
     protected $collections = [];
 
+    protected $attributes = [];
+
     public function __construct(array $options = [])
     {
+        $this->singleton(Repository::class, $this);
+
+        if (isset($options['attributes'])) {
+            $this->attributes = $options['attributes'];
+        }
+
         if (isset($options['connections'])) {
-            foreach ($options['connections'] as $id => $connection) {
-                $this->add($id, (new Thing($connection))->getHandler());
+            foreach ($options['connections'] as $meta) {
+                $this->add($this->resolve($meta));
             }
         }
 
@@ -36,22 +44,26 @@ class Norm
                 $this->setDefault($options['collections']['default']);
             }
 
-            if (isset($options['collections']['resolvers']) && is_array($options['collections']['resolvers'])) {
+            if (isset($options['collections']['resolvers'])) {
                 foreach ($options['collections']['resolvers'] as $resolver) {
-                    $this->addResolver((new Thing($resolver))->getHandler());
+                    $this->addResolver($this->resolve($resolver));
                 }
             }
         }
-    }
 
-    public function add($id, Connection $connection)
-    {
-        if (!is_string($id)) {
-            throw new InvalidArgumentException('Connection id must be string');
+        if (isset($options['renderer'])) {
+            $this->renderer = $options['renderer'];
         }
 
+        $this->translator = isset($options['translator']) ?
+            $options['translator'] :
+            'sprintf';
+    }
+
+    public function add(Connection $connection)
+    {
+        $id = $connection->getId();
         $this->connections[$id] = $connection;
-        $connection->withId($id);
         if (is_null($this->useConnection)) {
             $this->useConnection = $id;
         }
@@ -62,7 +74,7 @@ class Norm
     public function getConnection($id = '')
     {
         if (!is_null($id) && !is_string($id)) {
-            throw new InvalidArgumentException('Connection id must be string');
+            throw new NormException('Connection id must be string');
         }
 
         return isset($this->connections[$id ?: $this->useConnection]) ?
@@ -70,13 +82,18 @@ class Norm
             null;
     }
 
+    public function getAttribute($key)
+    {
+        return isset($this->attributes[$key]) ? $this->attributes[$key] : null;
+    }
+
     public function addResolver($resolver)
     {
         if (!is_callable($resolver)) {
-            throw new InvalidArgumentException('Resolver must be callable');
+            throw new NormException('Resolver must be callable');
         }
 
-        $this->resolvers[] = (new Thing($resolver))->getHandler();
+        $this->resolvers[] = $resolver;
         return $this;
     }
 
@@ -89,7 +106,7 @@ class Norm
     public function factory($collectionId, $connectionId = '')
     {
         if (!is_string($collectionId) || !is_string($connectionId)) {
-            throw new InvalidArgumentException('Collection and Connection Id must be string');
+            throw new NormException('Collection and Connection Id must be string');
         }
 
         $connection = $this->getConnection($connectionId ?: $this->useConnection);
@@ -114,44 +131,63 @@ class Norm
                 }
             }
 
-            $this->collections[$collectionSignature] = (new Collection($this, $options))->withConnection($connection);
+            $this->collections[$collectionSignature] = $this->resolve(Collection::class, [
+                'connection' => $connection,
+                'options' => $options
+            ]);
+            // $this->collections[$collectionSignature] = (new Collection($this, $options))->withConnection($connection);
         }
 
         return $this->collections[$collectionSignature];
     }
 
+    // maybe we shouldnt use own renderer or delegate
     public function translate($message)
     {
         if (!is_string($message)) {
-            throw new InvalidArgumentException('Message to translate must be string');
+            throw new NormException('Message to translate must be string');
         }
 
-        return empty($this->translator) ? $message : call_user_func_array($this->translator, func_get_args());
+        $translate = $this->translator;
+        return call_user_func_array($translate, func_get_args());
     }
 
-    public function render($template, array $context = [])
+    public function render($template, array $data = [])
     {
         if (!is_string($template)) {
-            throw new InvalidArgumentException('Template to render must be string');
+            throw new NormException('Template to render must be string');
         }
 
-        try {
-            if (is_null($this->renderer)) {
-                throw new NormException('Unset renderer for Norm');
-            }
-            return $this->renderer($template, $context);
-        } catch (Exception $e) {
-            $templateFile = __DIR__.'/../templates/'.$template.'.php';
-            if (is_readable($templateFile)) {
-                ob_start();
-                extract($context);
-                include $templateFile;
-                $html = ob_get_clean();
-                return $html;
-            } else {
-                throw $e;
-            }
+        if (isset($this->renderer)) {
+            $render = $this->renderer;
+            return $render($template, $data);
+        } else {
+            return $this->defaultRender($template, $data);
         }
+    }
+
+    public function defaultRender($template, array $data = []) {
+        $templateFile = static::TEMPLATE_PATH . $template . '.php';
+        if (is_readable($templateFile)) {
+            ob_start();
+            extract($data);
+            include $templateFile;
+            return ob_get_clean();
+        } else {
+            throw new NormException('Template not found, ' . $template);
+        }
+    }
+
+    public function setRenderer(callable $renderer)
+    {
+        $this->renderer = $renderer;
+        return $this;
+    }
+
+    public function setTranslator(callable $translator)
+    {
+        $this->translator = $translator;
+        return $this;
     }
 
     public function __invoke($name, $connectionId = '')

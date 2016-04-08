@@ -4,11 +4,11 @@ namespace Norm\Schema;
 
 use Exception;
 
-class File extends Object
+class NFile extends Object
 {
     public function prepare($value)
     {
-        throw new Exception('Unimplmeneted please revisit this');
+        throw new Exception('Unimplemented please revisit this');
         // $app = App::getInstance();
 
         // if ($app->request->isPost() && !empty($_FILES)) {

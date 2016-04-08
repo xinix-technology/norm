@@ -3,14 +3,14 @@
 namespace Norm\Observer;
 
 use Norm\Norm;
-use Norm\Schema\ArrayList;
+use Norm\Schema\NList;
 use ROH\Util\Collection as UtilCollection;
 
 class Historable
 {
     public function initialize($context)
     {
-        $historyField = ArrayList::create()
+        $historyField = NList::create()
             ->transient()
             ->withReader(function ($model) use ($context) {
                 return $context['collection']->factory($context['collection']->getName().'History')
@@ -35,7 +35,7 @@ class Historable
             $history['type'] = 'new';
             $history->save();
         } else {
-            $delta = array();
+            $delta = [];
 
             foreach ($newValues as $key => $value) {
                 if ($key[0] === '$') {
@@ -56,10 +56,10 @@ class Historable
                     continue;
                 }
 
-                $delta[$key] = array(
+                $delta[$key] = [
                     'old' => $old,
                     'new' => $value,
-                );
+                ];
             }
             foreach ($oldValues as $key => $value) {
                 if ($key[0] === '$') {
@@ -80,10 +80,10 @@ class Historable
                     continue;
                 }
 
-                $delta[$key] = array(
+                $delta[$key] = [
                     'old' => $value,
                     'new' => $new,
-                );
+                ];
             }
 
 
@@ -100,7 +100,7 @@ class Historable
         }
     }
 
-    public function remove($context)
+    public function remove($context, $next)
     {
         $next($context);
 

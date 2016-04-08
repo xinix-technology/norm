@@ -3,7 +3,7 @@ namespace Norm\Test;
 
 use Norm\Collection;
 use Norm\Schema;
-use Norm\Schema\Unknown;
+use Norm\Schema\NUnknown;
 use ROH\Util\Collection as UtilCollection;
 use PHPUnit_Framework_TestCase;
 
@@ -32,7 +32,7 @@ class CollectionTest extends PHPUnit_Framework_TestCase
         ]);
 
         $this->assertInstanceOf(Schema::class, $collection->getSchema());
-        $this->assertInstanceOf(Unknown::class, $collection->getSchema()['tryme']);
+        $this->assertInstanceOf(NUnknown::class, $collection->getSchema()['tryme']);
     }
 
     public function testWithSchema()
@@ -42,11 +42,11 @@ class CollectionTest extends PHPUnit_Framework_TestCase
         ]);
 
         $result = $collection->withSchema([
-            'foo' => $this->getMock(Unknown::class)
+            'foo' => $this->getMock(NUnknown::class)
         ]);
 
         $this->assertEquals($collection, $result);
-        $this->assertInstanceOf(Unknown::class, $collection->getSchema()['foo']);
+        $this->assertInstanceOf(NUnknown::class, $collection->getSchema()['foo']);
     }
 
     public function testAttach()

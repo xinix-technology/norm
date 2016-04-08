@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-class Token extends String
+class NToken extends String
 {
     public function formatInput($value, $model = null)
     {

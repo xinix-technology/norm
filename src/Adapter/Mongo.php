@@ -15,7 +15,7 @@ class Mongo extends Connection
 {
     protected $client;
 
-    public function __construct($options = array())
+    public function __construct($options = [])
     {
         $options = Options::create([
             'hostname' => MongoClient::DEFAULT_HOST,
@@ -55,15 +55,15 @@ class Mongo extends Connection
         $marshalledRow = $this->marshall($row);
 
         if (isset($row['$id'])) {
-            $criteria = array(
+            $criteria = [
                 '_id' => new MongoId($row['$id']),
-            );
+            ];
 
             $marshalledRow = $this->getRaw()->$collectionName->findAndModify(
                 $criteria,
-                array('$set' => $marshalledRow),
+                ['$set' => $marshalledRow],
                 null,
-                array('new' => true)
+                ['new' => true]
             );
         } else {
             $retval = $this->getRaw()->$collectionName->insert($marshalledRow);

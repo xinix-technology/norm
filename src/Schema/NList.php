@@ -4,7 +4,7 @@ namespace Norm\Schema;
 
 use Norm\Type\ArrayList as TypeArray;
 
-class ArrayList extends Field
+class NList extends NField
 {
 
     public function prepare($value)
@@ -36,7 +36,7 @@ class ArrayList extends Field
 
     public function formatInput($value, $model = null)
     {
-        return $this->render('_schema/array/input', array(
+        return $this->render('_schema/narray/input', array(
             'value' => $value,
             'entry' => $model,
         ));

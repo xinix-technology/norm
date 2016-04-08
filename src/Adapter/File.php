@@ -9,8 +9,9 @@ class File extends Memory
 {
     protected $dataDir;
 
-    public function __construct(array $options = [])
+    public function __construct($id, array $options = [])
     {
+        parent::__construct($id);
 
         if (!isset($options['dataDir'])) {
             throw new InvalidArgumentException(
@@ -59,12 +60,12 @@ class File extends Memory
 
         $criteria = $this->marshall($cursor->getCriteria(), 'id');
 
-        $query = array(
+        $query = [
             'criteria' => $criteria,
             'limit' => $cursor->getLimit(),
             'skip' => $cursor->getSkip(),
             'sort' => $cursor->getSort(),
-        );
+        ];
 
         $collectionId = $cursor->getCollectionId();
 

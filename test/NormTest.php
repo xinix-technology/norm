@@ -17,43 +17,43 @@ class NormTest extends PHPUnit_Framework_TestCase
 
     public function testCanGetConnection()
     {
-        $norm = new Norm();
+        $repository = new Norm();
 
         $stub = $this->getMock(Connection::class);
-        $norm->add('first', $stub);
-        $this->assertEquals($stub, $norm->getConnection('first'));
+        $repository->add('first', $stub);
+        $this->assertEquals($stub, $repository->getConnection('first'));
     }
 
     public function testCanAddConnection()
     {
-        $norm = new Norm();
+        $repository = new Norm();
 
         $stub = $this->getMock(Connection::class);
-        $retval = $norm->add('first', $stub);
+        $retval = $repository->add('first', $stub);
 
-        $this->assertEquals($norm, $retval, '#add should be chainable');
+        $this->assertEquals($repository, $retval, '#add should be chainable');
     }
 
     public function testCanAddAndGetResolvers()
     {
-        $norm = new Norm();
+        $repository = new Norm();
 
         $resolver = function () {
 
         };
-        $retval = $norm->addResolver($resolver);
+        $retval = $repository->addResolver($resolver);
 
-        $this->assertEquals($norm, $retval, '#addResolver should be chainable');
+        $this->assertEquals($repository, $retval, '#addResolver should be chainable');
     }
 
     public function testCanSetAndGetDefault()
     {
-        $norm = new Norm();
+        $repository = new Norm();
 
         $default = [];
-        $retval = $norm->setDefault($default);
+        $retval = $repository->setDefault($default);
 
-        $this->assertEquals($norm, $retval, '#setDefault should be chainable');
+        $this->assertEquals($repository, $retval, '#setDefault should be chainable');
     }
 
     public function testConstructWithOptions()
@@ -66,7 +66,7 @@ class NormTest extends PHPUnit_Framework_TestCase
         $resolver = function () {
         };
 
-        $norm = new Norm([
+        $repository = new Norm([
             'connections' => $connections,
             'collections' => [
                 'default' => $default,
@@ -76,7 +76,7 @@ class NormTest extends PHPUnit_Framework_TestCase
             ]
         ]);
 
-        $this->assertEquals($connections['first'], $norm->getConnection('first'));
+        $this->assertEquals($connections['first'], $repository->getConnection('first'));
     }
 
     public function testFactoryUseResolvers()
@@ -93,7 +93,7 @@ class NormTest extends PHPUnit_Framework_TestCase
             return call_user_func_array([$resolverHandler, 'resolve'], func_get_args());
         };
 
-        $norm = new Norm([
+        $repository = new Norm([
             'connections' => [
                 'null' => $this->getMock(Connection::class),
             ],
@@ -103,9 +103,9 @@ class NormTest extends PHPUnit_Framework_TestCase
                 ]
             ],
         ]);
-        $collection = $norm->factory('Once');
-        $collection = $norm->factory('Resolved');
-        $collection = $norm->factory('Twice');
+        $collection = $repository->factory('Once');
+        $collection = $repository->factory('Resolved');
+        $collection = $repository->factory('Twice');
 
         $this->assertInstanceOf(Collection::class, $collection);
     }

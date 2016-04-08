@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-class Boolean extends Field
+class NBool extends NField
 {
     public function prepare($value)
     {
@@ -11,7 +11,7 @@ class Boolean extends Field
 
     public function formatInput($value, $model = null)
     {
-        return $this->render('_schema/boolean/input', array(
+        return $this->render('_schema/nbool/input', array(
             'value' => $value,
             'entry' => $model,
         ));

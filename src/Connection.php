@@ -2,7 +2,7 @@
 
 namespace Norm;
 
-use InvalidArgumentException;
+use Norm\Exception\NormException;
 use ArrayAccess;
 use Norm\Type\DateTime;
 use Norm\Type\ArrayList;
@@ -22,6 +22,15 @@ abstract class Connection
     protected $id;
 
     protected $raw;
+
+    public function __construct($id)
+    {
+        if (!is_string($id)) {
+            throw new NormException('Connection must specified id');
+        }
+
+        $this->id = $id;
+    }
 
     /**
      * Persist specified attributes with current connection
@@ -65,11 +74,11 @@ abstract class Connection
         return $this->id;
     }
 
-    public function withId($id)
-    {
-        $this->id = $id;
-        return $this;
-    }
+    // public function withId($id)
+    // {
+    //     $this->id = $id;
+    //     return $this;
+    // }
 
     /**
      * Unmarshall single assoc from data source to norm friendly associative array.
@@ -86,7 +95,7 @@ abstract class Connection
     public function unmarshall($assoc)
     {
         if (!is_array($assoc) && !($assoc instanceof ArrayAccess)) {
-            throw new InvalidArgumentException('Unmarshall only accept array or ArrayAccess');
+            throw new NormException('Unmarshall only accept array or ArrayAccess');
         }
 
         $result = [];
@@ -130,7 +139,7 @@ abstract class Connection
     public function marshall($object, $primaryKey = null)
     {
         if (is_array($object)) {
-            $result = array();
+            $result = [];
 
             foreach ($object as $key => $value) {
                 if ($key[0] === '$') {

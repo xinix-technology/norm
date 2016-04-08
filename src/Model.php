@@ -108,7 +108,7 @@ class Model implements JsonSerializer, ArrayAccess
     public function reset()
     {
         $this->id = null;
-        $this->attributes = array();
+        $this->attributes = [];
     }
 
     /**
@@ -177,7 +177,7 @@ class Model implements JsonSerializer, ArrayAccess
      */
     public function dump()
     {
-        $attributes = array();
+        $attributes = [];
 
         if ($this->id) {
             $attributes['$id'] = $this->id;
@@ -205,7 +205,7 @@ class Model implements JsonSerializer, ArrayAccess
     // public function add($key, $value)
     // {
     //     if (! isset($this->attributes[$key])) {
-    //         $this->attributes[$key] = array();
+    //         $this->attributes[$key] = [];
     //     }
 
     //     $this->attributes[$key][] = $value;
@@ -248,7 +248,7 @@ class Model implements JsonSerializer, ArrayAccess
     public function clear($key = null)
     {
         if (func_num_args() === 0) {
-            $this->attributes = array();
+            $this->attributes = [];
         } elseif ($key === '$id') {
             throw new NormException('Restricting model to clear for $id.');
         } else {
@@ -263,7 +263,7 @@ class Model implements JsonSerializer, ArrayAccess
      *
      * @return void
      */
-    public function save($options = array())
+    public function save(array $options = [])
     {
         $this->collection->save($this, $options);
     }
@@ -305,10 +305,10 @@ class Model implements JsonSerializer, ArrayAccess
             return $this->attributes;
         }
 
-        $attributes = array();
+        $attributes = [];
 
-        if (empty($this->attributes)) {
-            $this->attributes = array();
+        if (!is_array($this->attributes)) {
+            $this->attributes = [];
         }
 
         if ($fetchType === Model::FETCH_ALL or $fetchType === Model::FETCH_HIDDEN) {
@@ -402,10 +402,10 @@ class Model implements JsonSerializer, ArrayAccess
         //     return $this->toArray();
         // }
 
-        $destination = array();
+        $destination = [];
         $source =  $this->toArray();
 
-        $schema = $this->collection->schema();
+        $schema = $this->collection->getSchema();
 
         foreach ($source as $key => $value) {
             if (isset($schema[$key]) and isset($value)) {
@@ -487,7 +487,7 @@ class Model implements JsonSerializer, ArrayAccess
      */
     // public function schemaByIndex($index)
     // {
-    //     $schema = array();
+    //     $schema = [];
 
     //     foreach ($this->collection->schema() as $value) {
     //         $schema[] = $value;
@@ -497,18 +497,22 @@ class Model implements JsonSerializer, ArrayAccess
     // }
 
     /**
-     * Format the model to HTML file. Bind it's attributes to view.
+     * Format the model to HTML string. Bind it's attributes to view.
      *
      * @method format
      *
-     * @param string $field
      * @param string $format
+     * @param string $field
      *
      * @return mixed
      */
-    public function format($format = null)
+    public function format($format = 'plain', $field = null)
     {
-        return $this->getSchema()->format($this, $format);
+        if (isset($field)) {
+            return $this->getSchema()[$field]->format($format, $this[$field]);
+        } else {
+            return $this->getSchema()->format($format, $this);
+        }
     }
 
     /**
@@ -521,6 +525,11 @@ class Model implements JsonSerializer, ArrayAccess
     public function getCollectionId()
     {
         return $this->collection->getId();
+    }
+
+    public function getCollectionName()
+    {
+        return $this->collection->getName();
     }
 
     /**
@@ -553,7 +562,7 @@ class Model implements JsonSerializer, ArrayAccess
      */
     protected function populateOld()
     {
-        $this->oldAttributes = $this->attributes ?: array();
+        $this->oldAttributes = $this->attributes ?: [];
     }
 
     public function getSchema()

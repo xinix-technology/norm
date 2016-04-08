@@ -77,7 +77,7 @@ class FilterException extends RuntimeException
      * FilterException is nested exception
      * @var array
      */
-    protected $children = array();
+    protected $children = [];
 
     /**
      * Factory method to create new exception
@@ -150,7 +150,7 @@ class FilterException extends RuntimeException
      *
      * @return Norm\Exception\FilterException
      */
-    public function withArgs()
+    public function setArgs()
     {
         $this->args = func_get_args();
 

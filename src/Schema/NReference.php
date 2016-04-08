@@ -5,14 +5,25 @@ namespace Norm\Schema;
 use Exception;
 use ArrayAccess;
 use Norm\Model;
+use Norm\Schema;
 use Norm\Collection;
+use Norm\Repository;
 use Closure;
 use InvalidArgumentException;
 use ROH\Util\StringFormatter;
 
-class Reference extends Field
+class NReference extends NField
 {
     protected $options;
+
+    function __construct(Repository $repository, Schema $schema, array $options = [])
+    {
+        parent::__construct($repository, $schema, $options);
+
+        if (isset($options['to'])) {
+            $this->to($options['to']);
+        }
+    }
 
     public function to($foreign, $foreignLabel = null)
     {
@@ -59,13 +70,13 @@ class Reference extends Field
         return $this;
     }
 
-    public function withSort($sort = [])
+    public function setSort($sort = [])
     {
         $this['foreignSort'] = $sort;
         return $this;
     }
 
-    public function withCriteria($criteria = [])
+    public function setCriteria($criteria = [])
     {
         $this['foreignCriteria'] = $criteria;
         return $this;

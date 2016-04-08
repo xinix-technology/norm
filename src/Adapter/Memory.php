@@ -18,7 +18,7 @@ class Memory extends Connection
     public function persist($collectionName, array $row)
     {
         $this->context[$collectionName] = isset($this->context[$collectionName]) ?
-            $this->context[$collectionName] : array();
+            $this->context[$collectionName] : [];
 
         $id = isset($row['$id']) ? $row['$id'] : Uuid::uuid1()->__toString();
 
@@ -33,7 +33,7 @@ class Memory extends Connection
     public function remove($collectionName, $rowId)
     {
         $this->context[$collectionName] = isset($this->context[$collectionName]) ?
-            $this->context[$collectionName] : array();
+            $this->context[$collectionName] : [];
 
         if (isset($this->context[$collectionName][$rowId])) {
             unset($this->context[$collectionName][$rowId]);
@@ -49,12 +49,12 @@ class Memory extends Connection
     {
         $criteria = $this->marshall($cursor->getCriteria(), 'id');
 
-        $query = array(
+        $query = [
             'criteria' => $criteria,
             'limit' => $cursor->getLimit(),
             'skip' => $cursor->getSkip(),
             'sort' => $cursor->getSort(),
-        );
+        ];
 
         $collectionId = $cursor->getCollectionId();
         $contextAll = isset($this->context[$collectionId]) ? $this->context[$collectionId] : [];

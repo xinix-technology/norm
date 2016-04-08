@@ -5,7 +5,7 @@ use Norm\Norm;
 use Norm\Model;
 use Norm\Collection;
 use Norm\Connection;
-use Norm\Schema\String;
+use Norm\Schema\NString;
 use PHPUnit_Framework_TestCase;
 
 class ModelTest extends PHPUnit_Framework_TestCase
@@ -48,21 +48,21 @@ class ModelTest extends PHPUnit_Framework_TestCase
             $model['id'] = 1;
             return $model;
         }));
-        $norm = new Norm([
+        $repository = new Norm([
             'connections' => [
                 'connection' => $connection,
             ]
         ]);
 
-        $norm->addResolver(function ($id) {
+        $repository->addResolver(function ($id) {
             return [
                 'schema' => [
-                    'foo' => String::create()->withFilter('trim|default:bar|required'),
+                    'foo' => NString::create()->withFilter('trim|default:bar|required'),
                 ]
             ];
         });
 
-        $model = $norm->factory('Foo')->newInstance();
+        $model = $repository->factory('Foo')->newInstance();
         $this->assertNull($model['foo']);
         $model->save();
         $this->assertEquals('bar', $model['foo']);

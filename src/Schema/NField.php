@@ -2,15 +2,13 @@
 
 namespace Norm\Schema;
 
-use Closure;
-use Exception;
-use InvalidArgumentException;
+use Norm\Exception\NormException;
 use ROH\Util\Inflector;
-use ROH\Util\Collection as UtilCollection;
-use Norm\Norm;
-use Norm\Filter;
+use Norm\Normable;
+use Norm\Repository;
+use Norm\Schema;
 
-abstract class Field extends UtilCollection
+abstract class NField extends Normable
 {
     protected $schema;
 
@@ -20,17 +18,17 @@ abstract class Field extends UtilCollection
 
     protected $reader;
 
-    public static function create($label = null)
+    public function __construct(Repository $repository, Schema $schema, array $options = [])
     {
-        $Field = get_called_class();
+        if (null === $schema) {
+            throw new NormException('Schema is mandatory!');
+        }
 
-        return new $Field($label);
-    }
+        if (!isset($options['name'])) {
+            throw new NormException('Option name is mandatory!');
+        }
 
-    public function __construct($label = null)
-    {
-        $this['name'] = '';
-        $this['label'] = $label;
+        $this->schema = $schema;
 
         $this->formatters = [
             'readonly' => [$this, 'formatReadonly'],
@@ -38,41 +36,37 @@ abstract class Field extends UtilCollection
             'plain' => [$this, 'formatPlain'],
         ];
 
-        parent::__construct();
-    }
+        if (isset($options['filter'])) {
+            $this->addFilter($options['filter']);
+        }
 
-    public function forSchema($schema, $name)
-    {
-        $this->schema = $schema;
-
-        $this['name'] = $name;
+        parent::__construct($repository, $options);
 
         if ($this['name'][0] === '$') {
             $this->hidden();
         }
-
         if (is_null($this['label'])) {
             $this['label'] = Inflector::humanize($this['name']);
         }
 
-
-        return $this;
     }
 
-    public function factory($collectionId = null, $connectionId = null)
+    // public function forSchema($schema, $name)
+    // {
+    //     $this->schema = $schema;
+    //     $this['name'] = $name ?: '';
+    //     if ($this['name'][0] === '$') {
+    //         $this->hidden();
+    //     }
+    //     if (is_null($this['label'])) {
+    //         $this['label'] = Inflector::humanize($this['name']);
+    //     }
+    //     return $this;
+    // }
+
+    public function factory($collectionId = '', $connectionId = '')
     {
-        if (is_null($this->schema)) {
-            throw new InvalidArgumentException('Schema is undefined');
-        }
         return $this->schema->factory($collectionId, $connectionId);
-    }
-
-    public function translate($message)
-    {
-        if (is_null($this->schema)) {
-            throw new InvalidArgumentException('Schema is undefined');
-        }
-        return $this->schema->translate($message);
     }
 
     public function prepare($value)
@@ -86,7 +80,7 @@ abstract class Field extends UtilCollection
         return $reader($model);
     }
 
-    public function withReader($reader)
+    public function setReader($reader)
     {
         $this->reader = $reader;
         return $this;
@@ -102,7 +96,7 @@ abstract class Field extends UtilCollection
         return isset($this->formatters[$format]) ? $this->formatters[$format] : null;
     }
 
-    public function format($format, $value, $model = null)
+    public function format($format, $value)
     {
         if ($format === 'input' && $this['readonly']) {
             $format = 'readonly';
@@ -110,7 +104,7 @@ abstract class Field extends UtilCollection
 
         $formatter = $this->getFormatter($format);
         if (isset($formatter)) {
-            return $formatter($this->prepare($value), $model);
+            return $formatter($this->prepare($value));
         }
     }
 
@@ -119,7 +113,7 @@ abstract class Field extends UtilCollection
         return $this->filter;
     }
 
-    public function withFilter()
+    public function addFilter()
     {
         $filters = func_get_args();
         foreach ($filters as $filter) {
@@ -129,6 +123,10 @@ abstract class Field extends UtilCollection
                     $farr = explode(':', $f);
                     $this['filter.' . $farr[0]] = array_slice($farr, 1);
                     $this->filter[] = $f;
+                }
+            } elseif (is_array($filter)) {
+                foreach ($filter as $f) {
+                    $this->addFilter($f);
                 }
             } else {
                 $this->filter[] = $filter;
@@ -177,13 +175,9 @@ abstract class Field extends UtilCollection
         unset($this->attributes[$offset]);
     }
 
-    public function label($plain = false)
+    public function label()
     {
-        $label = $this->translate($this['label']);
-        if ($plain) {
-            return $label;
-        }
-        return '<label>'.$label.(isset($this['filter.required']) ? '*' : '').'</label>';
+        return '<label>'. $this->translate($this['label']).(isset($this['filter.required']) ? '*' : '').'</label>';
     }
 
     public function toJSON($value)
@@ -206,19 +200,12 @@ abstract class Field extends UtilCollection
         if (!empty($value)) {
             $value = htmlentities($value);
         }
-        return '<input type="text" name="'.$this['name'].'" value="'.$value.'" placeholder="' .
-            $this->translate($this['label']). '" autocomplete="off" />';
-    }
 
-    public function render($template, array $context = array())
-    {
-        if (is_null($this->schema)) {
-            throw new InvalidArgumentException('Schema is undefined');
-        }
-
-        $context['self'] = $this;
-
-        return $this->schema->render($template, $context);
+        return $this->render('__norm__/nfield/input', [
+            'self' => $this,
+            'value' => $value,
+            'model' => $model,
+        ]);
     }
 
     public function current()

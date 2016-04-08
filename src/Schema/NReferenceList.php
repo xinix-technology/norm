@@ -12,7 +12,7 @@ class ReferenceList extends ArrayList
     public function prepare($value)
     {
         if (is_array($value) || $value instanceof TypeArray) {
-            $newValue = array();
+            $newValue = [];
             foreach ($value as $k => $v) {
                 $newValue[] = $this->prepareItem($v);
             }
@@ -77,7 +77,7 @@ class ReferenceList extends ArrayList
         if (is_array($this['foreign'])) {
             return $this['foreign'];
         } elseif (is_callable($this['foreign'])) {
-            return val($this['foreign']) ?: array();
+            return val($this['foreign']) ?: [];
         }
 
         if (is_null($this['byCriteria'])) {
@@ -155,7 +155,7 @@ class ReferenceList extends ArrayList
         if (Norm::options('include')) {
             $foreignKey = $this['foreignKey'];
 
-            $newValue = array();
+            $newValue = [];
             foreach ($value as $k => $v) {
                 if (is_null($foreignKey)) {
                     $newValue[] = $foreignCollection->findOne($v);
