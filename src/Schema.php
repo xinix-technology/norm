@@ -7,16 +7,33 @@ use Norm\Collection;
 use ROH\Util\StringFormatter;
 use Norm\Schema\NUnknown;
 use Norm\Schema\NField;
-use InvalidArgumentException;
 
 class Schema extends Normable
 {
+    /**
+     * [$collection description]
+     * @var Collection
+     */
     protected $collection;
 
+    /**
+     * [$formatters description]
+     * @var array
+     */
     protected $formatters;
 
+    /**
+     * [$firstKey description]
+     * @var string
+     */
     protected $firstKey;
 
+    /**
+     * [__construct description]
+     * @param Repository $repository [description]
+     * @param Collection $collection [description]
+     * @param array      $fields     [description]
+     */
     public function __construct(Repository $repository, Collection $collection, array $fields = [])
     {
         $this->collection = $collection;
@@ -32,12 +49,16 @@ class Schema extends Normable
         ];
     }
 
-    public function addField($meta)
+    /**
+     * [addField description]
+     * @param array|NField $metaOrField [description]
+     */
+    public function addField($metaOrField)
     {
-        if ($meta instanceof NField) {
-            $field = $meta;
+        if ($metaOrField instanceof NField) {
+            $field = $metaOrField;
         } else {
-            $field = $this->resolve($meta, [
+            $field = $this->resolve($metaOrField, [
                 'schema' => $this,
             ]);
         }
@@ -48,61 +69,92 @@ class Schema extends Normable
             $this->firstKey = $field['name'];
         }
 
-        return $this;
+        return $field;
     }
 
+    /**
+     * [getFilterRules description]
+     * @return array [description]
+     */
     public function getFilterRules()
     {
         $rules = [];
         foreach ($this as $k => $field) {
-            if (is_null($field)) {
-                continue;
-            }
+            // there will be no null field
+            // if (is_null($field)) {
+            //     continue;
+            // }
 
             $rules[$k] = [
                 'label' => $field['label'],
                 'filters' => $field->getFilter(),
             ];
+
         }
         return $rules;
     }
 
-    public function formatPlain($model)
+    /**
+     * [formatPlain description]
+     * @param  Model  $model [description]
+     * @return string        [description]
+     */
+    public function formatPlain(Model $model)
     {
         return $model[$this->firstKey];
     }
 
-    public function getFormatter($format)
-    {
-        return isset($this->formatters[$format]) ? $this->formatters[$format] : null;
-    }
-
+    /**
+     * [addFormatter description]
+     * @param string          $format    [description]
+     * @param string|callable $formatter [description]
+     */
     public function addFormatter($format, $formatter)
     {
         if (is_string($formatter)) {
-            $fmt = function ($model) use ($formatter) {
-                if (empty($formatter)) {
-                    return $model->format();
+            $sf = new StringFormatter($formatter);
+            $fmt = function ($model) use ($formatter, $sf) {
+                // if ('' === $formatter) {
+                //     return $model->format();
+                // } else {
+                if ($sf->isStatic()) {
+                    return isset($model[$formatter]) ? $model[$formatter] : '';
                 } else {
-                    $sf = new StringFormatter($formatter);
-                    if ($sf->isStatic()) {
-                        return $model[$formatter];
-                    } else {
-                        return $sf->format($model);
-                    }
+                    return $sf->format($model);
                 }
+                // }
             };
         } elseif (is_callable($formatter)) {
             $fmt = $formatter;
         } else {
-            throw new InvalidArgumentException('Formatter should be callable or string format');
+            throw new NormException('Formatter should be callable or string format');
         }
+        $this->formatters[$format] = $fmt;
         return $fmt;
     }
 
+    /**
+     * [getFormatter description]
+     * @param  string   $format [description]
+     * @return callable         [description]
+     */
+    public function getFormatter($format = 'plain')
+    {
+        if (!is_string($format)) {
+            throw new NormException('Format key must be string');
+        }
+        return isset($this->formatters[$format]) ? $this->formatters[$format] : null;
+    }
+
+    /**
+     * [format description]
+     * @param  string $format [description]
+     * @param  Model  $model  [description]
+     * @return string         [description]
+     */
     public function format($format, Model $model)
     {
-        $formatter = $this->getFormatter($format ?: '');
+        $formatter = $this->getFormatter($format);
 
         if (is_null($formatter)) {
             throw new NormException('Formatter ' . $format . ' not found');
@@ -111,6 +163,11 @@ class Schema extends Normable
         return $formatter($model);
     }
 
+    /**
+     * [offsetGet description]
+     * @param  string $key [description]
+     * @return NField      [description]
+     */
     public function offsetGet($key)
     {
         if (!$this->offsetExists($key)) {
@@ -122,11 +179,17 @@ class Schema extends Normable
         return $this->attributes[$key];
     }
 
+    /**
+     * [factory description]
+     * @param  string     $collectionId [description]
+     * @param  string     $connectionId [description]
+     * @return Collection               [description]
+     */
     public function factory($collectionId = '', $connectionId = '')
     {
         if ('' === $collectionId) {
             return $this->collection;
         }
-        return $this->repository->factory($collectionId, $connectionId);
+        return $this->collection->factory($collectionId, $connectionId);
     }
 }

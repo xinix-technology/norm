@@ -16,12 +16,12 @@ class PDOTest extends PHPUnit_Framework_TestCase
 
         $this->repository = new Repository([
             'connections' => [
-                'sqlite' => [
-                    'class' => PDO::class,
-                    'config' => [
+                [ PDO::class, [
+                    'id' => 'sqlite',
+                    'options' => [
                         'dsn' => 'sqlite::memory:',
                     ]
-                ]
+                ]]
             ]
         ]);
 

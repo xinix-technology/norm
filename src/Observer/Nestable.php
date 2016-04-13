@@ -8,8 +8,17 @@ class Nestable
 {
     public function initialize($context)
     {
-        $context['collection']->getSchema()->withField('$lft', NInteger::create())
-            ->withField('$rgt', NInteger::create());
+        $context['collection']->getSchema()
+            ->addField([ NInteger::class, [
+                'options' => [
+                    'name' => '$lft'
+                ]
+            ]])->end()
+            ->addField([ NInteger::class, [
+                'options' => [
+                    'name' => '$rgt'
+                ]
+            ]]);
     }
 
     public function save($context, $next)

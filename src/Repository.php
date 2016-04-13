@@ -25,6 +25,10 @@ class Repository extends Injector
 
     protected $attributes = [];
 
+    /**
+     * [__construct description]
+     * @param array $options [description]
+     */
     public function __construct(array $options = [])
     {
         $this->singleton(Repository::class, $this);
@@ -55,11 +59,17 @@ class Repository extends Injector
             $this->renderer = $options['renderer'];
         }
 
-        $this->translator = isset($options['translator']) ?
-            $options['translator'] :
-            'sprintf';
+        if (isset($options['translator'])) {
+            $this->translator = $options['translator'];
+        } else {
+            $this->translator = 'sprintf';
+        }
     }
 
+    /**
+     * [add description]
+     * @param Connection $connection [description]
+     */
     public function add(Connection $connection)
     {
         $id = $connection->getId();
@@ -71,6 +81,11 @@ class Repository extends Injector
         return $this;
     }
 
+    /**
+     * [getConnection description]
+     * @param  string     $id [description]
+     * @return Connection     [description]
+     */
     public function getConnection($id = '')
     {
         if (!is_null($id) && !is_string($id)) {
@@ -82,27 +97,53 @@ class Repository extends Injector
             null;
     }
 
+    /**
+     * [getAttribute description]
+     * @param  string $key [description]
+     * @return mixed       [description]
+     */
     public function getAttribute($key)
     {
         return isset($this->attributes[$key]) ? $this->attributes[$key] : null;
     }
 
-    public function addResolver($resolver)
+    /**
+     * [setAttribute description]
+     * @param string $key   [description]
+     * @param string $value [description]
+     */
+    public function setAttribute($key, $value)
     {
-        if (!is_callable($resolver)) {
-            throw new NormException('Resolver must be callable');
-        }
+        $this->attributes[$key] = $value;
+        return $this;
+    }
 
+    /**
+     * [addResolver description]
+     * @param callable $resolver [description]
+     */
+    public function addResolver(callable $resolver)
+    {
         $this->resolvers[] = $resolver;
         return $this;
     }
 
+    /**
+     * [setDefault description]
+     * @param array $default [description]
+     */
     public function setDefault(array $default)
     {
         $this->default = $default;
         return $this;
     }
 
+    /**
+     * [factory description]
+     * @param  string     $collectionId [description]
+     * @param  string     $connectionId [description]
+     * @return Collection               [description]
+     */
     public function factory($collectionId, $connectionId = '')
     {
         if (!is_string($collectionId) || !is_string($connectionId)) {
@@ -135,13 +176,16 @@ class Repository extends Injector
                 'connection' => $connection,
                 'options' => $options
             ]);
-            // $this->collections[$collectionSignature] = (new Collection($this, $options))->withConnection($connection);
         }
 
         return $this->collections[$collectionSignature];
     }
 
-    // maybe we shouldnt use own renderer or delegate
+    /**
+     * [translate description]
+     * @param  string $message [description]
+     * @return string          [description]
+     */
     public function translate($message)
     {
         if (!is_string($message)) {
@@ -152,6 +196,12 @@ class Repository extends Injector
         return call_user_func_array($translate, func_get_args());
     }
 
+    /**
+     * [render description]
+     * @param  string $template [description]
+     * @param  array  $data     [description]
+     * @return string           [description]
+     */
     public function render($template, array $data = [])
     {
         if (!is_string($template)) {
@@ -162,44 +212,58 @@ class Repository extends Injector
             $render = $this->renderer;
             return $render($template, $data);
         } else {
-            return $this->defaultRender($template, $data);
+            $templateFile = static::TEMPLATE_PATH . $template . '.php';
+            if (is_readable($templateFile)) {
+                ob_start();
+                extract($data);
+                include $templateFile;
+                return ob_get_clean();
+            } else {
+                throw new NormException('Template not found, ' . $template);
+            }
         }
     }
 
-    public function defaultRender($template, array $data = []) {
-        $templateFile = static::TEMPLATE_PATH . $template . '.php';
-        if (is_readable($templateFile)) {
-            ob_start();
-            extract($data);
-            include $templateFile;
-            return ob_get_clean();
-        } else {
-            throw new NormException('Template not found, ' . $template);
-        }
-    }
-
+    /**
+     * [setRenderer description]
+     * @param callable $renderer [description]
+     */
     public function setRenderer(callable $renderer)
     {
         $this->renderer = $renderer;
         return $this;
     }
 
+    /**
+     * [setTranslator description]
+     * @param callable $translator [description]
+     */
     public function setTranslator(callable $translator)
     {
         $this->translator = $translator;
         return $this;
     }
 
-    public function __invoke($name, $connectionId = '')
+    /**
+     * [__invoke description]
+     * @param  string $collectionId     [description]
+     * @param  string $connectionId     [description]
+     * @return Collection               [description]
+     */
+    public function __invoke($collectionId, $connectionId = '')
     {
-        return $this->factory($name, $connectionId);
+        return $this->factory($collectionId, $connectionId);
     }
 
+    /**
+     * [__debugInfo description]
+     * @return array [description]
+     */
     public function __debugInfo()
     {
         return [
-            'use' => $this->useConnection,
             'connections' => $this->connections,
+            'use' => $this->useConnection,
         ];
     }
 }

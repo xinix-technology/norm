@@ -15,9 +15,9 @@ class MemoryTest extends PHPUnit_Framework_TestCase
     {
         $this->repository = new Repository([
             'connections' => [
-                'memory' => [
-                    'class' => Memory::class
-                ]
+                [ Memory::class, [
+                    'id' => 'memory',
+                ]],
             ]
         ]);
 

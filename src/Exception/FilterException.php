@@ -27,8 +27,8 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @author      Ganesha <reekoheek@gmail.com>
- * @copyright   2015 PT Sagara Xinix Solusitama
- * @link        http://xinix.co.id/products/norm
+ * @copyright   2016 PT Sagara Xinix Solusitama
+ * @link        http://sagara.id/p/product
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm\Filter
  *
@@ -80,20 +80,6 @@ class FilterException extends RuntimeException
     protected $children = [];
 
     /**
-     * Factory method to create new exception
-     *
-     * @param  string $message Message of new exception
-     *
-     * @return Norm\Exception\FilterException
-     */
-    public static function create($context, $message)
-    {
-        $o = new static($message);
-
-        return $o->context($context);
-    }
-
-    /**
      * Class constructor
      *
      * @param string     $message
@@ -125,23 +111,6 @@ class FilterException extends RuntimeException
     public function setContext($context)
     {
         $this->context = $context;
-    }
-
-    /**
-     * Set field context of exception
-     *
-     * @param string $context The field context
-     *
-     * @return FilterException return self object to be chained
-     */
-    public function context($context = null)
-    {
-        if (func_num_args() === 0) {
-            return $this->getContext();
-        }
-
-        $this->setContext($context);
-
         return $this;
     }
 
@@ -163,6 +132,8 @@ class FilterException extends RuntimeException
     public function setChildren($children)
     {
         $this->children = $children;
+
+        return $this;
     }
 
     public function getChildren()

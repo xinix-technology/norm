@@ -24,7 +24,7 @@ class Timestampable
                 'options' => [
                     'name' => $this->options['createdKey']
                 ]
-            ]])
+            ]])->end()
             ->addField([ NDateTime::class, [
                 'options' => [
                     'name' => $this->options['updatedKey']

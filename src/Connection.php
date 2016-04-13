@@ -3,7 +3,7 @@
 namespace Norm;
 
 use Norm\Exception\NormException;
-use ArrayAccess;
+use Traversable;
 use Norm\Type\DateTime;
 use Norm\Type\ArrayList;
 use Norm\Cursor;
@@ -12,18 +12,30 @@ use Norm\Cursor;
  * Base class for connection instance
  *
  * @author      Ganesha <reekoheek@gmail.com>
- * @copyright   2015 PT Sagara Xinix Solusitama
- * @link        http://xinix.co.id/products/norm Norm
+ * @copyright   2016 PT Sagara Xinix Solusitama
+ * @link        http://sagara.id/p/product Norm
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
 abstract class Connection
 {
+    /**
+     * [$id description]
+     * @var string
+     */
     protected $id;
 
+    /**
+     * [$raw description]
+     * @var mixed
+     */
     protected $raw;
 
-    public function __construct($id)
+    /**
+     * [__construct description]
+     * @param string $id [description]
+     */
+    public function __construct($id = 'main')
     {
         if (!is_string($id)) {
             throw new NormException('Connection must specified id');
@@ -33,25 +45,11 @@ abstract class Connection
     }
 
     /**
-     * Persist specified attributes with current connection
-     *
-     * @param string        $collectionId Collection name or instance
-     * @param array         $attributes Attributes to persist
-     *
-     * @return array Attributes persisted
+     * [multiPersist description]
+     * @param  string $collectionId [description]
+     * @param  array  $rows         [description]
+     * @return [type]               [description]
      */
-    abstract public function persist($collectionId, array $row);
-
-    abstract public function remove($collectionId, $rowId);
-
-    abstract public function cursorDistinct(Cursor $cursor);
-
-    abstract public function cursorFetch(Cursor $cursor);
-
-    abstract public function cursorSize(Cursor $cursor, $withLimitSkip = false);
-
-    abstract public function cursorRead($context, $position = 0);
-
     public function multiPersist($collectionId, array $rows)
     {
         return array_map(function ($row) {
@@ -69,16 +67,14 @@ abstract class Connection
         return $this->raw;
     }
 
+    /**
+     * [getId description]
+     * @return string [description]
+     */
     public function getId()
     {
         return $this->id;
     }
-
-    // public function withId($id)
-    // {
-    //     $this->id = $id;
-    //     return $this;
-    // }
 
     /**
      * Unmarshall single assoc from data source to norm friendly associative array.
@@ -90,12 +86,12 @@ abstract class Connection
      *
      * @param mixed $assoc Object from data source
      *
-     * @return assoc Friendly norm data
+     * @return array Friendly norm data
      */
     public function unmarshall($assoc)
     {
-        if (!is_array($assoc) && !($assoc instanceof ArrayAccess)) {
-            throw new NormException('Unmarshall only accept array or ArrayAccess');
+        if (!is_array($assoc) && !($assoc instanceof Traversable)) {
+            throw new NormException('Unmarshall only accept array or traversable');
         }
 
         $result = [];
@@ -110,19 +106,6 @@ abstract class Connection
             }
         }
         return $result;
-
-        // if (isset($assoc['id'])) {
-        //     $assoc['$id'] = $assoc['id'];
-        //     unset($assoc['id']);
-        // }
-
-        // foreach ($assoc as $key => $value) {
-        //     if ($key[0] === '_') {
-        //         $key[0] = '$';
-        //         $assoc[$key] = $value;
-        //     }
-        // }
-        // return $assoc;
     }
 
     /**
@@ -162,8 +145,56 @@ abstract class Connection
             return json_encode($object->toArray());
         } elseif (method_exists($object, 'marshall')) {
             return $object->marshall();
-        } else {
-            return $object;
         }
+
+        return $object;
     }
+
+    /**
+     * Persist specified attributes with current connection
+     *
+     * @param string        $collectionId Collection name or instance
+     * @param array         $attributes Attributes to persist
+     *
+     * @return array Attributes persisted
+     */
+    abstract public function persist($collectionId, array $row);
+
+    /**
+     * [remove description]
+     * @param  string         $collectionId [description]
+     * @param  string|integer $rowId        [description]
+     * @return [type]                       [description]
+     */
+    abstract public function remove($collectionId, $rowId);
+
+    /**
+     * [cursorDistinct description]
+     * @param  Cursor $cursor [description]
+     * @return [type]         [description]
+     */
+    abstract public function cursorDistinct(Cursor $cursor);
+
+    /**
+     * [cursorFetch description]
+     * @param  Cursor $cursor [description]
+     * @return [type]         [description]
+     */
+    abstract public function cursorFetch(Cursor $cursor);
+
+    /**
+     * [cursorSize description]
+     * @param  Cursor  $cursor        [description]
+     * @param  boolean $withLimitSkip [description]
+     * @return [type]                 [description]
+     */
+    abstract public function cursorSize(Cursor $cursor, $withLimitSkip = false);
+
+    /**
+     * [cursorRead description]
+     * @param  mixed   $context  [description]
+     * @param  integer $position [description]
+     * @return [type]            [description]
+     */
+    abstract public function cursorRead($context, $position = 0);
 }

@@ -15,8 +15,10 @@ class Mongo extends Connection
 {
     protected $client;
 
-    public function __construct($options = [])
+    public function __construct($id, array $options = [])
     {
+        parent::__construct($id);
+
         $options = Options::create([
             'hostname' => MongoClient::DEFAULT_HOST,
             'port' => MongoClient::DEFAULT_PORT,

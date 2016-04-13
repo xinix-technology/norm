@@ -2,8 +2,9 @@
 namespace Norm\Test\Observer;
 
 use Norm\Observer\Historable;
+use Norm\Test\ObserverTestCase;
 
-class HistorableTest extends AbstractObserverTest
+class HistorableTest extends ObserverTestCase
 {
     public function testSave()
     {
@@ -13,11 +14,15 @@ class HistorableTest extends AbstractObserverTest
         $model['name'] = '1';
         $model->save();
 
-        $this->assertEquals('new', $collection->factory('FooHistory')->findOne(['model_id' => $model['$id']])['type']);
+        $this->assertEquals('new', $collection->factory('FooHistory')->findOne([
+            'model_id' => $model['$id']
+        ])['type']);
 
         $model['name'] = '2';
         $model->save();
-        $this->assertEquals(2, count($collection->factory('FooHistory')->find(['model_id' => $model['$id']])));
+        $this->assertEquals(2, count($collection->factory('FooHistory')->find([
+            'model_id' => $model['$id']
+        ])));
 
         $model = $collection->findOne();
 

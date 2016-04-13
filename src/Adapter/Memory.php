@@ -10,6 +10,11 @@ class Memory extends Connection
 {
     protected $context;
 
+    public function __construct($id, array $options = [])
+    {
+        parent::__construct($id);
+    }
+
     public function getContext()
     {
         return $this->context;

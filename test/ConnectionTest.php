@@ -3,93 +3,66 @@
 namespace Norm\Test;
 
 use stdClass;
-use Exception;
+use Norm\Repository;
 use Norm\Connection;
-use Norm\Collection;
-use Norm\Cursor;
+use Norm\Exception\NormException;
 use PHPUnit_Framework_TestCase;
+use Norm\Type\ArrayList;
+use Norm\Type\Secret;
 
 class ConnectionTest extends PHPUnit_Framework_TestCase
 {
-    public function mockConnectionWithRows($rows)
+    protected $repository;
+
+    protected $connection;
+
+    public function setUp()
     {
-        $connection = $this->getMock(Connection::class, [
-            'cursorRead',
+        $this->repository = new Repository();
+        $this->connection = $this->getMock(Connection::class, [
+            'persist',
+            'remove',
+            'cursorDistinct',
             'cursorFetch',
             'cursorSize',
-            'cursorDistinct',
-            'persist',
-            'remove'
+            'cursorRead',
         ]);
-        $connection->method('cursorRead')
-            ->will($this->returnCallback(function ($context, $position) {
-                if (isset($context[$position])) {
-                    return $context[$position];
-                }
-            }));
-        $connection->method('cursorFetch')
-            ->will($this->returnCallback(function ($cursor) use ($rows) {
-                return $rows;
-            }));
-        $connection->method('cursorDistinct')
-            ->will($this->returnCallback(function ($cursor, $key) use ($rows) {
-                $result = [];
-                foreach ($rows as $k => $v) {
-                    if (!in_array($v[$key], $result)) {
-                        $result[] = $v[$key];
-                    }
-                }
-                return $result;
-            }));
-        $connection->method('cursorSize')
-            ->will($this->returnCallback(function ($cursor, $respectLimitSkip = false) use ($rows) {
-                return count($rows);
-            }));
+    }
 
-        return $connection;
+    public function testConstruct()
+    {
+        try {
+            $this->getMock(Connection::class, [], [88]);
+            $this->fail('must not here');
+        } catch(NormException $e) {
+            if ($e->getMessage() !== 'Connection must specified id') {
+                throw $e;
+            }
+        }
     }
 
     public function testGetRaw()
     {
-        $connection  = $this->mockConnectionWithRows([]);
-        $this->assertNull($connection->getRaw());
+        $this->assertNull($this->connection->getRaw());
     }
 
-    public function testUnmarshall()
+    public function testUnmarshallAndMarshall()
     {
-        $connection  = $this->mockConnectionWithRows([]);
-        $arr = $connection->unmarshall([
-            'id' => 10,
-            'regular' => 'yes',
-            '_hidden' => 'shy',
-        ]);
-        $this->assertEquals(10, $arr['$id']);
-        $this->assertEquals('yes', $arr['regular']);
-        $this->assertEquals('shy', $arr['$hidden']);
-
         try {
-            $connection->unmarshall('non-array');
-            throw new Exception('Error not thrown with scalar parameter');
-        } catch (Exception $e) {
+            $this->connection->unmarshall(new stdClass());
+        } catch (NormException $e) {
+            if ($e->getMessage() !== 'Unmarshall only accept array or traversable') {
+                throw $e;
+            }
         }
 
-        try {
-            $connection->unmarshall(new stdClass());
-            throw new Exception('Error not thrown with object parameter');
-        } catch (Exception $e) {
-        }
-    }
+        $arr = [
+            'foo' => new ArrayList([ 2, 3, 4 ]),
+            'bar' => new Secret('bar'),
+        ];
 
-    public function testMarshall()
-    {
-        $connection  = $this->mockConnectionWithRows([]);
-        $arr = $connection->marshall([
-            '$id' => 10,
-            'regular' => 'yes',
-            '$hidden' => 'shy',
-        ]);
-        $this->assertFalse(isset($arr['id']));
-        $this->assertEquals('yes', $arr['regular']);
-        $this->assertEquals('shy', $arr['_hidden']);
+        $marshalled = $this->connection->marshall($arr);
+        $this->assertEquals($marshalled['foo'], '[2,3,4]');
+        $this->assertEquals($marshalled['bar'], 'bar');
     }
 }

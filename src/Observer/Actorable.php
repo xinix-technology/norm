@@ -4,6 +4,7 @@ namespace Norm\Observer;
 
 use Norm\Schema\NReference;
 use ROH\Util\Options;
+use Norm\Exception\NormException;
 
 class Actorable
 {
@@ -33,14 +34,14 @@ class Actorable
         $this->options['updatedField'][1]['options']['name'] = $this->options['updatedKey'];
 
         if (!is_callable($this->options['userCallback'])) {
-            throw new InvalidArgumentException('Actorable needs userCallback as callable');
+            throw new NormException('Actorable needs userCallback as callable');
         }
     }
 
     public function initialize($context, $next)
     {
         $context['collection']->getSchema()
-            ->addField($this->options['createdField'])
+            ->addField($this->options['createdField'])->end()
             ->addField($this->options['updatedField']);
 
         $next($context);
@@ -56,6 +57,5 @@ class Actorable
         }
 
         $next($context);
-
     }
 }

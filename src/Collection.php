@@ -15,8 +15,8 @@ use ROH\Util\Composition;
  * The collection class that wraps models.
  *
  * @author      Ganesha <reekoheek@gmail.com>
- * @copyright   2015 PT Sagara Xinix Solusitama
- * @link        http://xinix.co.id/products/norm Norm
+ * @copyright   2016 PT Sagara Xinix Solusitama
+ * @link        http://sagara.id/p/product Norm
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
@@ -103,21 +103,21 @@ class Collection extends Normable
         $this->modelClass = $options['model'];
 
         foreach ($options['observers'] as $meta) {
-            $this->observe($this->resolve($meta));
+            if (is_array($meta) && !isset($meta[0])) {
+                $this->observe($meta);
+            } else {
+                $this->observe($this->resolve($meta));
+            }
         }
 
         $this->schema = $this->resolve(Schema::class, [
             'collection' => $this,
             'fields' => $options['schema']
         ]); //new Schema($this, $options['schema']);
+
         if (isset($options['format'])) {
             $this->schema->addFormatter($options['format']);
         }
-
-        $context = new UtilCollection([
-            'collection' => $this,
-        ]);
-        $this->apply('initialize', $context);
     }
 
     // public function withConnection(Connection $connection)
@@ -153,26 +153,26 @@ class Collection extends Normable
         return $this->name;
     }
 
-    /**
-     * Getter of connection
-     *
-     * @return Norm\Connection
-     */
-    protected function getConnection()
-    {
-        if (is_null($this->connection)) {
-            throw new NormException('Connection not found');
-        }
-        return $this->connection;
-    }
+    // /**
+    //  * Getter of connection
+    //  *
+    //  * @return Norm\Connection
+    //  */
+    // protected function getConnection()
+    // {
+    //     if (is_null($this->connection)) {
+    //         throw new NormException('Connection not found');
+    //     }
+    //     return $this->connection;
+    // }
 
-    /**
-     * Getter of collection option
-     *
-     * @param string $key
-     *
-     * @return mixed
-     */
+    // /**
+    //  * Getter of collection option
+    //  *
+    //  * @param string $key
+    //  *
+    //  * @return mixed
+    //  */
     // public function option($key = null)
     // {
     //     if (func_num_args() ===  0) {
@@ -333,7 +333,7 @@ class Collection extends Normable
         }
 
         $save = function ($context) {
-            $context['modified'] = $this->getConnection()->persist($this->getId(), $context['model']->dump());
+            $context['modified'] = $this->connection->persist($this->getId(), $context['model']->dump());
         };
 
         $context = new UtilCollection([
@@ -359,7 +359,7 @@ class Collection extends Normable
     public function remove(Model $model = null)
     {
         if (func_num_args() === 0) {
-            $this->getConnection()->remove($this);
+            $this->connection->remove($this);
         } else {
             // avoid remove empty model
             if (is_null($model)) {
@@ -372,7 +372,7 @@ class Collection extends Normable
             ]);
 
             $this->apply('remove', $context, function ($context) {
-                $result = $this->getConnection()->remove($this->getId(), $context['model']['$id']);
+                $result = $this->connection->remove($this->getId(), $context['model']['$id']);
                 if ($result) {
                     $context['model']->reset();
                 }
@@ -383,36 +383,33 @@ class Collection extends Normable
     /**
      * Override this to add new functionality of observer to the collection,
      * otherwise you are not necessarilly to know about this.
-     * @param object $observer
+     * @param object|array $observer
      *
      * @return void
      */
     public function observe($observer)
     {
-
-        if (method_exists($observer, 'save')) {
-            $this->compose('save', [$observer, 'save']);
+        $methods = [ 'save', 'filter', 'remove', 'search', 'attach', 'initialize', ];
+        if (is_array($observer)) {
+            foreach ($methods as $method) {
+                if (isset($observer[$method]) && is_callable($observer[$method])) {
+                    $this->compose($method, $observer[$method]);
+                }
+            }
+        } elseif (is_object($observer)) {
+            foreach ($methods as $method) {
+                if (method_exists($observer, $method)) {
+                    $this->compose($method, [$observer, $method]);
+                }
+            }
+        } else {
+            throw new NormException('Observer must be array or object');
         }
 
-        if (method_exists($observer, 'filter')) {
-            $this->compose('filter', [$observer, 'filter']);
-        }
-
-        if (method_exists($observer, 'remove')) {
-            $this->compose('remove', [$observer, 'remove']);
-        }
-
-        if (method_exists($observer, 'search')) {
-            $this->compose('search', [$observer, 'search']);
-        }
-
-        if (method_exists($observer, 'attach')) {
-            $this->compose('attach', [$observer, 'attach']);
-        }
-
-        if (method_exists($observer, 'initialize')) {
-            $this->compose('initialize', [$observer, 'initialize']);
-        }
+        $context = new UtilCollection([
+            'collection' => $this,
+        ]);
+        $this->apply('initialize', $context);
     }
 
     /**
@@ -434,7 +431,7 @@ class Collection extends Normable
             case 'cursorFetch':
             case 'cursorSize':
             case 'cursorRead':
-                return call_user_func_array([$this->getConnection(), $method], $args);
+                return call_user_func_array([$this->connection, $method], $args);
             default:
                 throw new NormException('Collection does not have method ' . $method);
         }
@@ -442,16 +439,13 @@ class Collection extends Normable
 
     public function cursorRead($context, $position = 0)
     {
-        $row = $this->getConnection()->cursorRead($context, $position);
+        $row = $this->connection->cursorRead($context, $position);
         return is_null($row) ? $row : $this->attach($row);
     }
 
-    public function factory($collectionId = null, $connectionId = null)
+    public function factory($collectionId = '', $connectionId = '')
     {
-        if (is_null($collectionId)) {
-            return $this;
-        }
-        return $this->repository->factory($collectionId, $connectionId ?: $this->getConnection()->getId());
+        return $this->repository->factory($collectionId, $connectionId ?: $this->connection->getId());
     }
 
     public function __debugInfo()

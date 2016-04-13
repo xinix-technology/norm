@@ -10,18 +10,25 @@ use Norm\Repository;
  * Collection abstract class.
  *
  * @author    Ganesha <reekoheek@gmail.com>
- * @copyright 2015 PT Sagara Xinix Solusitama
- * @link      http://xinix.co.id/products/norm Norm
+ * @copyright 2016 PT Sagara Xinix Solusitama
+ * @link      http://sagara.id/p/product Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
 class DateTime extends NDateTime implements JsonSerializer
 {
     protected $repository;
 
-    function __construct(Repository $repository, $t)
+    function __construct(Repository $repository, $t = null, $tz = null)
     {
         $this->repository = $repository;
-        parent::__construct($t);
+        switch(func_num_args()) {
+            case 1:
+                return parent::__construct();
+            case 2:
+                return parent::__construct($t);
+            default:
+                return parent::__construct($t, $tz);
+        }
     }
 
     /**

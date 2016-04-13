@@ -3,7 +3,7 @@
 namespace Norm\Schema;
 
 use Closure;
-use Norm\Norm;
+use Norm\Repository;
 use Norm\Type\ArrayList as TypeArray;
 
 class ReferenceList extends ArrayList

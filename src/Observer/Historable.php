@@ -2,7 +2,7 @@
 
 namespace Norm\Observer;
 
-use Norm\Norm;
+use Norm\Repository;
 use Norm\Schema\NList;
 use ROH\Util\Collection as UtilCollection;
 
@@ -10,15 +10,19 @@ class Historable
 {
     public function initialize($context)
     {
-        $historyField = NList::create()
-            ->transient()
-            ->withReader(function ($model) use ($context) {
+        $context['collection']->getSchema()
+            ->addField([ NList::class, [
+                'options' => [
+                    'name' => '$history',
+                    'transient' => true,
+                ],
+            ]])
+            ->setReader(function ($model) use ($context) {
                 return $context['collection']->factory($context['collection']->getName().'History')
                     ->find(array('model_id' => $model['$id']))
                     ->sort(array('$created_time' => -1))
                     ->toArray(true);
             });
-        $context['collection']->getSchema()->withField('$history', $historyField);
     }
 
     public function save($context, $next)

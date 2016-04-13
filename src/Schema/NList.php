@@ -6,7 +6,6 @@ use Norm\Type\ArrayList as TypeArray;
 
 class NList extends NField
 {
-
     public function prepare($value)
     {
         if (empty($value)) {

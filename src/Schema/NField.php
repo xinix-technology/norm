@@ -249,4 +249,9 @@ abstract class NField extends Normable
         $this['hidden'] = $hidden;
         return $this;
     }
+
+    public function end()
+    {
+        return $this->schema;
+    }
 }

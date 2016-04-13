@@ -7,8 +7,8 @@ use JsonKit\JsonSerializer;
  * Collection abstract class.
  *
  * @author    Ganesha <reekoheek@gmail.com>
- * @copyright 2015 PT Sagara Xinix Solusitama
- * @link      http://xinix.co.id/products/norm Norm
+ * @copyright 2016 PT Sagara Xinix Solusitama
+ * @link      http://sagara.id/p/product Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
 class Secret implements JsonSerializer

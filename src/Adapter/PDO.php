@@ -29,8 +29,10 @@ class PDO extends Connection
 
     protected $pdoOptions;
 
-    public function __construct(array $options = [])
+    public function __construct($id, array $options = [])
     {
+        parent::__construct($id);
+
         if (!isset($options['dsn'])) {
             throw new InvalidArgumentException('DSN is required');
         }

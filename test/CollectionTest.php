@@ -1,63 +1,101 @@
 <?php
 namespace Norm\Test;
 
-use Norm\Collection;
-use Norm\Schema;
-use Norm\Schema\NUnknown;
-use ROH\Util\Collection as UtilCollection;
 use PHPUnit_Framework_TestCase;
+use Norm\Repository;
+use Norm\Connection;
+use Norm\Collection;
+use Norm\Observer\Timestampable;
+use Norm\Exception\NormException;
+// use Norm\Schema;
+// use Norm\Schema\NUnknown;
+// use ROH\Util\Collection as UtilCollection;
+// use Norm\Test\NormTestCase;
 
 class CollectionTest extends PHPUnit_Framework_TestCase
 {
-    public function testGetId()
+    protected $repository;
+
+    public function setUp()
     {
-        $collection = new Collection(null, [
-            'name' => 'Test'
+
+        $connection = $this->getMock(Connection::class, [
+            'persist',
+            'remove',
+            'cursorDistinct',
+            'cursorFetch',
+            'cursorSize',
+            'cursorRead',
+            'getId',
         ]);
-
-        $this->assertEquals('test', $collection->getId());
-
-        $collection = new Collection(null, [
-            'name' => 'Try',
-            'id' => 'try',
+        $connection->method('getId')->will($this->returnValue('main'));
+        $this->repository = new Repository([
+            'connections' => [
+                $connection,
+            ]
         ]);
-
-        $this->assertEquals('try', $collection->getId());
+        $this->repository->singleton(Connection::class, $connection);
     }
 
-    public function testGetSchema()
+    public function testConstruct()
     {
-        $collection = new Collection(null, [
-            'name' => 'Test'
+        $hit = false;
+        $collection = new Collection($this->repository, $this->repository->getConnection(), [
+            'name' => 'Foo',
+            'observers' => [
+                [
+                    'initialize' => function($context, $next) use (&$hit) {
+                        $hit = true;
+                        $next($context);
+                    },
+                ],
+                [ Timestampable::class ],
+            ]
         ]);
 
-        $this->assertInstanceOf(Schema::class, $collection->getSchema());
-        $this->assertInstanceOf(NUnknown::class, $collection->getSchema()['tryme']);
+        $this->assertTrue($hit);
     }
 
-    public function testWithSchema()
+    public function testObserve()
     {
-        $collection = new Collection(null, [
-            'name' => 'Test'
+        $collection = new Collection($this->repository, $this->repository->getConnection(), [
+            'name' => 'Foo',
+        ]);
+        $collection->observe([
+            'initialize' => function($context, $next) use (&$hit) {
+                $hit = true;
+                $next($context);
+            }
         ]);
 
-        $result = $collection->withSchema([
-            'foo' => $this->getMock(NUnknown::class)
-        ]);
+        $this->assertTrue($hit);
 
-        $this->assertEquals($collection, $result);
-        $this->assertInstanceOf(NUnknown::class, $collection->getSchema()['foo']);
+        try {
+            $collection->observe(0);
+            $this->fail('Must not here');
+        } catch(NormException $e) {
+            if ($e->getMessage() !== 'Observer must be array or object') {
+                throw $e;
+            }
+        }
     }
 
-    public function testAttach()
+    public function testDebugInfo()
     {
-        $collection = new Collection(null, [
-            'name' => 'Test',
+        $collection = new Collection($this->repository, $this->repository->getConnection(), [
+            'name' => 'Foo',
+        ]);
+        $info = $collection->__debugInfo();
+        $this->assertEquals($info['id'], 'foo');
+        $this->assertEquals($info['name'], 'Foo');
+    }
+
+    public function testFactory()
+    {
+        $collection = new Collection($this->repository, $this->repository->getConnection(), [
+            'name' => 'Foo',
         ]);
 
-        $result = $collection->attach([
-            'fname' => 'John',
-            'lname' => 'Doe'
-        ]);
+        $this->assertEquals($collection->factory('Foo'), $collection);
     }
 }
