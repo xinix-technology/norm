@@ -21,7 +21,7 @@ class NObject extends NField
         return new TypeObject($value);
     }
 
-    public function formatReadonly($value, $model = null)
+    protected function formatReadonly($value, $model = null)
     {
         if (isset($value)) {
             // TODO this checking should available on JsonKit
@@ -35,7 +35,7 @@ class NObject extends NField
         return parent::formatReadonly($value, $model);
     }
 
-    public function formatInput($value, $model = null)
+    protected function formatInput($value, $model = null)
     {
         if (isset($value)) {
             // TODO this checking should available on JsonKit

@@ -99,7 +99,7 @@ class Schema extends Normable
      * @param  Model  $model [description]
      * @return string        [description]
      */
-    public function formatPlain(Model $model)
+    protected function formatPlain(Model $model)
     {
         return $model[$this->firstKey];
     }

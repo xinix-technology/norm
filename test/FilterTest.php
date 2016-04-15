@@ -2,245 +2,326 @@
 namespace Norm\Test;
 
 use PHPUnit_Framework_TestCase;
+use Norm\Repository;
 use Norm\Filter;
 use Norm\Exception\FilterException;
 use Norm\Collection;
+use Norm\Connection;
+use Norm\Exception\FatalException;
+use Norm\Exception\SkipException;
 
 class FilterTest extends PHPUnit_Framework_TestCase
 {
-    // public function getCollection()
-    // {
-    //     $collection = $this->repository->resolve(Collection::class, [
-    //         'connection' => $this->repository->getConnection(),
-    //         'options' => [
-    //             'name' => 'Foo',
-    //         ]
-    //     ]);
-    //     return $collection;
-    // }
+    protected $repository;
 
-    // public function testFilterChain()
-    // {
-    //     $rules = Filter::parseFilterRules([
-    //         'foo' => [
-    //             'filters' => [
-    //                 'a|b:c|d:e,f'
-    //             ]
-    //         ]
-    //     ]);
+    protected $collection;
 
-    //     $this->assertEquals(3, count($rules['foo']['filters']));
+    public function setUp()
+    {
+        $this->repository = new Repository();
+        $connection = $this->getMock(Connection::class);
+        $this->collection = $this->getMock(Collection::class, [], [
+            $this->repository,
+            $connection,
+            [ 'name' => 'Foo' ],
+        ]);
+    }
 
-    //     $this->assertEquals('a', $rules['foo']['filters'][0][0]);
-    //     $this->assertEquals([], $rules['foo']['filters'][0][1]);
+    public function testRegister()
+    {
+        $foo = function() {};
+        Filter::register('foo', $foo);
+        $this->assertEquals(Filter::get('foo'), $foo);
+    }
 
-    //     $this->assertEquals('b', $rules['foo']['filters'][1][0]);
-    //     $this->assertEquals(['c'], $rules['foo']['filters'][1][1]);
+    public function testFilterChain()
+    {
+        $filter = function() {};
+        $rules = Filter::parseFilterRules([
+            'foo' => [
+                'filters' => [
+                    'a|b:c|d:e,f',
+                    $filter,
+                ]
+            ]
+        ]);
 
-    //     $this->assertEquals('d', $rules['foo']['filters'][2][0]);
-    //     $this->assertEquals(['e', 'f'], $rules['foo']['filters'][2][1]);
-    // }
+        $this->assertEquals(4, count($rules['foo']['filters']));
 
-    // public function testRegister()
-    // {
-    //     $filter1 = function () {
+        $this->assertEquals('a', $rules['foo']['filters'][0][0]);
+        $this->assertEquals([], $rules['foo']['filters'][0][1]);
 
-    //     };
-    //     $filter2 = [$this, 'testRegister'];
+        $this->assertEquals('b', $rules['foo']['filters'][1][0]);
+        $this->assertEquals(['c'], $rules['foo']['filters'][1][1]);
 
-    //     Filter::register('filter-1', $filter1);
-    //     Filter::register('filter-2', $filter2);
+        $this->assertEquals('d', $rules['foo']['filters'][2][0]);
+        $this->assertEquals(['e', 'f'], $rules['foo']['filters'][2][1]);
+        $this->assertEquals($filter, $rules['foo']['filters'][3][0]);
+    }
 
-    //     $registries = Filter::debugRegistration();
+    public function testConstruct()
+    {
+        $filter = new Filter($this->collection, [
+            'foo' => [
+                'filters' => [
+                    'a|b:c|d:e,f',
+                ]
+            ]
+        ]);
 
-    //     $this->assertEquals($filter1, $registries['filter-1']);
-    //     $this->assertEquals($filter2, $registries['filter-2']);
-    // }
+        $this->assertEquals(count($filter->__debugInfo()['foo']['filters']), 3);
+    }
 
-    // public function testConstruct()
-    // {
-    //     $filter = new Filter($this->getCollection(), []);
-    // }
+    public function testGetLabel()
+    {
+        $filter = new Filter($this->collection, [
+            'foo' => [],
+            'bar' => [
+                'label' => 'Bar',
+            ],
+        ]);
 
-    // public function testRunAllContext()
-    // {
-    //     $filter = new Filter($this->getCollection(), [
-    //         'paddedstr' => [
-    //             'filters' => [
-    //                 'trim'
-    //             ]
-    //         ]
-    //     ]);
+        $this->assertEquals($filter->getLabel('foo'), 'Unknown');
+        $this->assertEquals($filter->getLabel('bar'), 'Bar');
+    }
 
-    //     $data = [
-    //         'paddedstr' => '   this is str   ',
-    //     ];
+    public function testRunAllContext()
+    {
+        $filter = new Filter($this->collection, [
+            'paddedstr' => [
+                'filters' => [
+                    'trim'
+                ]
+            ]
+        ]);
 
-    //     $result = $filter->run($data);
+        $data = [
+            'paddedstr' => '   this is str   ',
+        ];
 
-    //     $this->assertEquals('this is str', $result['paddedstr']);
-    // }
+        $result = $filter->run($data);
 
-    // public function testRunSelectiveContext()
-    // {
-    //     $filter = new Filter($this->getCollection(), [
-    //         'foo' => [
-    //             'filters' => [
-    //                 'trim'
-    //             ]
-    //         ],
-    //         'bar' => [
-    //             'filters' => [
-    //                 'trim'
-    //             ]
-    //         ]
-    //     ]);
+        $this->assertEquals('this is str', $result['paddedstr']);
+    }
 
-    //     $data = [
-    //         'foo' => '   this is foo   ',
-    //         'bar' => '   this is bar   ',
-    //     ];
+    public function testRunSingleField()
+    {
+        $filter = new Filter($this->collection, [
+            'paddedstr' => [
+                'filters' => [
+                    'trim'
+                ]
+            ],
+            'foo' => [
+                'filters' => [
+                    function() {
+                        throw new \Exception('Must not throw this');
+                    }
+                ]
+            ]
+        ]);
 
-    //     $result = $filter->run($data);
+        $data = [
+            'paddedstr' => '   this is str   ',
+            'foo' => 'bar',
+        ];
 
-    //     $this->assertNotEquals('   this is foo   ', $result['foo']);
-    //     $this->assertEquals('this is bar', $result['bar']);
-    // }
 
-    // public function testGetErrors()
-    // {
-    //     $filter = new Filter($this->getCollection(), [
-    //         'foo' => [
-    //             'filters' => [
-    //                 function () {
-    //                     throw new \Exception('Foo error');
-    //                 }
-    //             ]
-    //         ],
-    //         'bar' => [
-    //             'filters' => [
-    //                 function () {
-    //                     throw new \Exception('Bar error');
-    //                 }
-    //             ]
-    //         ]
-    //     ]);
+        $filter->run($data, 'paddedstr');
+    }
 
-    //     try {
-    //         $filter->run(null);
-    //     } catch (FilterException $e) {
-    //         $this->assertEquals('Foo error', $e->getChildren()[0]->getMessage());
-    //         $this->assertEquals('Foo error', $filter->getErrors()[0]->getMessage());
-    //         return;
-    //     }
-    //     $this->fail('An expected exception has not been raised.');
-    // }
+    public function testRunSelectiveContext()
+    {
+        $filter = new Filter($this->collection, [
+            'foo' => [
+                'filters' => [
+                    'trim'
+                ]
+            ],
+            'bar' => [
+                'filters' => [
+                    'trim'
+                ]
+            ]
+        ]);
 
-    // public function testFilterRequired()
-    // {
-    //     $filter = new Filter($this->getCollection(), [
-    //         'foo' => [
-    //             'label' => 'Foo',
-    //             'filters' => [
-    //                 'required'
-    //             ]
-    //         ],
-    //     ]);
+        $data = [
+            'foo' => '   this is foo   ',
+            'bar' => '   this is bar   ',
+        ];
 
-    //     try {
-    //         $x = $filter->run(['foo' => 'not raised']);
-    //     } catch (\Exception $e) {
-    //         $this->fail('Unexpected exception raised here. '. $e->getMessage());
-    //     }
+        $result = $filter->run($data);
 
-    //     try {
-    //         $filter->run(null);
-    //         $this->fail('Expected exception raised here.');
-    //     } catch (FilterException $e) {
-    //         $this->assertEquals('Field Foo is required', $filter->getErrors()[0]->getMessage());
-    //     }
+        $this->assertNotEquals('   this is foo   ', $result['foo']);
+        $this->assertEquals('this is bar', $result['bar']);
+    }
 
-    //     try {
-    //         $filter->run([]);
-    //         $this->fail('Expected exception raised here.');
-    //     } catch (FilterException $e) {
-    //     }
+    public function testRunFatal()
+    {
+        $filter = new Filter($this->collection, [
+            'foo' => [
+                'filters' => [
+                    function() {
+                        throw new FatalException('fatal');
+                    }
+                ]
+            ],
+            'bar' => [
+                'filters' => [
+                    'trim'
+                ]
+            ]
+        ]);
 
-    //     try {
-    //         $filter->run(['foo' => '']);
-    //         $this->fail('Expected exception raised here.');
-    //     } catch (FilterException $e) {
-    //     }
+        $data = [
+            'foo' => '   this is foo   ',
+            'bar' => '   this is bar   ',
+        ];
 
-    //     try {
-    //         $filter->run(['foo' => null]);
-    //         $this->fail('Expected exception raised here.');
-    //     } catch (FilterException $e) {
-    //     }
-    // }
+        try {
+            $result = $filter->run($data);
+        } catch(FatalException $fe) {
+            $this->assertEquals($filter->getErrors(), []);
+        }
+    }
 
-    // public function testFilterConfirmed()
-    // {
-    //     $filter = new Filter($this->getCollection(), [
-    //         'foo' => [
-    //             'label' => 'Foo',
-    //         ],
-    //     ]);
+    public function testRunSkip()
+    {
+        $filter = new Filter($this->collection, [
+            'foo' => [
+                'filters' => [
+                    function() {
+                        throw new SkipException('fatal');
+                    },
+                    'trim',
+                ]
+            ],
+        ]);
 
-    //     try {
-    //         $filter->filterConfirmed('foo', [
-    //             'key' => 'foo',
-    //             'data' => [
-    //                 'foo' => 'foo',
-    //                 'foo_confirmation' => 'foox',
-    //             ]
-    //         ]);
-    //         $this->fail('Expected exception raised here.');
-    //     } catch (FilterException $e) {
-    //         $this->assertEquals('Field Foo must be confirmed', $e->getMessage());
-    //     }
+        $data = [
+            'foo' => '   this is foo   ',
+            'bar' => '   this is bar   ',
+        ];
 
-    //     $result = $filter->filterConfirmed('foo', [
-    //         'key' => 'foo',
-    //         'data' => [
-    //             'foo' => 'foo',
-    //             'foo_confirmation' => 'foo',
-    //         ]
-    //     ]);
+        $result = $filter->run($data);
+        $this->assertEquals($result['foo'], $data['foo']);
+    }
 
-    //     $this->assertEquals('foo', $result);
-    // }
+    public function testRunCommonError()
+    {
+        $filter = new Filter($this->collection, [
+            'foo' => [
+                'filters' => [
+                    'trim',
+                ]
+            ],
+            'bar' => [
+                'filters' => [
+                    function() {
+                        throw new \Exception('common error');
+                    }
+                ]
+            ]
+        ]);
 
-    // public function testFilterUnique()
-    // {
-    //     $filter = new Filter($this->getCollection(), [
-    //         'foo' => [
-    //             'label' => 'Foo',
-    //         ],
-    //     ]);
+        $data = [
+            'foo' => '   this is foo   ',
+            'bar' => '   this is bar   ',
+        ];
 
-    //     $result = $filter->filterUnique('foo', [
-    //         'key' => 'foo',
-    //         'data' => [
-    //             'foo' => 'foo',
-    //         ],
-    //         'arguments' => []
-    //     ]);
+        try {
+            $result = $filter->run($data);
+            $this->fail('Must not here');
+        } catch(FilterException $e) {
+        }
+    }
 
-    //     $this->assertEquals('foo', $result);
+    public function testFilterRequired()
+    {
+        $filter = new Filter($this->collection, [
+            'foo' => [
+                'label' => 'Foo',
+                'filters' => [
+                    'required'
+                ]
+            ],
+        ]);
 
-    //     // try {
-    //     //     $filter->filterUnique('foo', [
-    //     //         'key' => 'foo',
-    //     //         'data' => [
-    //     //             'foo' => 'foo',
-    //     //         ],
-    //     //         'arguments' => []
-    //     //     ]);
-    //     //     $this->fail('Expected exception raised here.');
-    //     // } catch (FilterException $e) {
-    //     //     $this->assertEquals('Field Foo must be confirmed', $e->getMessage());
-    //     // }
+        try {
+            $x = $filter->run(['foo' => 'not raised']);
+        } catch (\Excception $e) {
+            $this->fail('Unexpected exception raised here. '. $e->getMessage());
+        }
 
-    // }
+        try {
+            $filter->run(null);
+            $this->fail('Expected exception raised here.');
+        } catch (FilterException $e) {
+            $this->assertEquals('Field Foo is required', $filter->getErrors()[0]->getMessage());
+        } catch(\Exception $e) {
+        }
+
+        try {
+            $filter->run([]);
+            $this->fail('Expected exception raised here.');
+        } catch (FilterException $e) {
+        }
+
+        try {
+            $filter->run(['foo' => '']);
+            $this->fail('Expected exception raised here.');
+        } catch (FilterException $e) {
+        }
+
+        try {
+            $filter->run(['foo' => null]);
+            $this->fail('Expected exception raised here.');
+        } catch (FilterException $e) {
+        }
+    }
+
+    public function testFilterConfirmed()
+    {
+        $filter = new Filter($this->collection, [
+            'foo' => [
+                'label' => 'Foo',
+                'filters' => [
+                    'confirmed'
+                ]
+            ],
+        ]);
+
+        try {
+            $filter->run([
+                'foo' => 'foo',
+                'foo_confirmation' => 'foox',
+            ]);
+            $this->fail('Expected exception raised here.');
+        } catch (FilterException $e) {
+            $this->assertEquals('Field Foo must be confirmed', $e->getChildren()[0]->getMessage());
+        }
+
+        $result = $filter->run([
+            'foo' => 'foo',
+            'foo_confirmation' => 'foo',
+        ]);
+
+        $this->assertEquals('foo', $result['foo']);
+    }
+
+    public function testFilterUnique()
+    {
+        $filter = new Filter($this->collection, [
+            'foo' => [
+                'label' => 'Foo',
+                'filters' => [
+                    'unique'
+                ]
+            ],
+        ]);
+
+        $result = $filter->run([
+            'foo' => 'foo',
+        ]);
+    }
 }

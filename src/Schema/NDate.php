@@ -7,7 +7,7 @@ use DateTimeZone;
 class NDate extends DateTime
 {
 
-    public function formatInput($value, $model = null)
+    protected function formatInput($value, $model = null)
     {
         if ($value) {
             $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));
@@ -18,7 +18,7 @@ class NDate extends DateTime
             '" autocomplete="off" />';
     }
 
-    public function formatPlain($value, $model = null)
+    protected function formatPlain($value, $model = null)
     {
         if ($value) {
             $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));
@@ -27,7 +27,7 @@ class NDate extends DateTime
         return ($value ? $value->format('Y-m-d') : null);
     }
 
-    public function formatReadonly($value, $model = null)
+    protected function formatReadonly($value, $model = null)
     {
         if ($value) {
             $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));

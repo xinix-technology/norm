@@ -159,12 +159,12 @@ class NReference extends NField
         return parent::format($name, $valueOrCallable, $model);
     }
 
-    public function formatPlain($value, $model = null)
+    protected function formatPlain($value, $model = null)
     {
         return $this['foreign']($value);
     }
 
-    public function formatInput($value, $model = null)
+    protected function formatInput($value, $model = null)
     {
         return $this->render('_schema/reference/input', array(
             'self' => $this,

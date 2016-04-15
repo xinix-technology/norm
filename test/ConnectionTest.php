@@ -1,5 +1,4 @@
 <?php
-
 namespace Norm\Test;
 
 use stdClass;

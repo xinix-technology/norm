@@ -24,7 +24,7 @@ class NDateTime extends NField
         return new TypeDateTime($this->repository, $t);
     }
 
-    public function formatInput($value, $model = null)
+    protected function formatInput($value, $model = null)
     {
         if ($value) {
             $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));
@@ -35,7 +35,7 @@ class NDateTime extends NField
             $this['label'].'" autocomplete="off" />';
     }
 
-    public function formatReadonly($value, $model = null)
+    protected function formatReadonly($value, $model = null)
     {
         if ($value) {
             $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));

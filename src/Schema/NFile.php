@@ -65,12 +65,12 @@ class NFile extends Object
         // return parent::prepare($value);
     }
 
-    public function formatReadonly($value, $model = null)
+    protected function formatReadonly($value, $model = null)
     {
         return '<span class="field">'.($value['name'] ?: '-').'</span>';
     }
 
-    public function formatInput($value, $model = null)
+    protected function formatInput($value, $model = null)
     {
         return '
             <input type="hidden" name="'.$this['name'].'">

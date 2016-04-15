@@ -1,6 +1,7 @@
 <?php
 namespace Norm\Test;
 
+use Norm\Exception\NormException;
 use Norm\Model;
 use Norm\Collection;
 use Norm\Connection;
@@ -14,72 +15,65 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
+        $connection = $this->getMock(Connection::class);
         $this->repository = new Repository();
+        $this->collection = new Collection($this->repository, $connection, ['name' => 'Foo']);
     }
-    // public function getCollection()
-    // {
-    //     $repository = new Repository();
-    //     $connection = $this->getMock(Connection::class, [], ['default']);
-    //     $collection = $repository->resolve(Collection::class, [
-    //         'connection' => $connection,
-    //         'options' => [
-    //             'name' => 'test',
-    //         ]
-    //     ]);
-    //     return $collection;
-    // }
 
-    // public function testGetId()
-    // {
-    //     $collection = $this->getCollection();
-    //     $model = new Model($collection, ['$id' => 10, 'name' => 'John Doe']);
-    //     $this->assertEquals(10, $model->getId());
-    // }
+    public function testSet()
+    {
+        $model = new Model($this->collection);
+        try {
+            $model->set('$id', 10);
+            $this->fail('Must not here');
+        } catch(NormException $e) {
+            if ($e->getMessage() !== 'Restricting model to set for $id.') {
+                throw $e;
+            }
+        }
+    }
 
-    // public function testHas()
-    // {
-    //     $collection = $this->getCollection();
-    //     $model = new Model($collection, ['$id' => 10, 'name' => 'John Doe']);
-    //     $this->assertTrue($model->has('name'));
-    //     $this->assertFalse($model->has('address'));
-    // }
+    public function testClear()
+    {
+        $model = new Model($this->collection, [
+            'foo' => 'foo',
+            'bar' => 'bar',
+        ]);
+        $this->assertNotNull($model->clear('bar')['foo']);
+        $this->assertNull($model->clear()['foo']);
+        try {
+            $model->clear('$id');
+        } catch(NormException $e) {
+            if ($e->getMessage() !== 'Restricting model to clear for $id.') {
+                throw $e;
+            }
+        }
 
-    // public function testGet()
-    // {
-    //     $collection = $this->getCollection();
-    //     $model = new Model($collection, ['$id' => 10, 'name' => 'John Doe']);
-    //     $this->assertEquals('John Doe', $model->get('name'));
-    // }
+        unset($model->set('foo', 'foo')['foo']);
+        $this->assertNull($model['foo']);
+    }
 
-    // public function testCreateWithDefaultValue()
-    // {
-    //     $connection = $this->getMock(Connection::class, [], ['connection']);
-    //     $connection->method('persist')->will($this->returnCallback(function ($id, $model) {
-    //         $model['id'] = 1;
-    //         return $model;
-    //     }));
-    //     $repository = new Repository([
-    //         'connections' => [
-    //             $connection,
-    //         ]
-    //     ]);
+    public function testFilter()
+    {
+        (new Model($this->collection))->filter();
+    }
 
-    //     $repository->addResolver(function ($id) {
-    //         return [
-    //             'schema' => [
-    //                 [ NString::class, [
-    //                     'options' => [
-    //                         'name' => 'foo',
-    //                         'filter' => 'trim|default:bar|required',
-    //                     ],
-    //                 ]],
-    //             ],
-    //         ];
-    //     });
+    public function testPrevious()
+    {
+        $model = new Model($this->collection, ['foo' => 'bar']);
+        $this->assertEquals($model->previous(), ['foo' => 'bar']);
+        $this->assertEquals($model->previous('foo'), 'bar');
+    }
 
-    //     $model = $repository->factory('Foo')->newInstance();
-    //     $this->assertNull($model['foo']);
-    //     $model->save();
-    //     $this->assertEquals('bar', $model['foo']);
-    // }
+    public function testStatus()
+    {
+        $model = new Model($this->collection, ['foo' => 'bar']);
+        $this->assertEquals($model->isRemoved(), false);
+    }
+
+    public function testToArrayAndDebugInfo()
+    {
+        $model = new Model($this->collection, ['foo' => 'bar']);
+        $this->assertEquals($model->toArray(), $model->__debugInfo());
+    }
 }

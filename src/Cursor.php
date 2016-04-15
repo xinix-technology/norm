@@ -63,8 +63,16 @@ class Cursor implements Iterator, Countable, JsonSerializer
      */
     protected $match;
 
+    /**
+     * [$position description]
+     * @var integer
+     */
     protected $position = 0;
 
+    /**
+     * [$context description]
+     * @var mixed
+     */
     protected $context;
 
     /**
@@ -82,6 +90,10 @@ class Cursor implements Iterator, Countable, JsonSerializer
 
     // getter / setter *********************************************************
 
+    /**
+     * [getCollectionId description]
+     * @return string [description]
+     */
     public function getCollectionId()
     {
         return $this->collection->getId();
@@ -208,6 +220,10 @@ class Cursor implements Iterator, Countable, JsonSerializer
 
     // behavior ****************************************************************
 
+    /**
+     * [getContext description]
+     * @return mixed [description]
+     */
     public function getContext()
     {
         if (is_null($this->context)) {
@@ -228,11 +244,19 @@ class Cursor implements Iterator, Countable, JsonSerializer
         return $this->collection->cursorDistinct($this, $key);
     }
 
+    /**
+     * [current description]
+     * @return Model [description]
+     */
     public function current()
     {
         return $this->collection->cursorRead($this->getContext(), $this->position);
     }
 
+    /**
+     * [next description]
+     * @return function [description]
+     */
     public function next()
     {
         if ($this->valid()) {
@@ -240,11 +264,19 @@ class Cursor implements Iterator, Countable, JsonSerializer
         }
     }
 
+    /**
+     * [key description]
+     * @return int [description]
+     */
     public function key()
     {
         return $this->position;
     }
 
+    /**
+     * [valid description]
+     * @return bool [description]
+     */
     public function valid()
     {
 
@@ -252,21 +284,38 @@ class Cursor implements Iterator, Countable, JsonSerializer
         return (is_null($row)) ? false : true;
     }
 
+    /**
+     * [rewind description]
+     * @return [type] [description]
+     */
     public function rewind()
     {
         $this->position = 0;
     }
 
+    /**
+     * [count description]
+     * @return int [description]
+     */
     public function count()
     {
         return $this->size(true);
     }
 
+    /**
+     * [size description]
+     * @param  boolean $respectLimitSkip [description]
+     * @return int                       [description]
+     */
     public function size($respectLimitSkip = false)
     {
         return $this->collection->cursorSize($this, $respectLimitSkip);
     }
 
+    /**
+     * [first description]
+     * @return Model [description]
+     */
     public function first()
     {
         $this->rewind();

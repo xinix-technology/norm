@@ -2,10 +2,9 @@
 namespace Norm\Test\Observer;
 
 use Norm\Observer\Actorable;
-use Norm\Test\ObserverTestCase;
 use Norm\Collection;
 
-class ActorableTest extends ObserverTestCase
+class ActorableTest extends AbstractObserverTest
 {
     public function testSave()
     {

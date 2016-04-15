@@ -20,9 +20,9 @@ abstract class NField extends Normable
 
     public function __construct(Repository $repository, Schema $schema, array $options = [])
     {
-        if (null === $schema) {
-            throw new NormException('Schema is mandatory!');
-        }
+        // if (null === $schema) {
+        //     throw new NormException('Schema is mandatory!');
+        // }
 
         if (!isset($options['name'])) {
             throw new NormException('Option name is mandatory!');
@@ -185,17 +185,17 @@ abstract class NField extends Normable
         return $value;
     }
 
-    public function formatPlain($value, $model = null)
+    protected function formatPlain($value, $model = null)
     {
         return $value;
     }
 
-    public function formatReadonly($value, $model = null)
+    protected function formatReadonly($value, $model = null)
     {
         return "<span class=\"field\">".($this->formatPlain($value, $model) ?: '&nbsp;')."</span>";
     }
 
-    public function formatInput($value, $model = null)
+    protected function formatInput($value, $model = null)
     {
         if (!empty($value)) {
             $value = htmlentities($value);

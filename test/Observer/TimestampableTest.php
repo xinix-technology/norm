@@ -3,9 +3,8 @@ namespace Norm\Test\Observer;
 
 use Norm\Observer\Timestampable;
 use Norm\Schema\NDateTime;
-use Norm\Test\ObserverTestCase;
 
-class TimestampableTest extends ObserverTestCase
+class TimestampableTest extends AbstractObserverTest
 {
     public function testInitialize()
     {

@@ -85,7 +85,7 @@ class SchemaTest extends PHPUnit_Framework_TestCase
         $model = $this->collection->newInstance([
             'foo' => 'Foo Bar',
         ]);
-        $formatted = $this->schema->formatPlain($model);
+        $formatted = $this->schema->format('plain', $model);
         $this->assertEquals($formatted, 'Foo Bar');
     }
 

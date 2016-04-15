@@ -67,11 +67,12 @@ class DateTime extends NDateTime implements JsonSerializer
      */
     public function jsonSerialize()
     {
-        if (null !== $this->repository->getAttribute('timezone')) {
-            $this->setTimezone(new DateTimeZone($this->repository->getAttribute('timezone')));
-        }
+        return $this->__toString();
+        // if (null !== $this->repository->getAttribute('timezone')) {
+        //     $this->setTimezone(new DateTimeZone($this->repository->getAttribute('timezone')));
+        // }
 
-        return $this->format('c');
+        // return $this->format('c');
     }
 
     /**

@@ -1,9 +1,8 @@
 <?php
 namespace Norm;
 
-use Exception;
-use ArrayAccess;
-use InvalidArgumentException;
+use Traversable;
+use Norm\Exception\NormException;
 use ROH\Util\Collection as UtilCollection;
 use Norm\Exception\SkipException;
 use Norm\Exception\FilterException;
@@ -42,29 +41,29 @@ class Filter
     /**
      * Register custom filter to use later
      *
-     * @param  string $key   Key name of filter
-     * @param  string $callable PHP class to use
+     * @param  string   $key      Key name of filter
+     * @param  callable $callable PHP class to use
      */
-    public static function register($key, $callable)
+    public static function register($key, callable $callable)
     {
-        if (!is_callable($callable)) {
-            throw new InvalidArgumentException('Invalid callable to register');
-        }
         static::$registries[$key] = $callable;
     }
 
+    /**
+     * [get description]
+     * @param  string   $key [description]
+     * @return callable      [description]
+     */
     public static function get($key)
     {
-        if (isset(static::$registries[$key])) {
-            return static::$registries[$key];
-        }
+        return isset(static::$registries[$key]) ? static::$registries[$key] : null;
     }
 
-    public static function debugRegistration()
-    {
-        return static::$registries;
-    }
-
+    /**
+     * [parseFilterChain description]
+     * @param  mixed $filterChain  [description]
+     * @param  array &$ruleFilters [description]
+     */
     protected static function parseFilterChain($filterChain, &$ruleFilters)
     {
         if (is_string($filterChain)) {
@@ -80,7 +79,12 @@ class Filter
         }
     }
 
-    public static function parseFilterRules($rules)
+    /**
+     * [parseFilterRules description]
+     * @param  array $rules [description]
+     * @return array        [description]
+     */
+    public static function parseFilterRules(array $rules)
     {
         $newRules = [];
 
@@ -99,23 +103,37 @@ class Filter
         return $newRules;
     }
 
-    public function __construct(Collection $collection, $rules)
+    /**
+     * [__construct description]
+     * @param Collection $collection [description]
+     * @param array      $rules      [description]
+     */
+    public function __construct(Collection $collection, array $rules)
     {
-        if (!is_array($rules) && !($rules instanceof ArrayAccess)) {
-            throw new InvalidArgumentException('Filter rules must be instance of array');
-        }
-
         $this->collection = $collection;
 
         $this->rules = static::parseFilterRules($rules);
     }
 
+    /**
+     * [getLabel description]
+     * @param  string $key [description]
+     * @return string      [description]
+     */
     public function getLabel($key)
     {
         return isset($this->rules[$key]['label']) ? $this->rules[$key]['label'] : 'Unknown';
     }
 
-    public function execFilter($filter, $data, $k, $rule)
+    /**
+     * [execFilter description]
+     * @param  mixed|null  $filter [description]
+     * @param  mixed|null  $data   [description]
+     * @param  string      $k      [description]
+     * @param  mixed       $rule   [description]
+     * @return mixed               [description]
+     */
+    protected function execFilter($filter, $data, $k, $rule)
     {
         if (!is_array($filter) || count($filter) < 3) {
             throw new FatalException('Invalid filter'.print_r($filter, 1));
@@ -158,6 +176,12 @@ class Filter
         throw new FatalException($message);
     }
 
+    /**
+     * [run description]
+     * @param  array  $data [description]
+     * @param  string $key  [description]
+     * @return array        [description]
+     */
     public function run($data, $key = null)
     {
         $this->errors = [];
@@ -185,7 +209,7 @@ class Filter
                         break;
                     } catch (FatalException $e) {
                         throw $e;
-                    } catch (Exception $e) {
+                    } catch (\Exception $e) {
                         $this->errors[] = $e;
 
                         break;
@@ -203,17 +227,31 @@ class Filter
         return $data;
     }
 
+    /**
+     * [getErrors description]
+     * @return array [description]
+     */
     public function getErrors()
     {
         return $this->errors;
     }
 
+    /**
+     * [__debugInfo description]
+     * @return [type] [description]
+     */
     public function __debugInfo()
     {
         return $this->rules;
     }
 
-    public function filterRequired($value, $opts)
+    /**
+     * [filterRequired description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterRequired($value, $opts)
     {
         if (is_null($value) || $value === '') {
             throw (new FilterException('Field %s is required'))
@@ -224,7 +262,13 @@ class Filter
         return $value;
     }
 
-    public function filterConfirmed($value, $opts)
+    /**
+     * [filterConfirmed description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterConfirmed($value, $opts)
     {
         if (is_null($value) || $value === '') {
             unset($opts['data'][$opts['key']]);
@@ -243,7 +287,13 @@ class Filter
         return $value;
     }
 
-    public function filterSalt($value, $opts)
+    /**
+     * [filterSalt description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterSalt($value, $opts)
     {
         if ($value) {
             $config = $this->getAttribute('salt');
@@ -256,7 +306,7 @@ class Filter
                 }
 
                 if (empty($key)) {
-                    throw new \Exception('You should define salt key in order to use salt.');
+                    throw new NormException('You should define salt key in order to use salt.');
                 }
 
                 $value = $method($value.$key);
@@ -266,8 +316,13 @@ class Filter
         return $value;
     }
 
-
-    public function filterUnique($value, $opts)
+    /**
+     * [filterUnique description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterUnique($value, $opts)
     {
         if (is_null($value) || $value === '') {
             return '';
@@ -294,7 +349,13 @@ class Filter
         return $value;
     }
 
-    public function filterRequiredWith($value, $opts)
+    /**
+     * [filterRequiredWith description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterRequiredWith($value, $opts)
     {
         if (is_null($value) || $value === '') {
             return '';
@@ -310,7 +371,13 @@ class Filter
 
     }
 
-    public function filterRequiredWithout($value, $opts)
+    /**
+     * [filterRequiredWithout description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterRequiredWithout($value, $opts)
     {
         if (is_null($value) || $value === '') {
             return '';
@@ -326,7 +393,13 @@ class Filter
 
     }
 
-    public function filterMin($value, $opts)
+    /**
+     * [filterMin description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterMin($value, $opts)
     {
         if (is_null($value) || $value === '') {
             return '';
@@ -341,8 +414,13 @@ class Filter
         return $value;
     }
 
-
-    public function filterIp($value, $opts)
+    /**
+     * [filterIp description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterIp($value, $opts)
     {
         if (is_null($value) || $value === '') {
             return '';
@@ -357,7 +435,13 @@ class Filter
         return $value;
     }
 
-    public function filterEmail($value, $opts)
+    /**
+     * [filterEmail description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterEmail($value, $opts)
     {
         if (is_null($value) || $value === '') {
             return '';
@@ -372,7 +456,13 @@ class Filter
         return $value;
     }
 
-    public function filterRemoveEmpty($value, $opts)
+    /**
+     * [filterRemoveEmpty description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterRemoveEmpty($value, $opts)
     {
         if (empty($value)) {
             return $value;
@@ -382,7 +472,13 @@ class Filter
         return $value;
     }
 
-    public function filterDefault($value, $opts)
+    /**
+     * [filterDefault description]
+     * @param  [type] $value [description]
+     * @param  [type] $opts  [description]
+     * @return [type]        [description]
+     */
+    protected function filterDefault($value, $opts)
     {
         if (empty($value)) {
             return $opts['arguments'][0];
@@ -391,6 +487,11 @@ class Filter
         return $value;
     }
 
+    /**
+     * [getAttribute description]
+     * @param  string $key [description]
+     * @return mixed       [description]
+     */
     public function getAttribute($key)
     {
         return $this->collection->getAttribute($key);

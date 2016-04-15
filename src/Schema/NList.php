@@ -19,7 +19,7 @@ class NList extends NField
         return new TypeArray($value);
     }
 
-    public function formatPlain($value, $model = null)
+    protected function formatPlain($value, $model = null)
     {
         if (isset($value)) {
             // TODO this checking should available on JsonKit
@@ -33,7 +33,7 @@ class NList extends NField
         return $value;
     }
 
-    public function formatInput($value, $model = null)
+    protected function formatInput($value, $model = null)
     {
         return $this->render('_schema/narray/input', array(
             'value' => $value,
@@ -41,7 +41,7 @@ class NList extends NField
         ));
     }
 
-    public function formatReadonly($value, $model = null)
+    protected function formatReadonly($value, $model = null)
     {
         $html = "<span class=\"field\">\n";
         if (!empty($value)) {

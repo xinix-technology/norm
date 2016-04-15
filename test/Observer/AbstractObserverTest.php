@@ -1,12 +1,12 @@
 <?php
-namespace Norm\Test;
+namespace Norm\Test\Observer;
 
 use PHPUnit_Framework_TestCase;
 use Norm\Repository;
 use Norm\Collection;
 use Norm\Adapter\Memory;
 
-abstract class ObserverTestCase extends PHPUnit_Framework_TestCase
+abstract class AbstractObserverTest extends PHPUnit_Framework_TestCase
 {
     protected $repository;
 

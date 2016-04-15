@@ -116,7 +116,7 @@ class ReferenceList extends ArrayList
         return $label;
     }
 
-    public function formatReadonly($value, $model = null)
+    protected function formatReadonly($value, $model = null)
     {
         $html = "<span class=\"field\">\n";
         if (!empty($value)) {
@@ -135,7 +135,7 @@ class ReferenceList extends ArrayList
         return $html;
     }
 
-    public function formatInput($value, $model = null)
+    protected function formatInput($value, $model = null)
     {
         return $this->render('_schema/reference_array/input', array(
             'value' => $value,

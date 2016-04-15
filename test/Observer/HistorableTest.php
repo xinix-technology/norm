@@ -2,9 +2,8 @@
 namespace Norm\Test\Observer;
 
 use Norm\Observer\Historable;
-use Norm\Test\ObserverTestCase;
 
-class HistorableTest extends ObserverTestCase
+class HistorableTest extends AbstractObserverTest
 {
     public function testSave()
     {

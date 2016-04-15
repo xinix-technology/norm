@@ -11,19 +11,19 @@ class NPassword extends NField
         return null;
     }
 
-    public function formatPlain($value, $model = null)
+    protected function formatPlain($value, $model = null)
     {
         return '';
     }
 
-    public function formatInput($value, $model = null)
+    protected function formatInput($value, $model = null)
     {
         return $this->render('__norm__/npassword/input', [
             'self' => $this,
         ]);
     }
 
-    public function formatReadonly($value, $model = null)
+    protected function formatReadonly($value, $model = null)
     {
         return '<span class="field">*hidden*</span>';
     }

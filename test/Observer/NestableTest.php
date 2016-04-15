@@ -2,9 +2,8 @@
 namespace Norm\Test\Observer;
 
 use Norm\Observer\Nestable;
-use Norm\Test\ObserverTestCase;
 
-class NestableTest extends ObserverTestCase
+class NestableTest extends AbstractObserverTest
 {
     public function testSave()
     {

@@ -9,7 +9,7 @@ class NBool extends NField
         return (boolean) $value;
     }
 
-    public function formatInput($value, $model = null)
+    protected function formatInput($value, $model = null)
     {
         return $this->render('_schema/nbool/input', array(
             'value' => $value,
@@ -17,7 +17,7 @@ class NBool extends NField
         ));
     }
 
-    public function formatPlain($value, $model = null)
+    protected function formatPlain($value, $model = null)
     {
         return $value ? 'True' : 'False';
     }

@@ -1,5 +1,4 @@
 <?php
-
 namespace Norm\Test\Adapter;
 
 use Norm\Adapter\PDO;
