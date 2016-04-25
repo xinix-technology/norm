@@ -22,7 +22,6 @@
     ],
     "require": {
         "php": "^5.4",
-        "reekoheek/jsonkit": "~1.0.0",
         "reekoheek/util": "~1.1.0",
         "ramsey/uuid": "~2.8"
     },
