@@ -4,36 +4,32 @@ namespace Norm\Schema;
 
 use DateTimeZone;
 
-class NDate extends DateTime
+class NDate extends NDateTime
 {
-
     protected function formatInput($value, $model = null)
     {
-        if ($value) {
-            $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));
-        }
 
-        return '<input type="date" name="'.$this['name'].'" value="'.($value ? $value->format('Y-m-d') : '').
-            '" placeholder="'.$this['label'].
-            '" autocomplete="off" />';
-    }
-
-    protected function formatPlain($value, $model = null)
-    {
-        if ($value) {
-            $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));
-        }
-
-        return ($value ? $value->format('Y-m-d') : null);
+        return $this->render('__norm__/ndate/input', [
+            'value' => $value,
+            'self' => $this,
+        ]);
     }
 
     protected function formatReadonly($value, $model = null)
     {
-        if ($value) {
-            $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));
+        return $this->render('__norm__/ndate/readonly', [
+            'value' => $value,
+            'self' => $this,
+        ]);
+    }
+
+    protected function formatPlain($value, $model = null)
+    {
+        if (!empty($value)) {
+            return $value->format('Y-m-d');
         }
 
-        return '<span class="field">'.($value ? $value->format('m/d/Y') : '&nbsp;').'</span>';
+        return '';
     }
 
     // DEPRECATED replaced by Field::render

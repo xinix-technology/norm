@@ -5,7 +5,7 @@ use Norm\Observer\Historable;
 
 class HistorableTest extends AbstractObserverTest
 {
-    public function testSave()
+    public function testSaveAndRemove()
     {
         $collection = $this->getCollection(new Historable());
 
@@ -27,5 +27,10 @@ class HistorableTest extends AbstractObserverTest
 
         $this->assertEquals(2, count($model['$history']));
         $this->assertTrue(is_array($model['$history']));
+
+        $model->remove();
+
+        $this->assertEquals(3, count($model['$history']));
+
     }
 }

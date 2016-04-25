@@ -3,7 +3,6 @@
 namespace Norm;
 
 use Norm\Exception\NormException;
-use Traversable;
 use Norm\Type\DateTime;
 use Norm\Type\ArrayList;
 use Norm\Cursor;
@@ -17,7 +16,7 @@ use Norm\Cursor;
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-abstract class Connection
+abstract class Connection extends Normable
 {
     /**
      * [$id description]
@@ -26,22 +25,24 @@ abstract class Connection
     protected $id;
 
     /**
-     * [$raw description]
-     * @var mixed
-     */
-    protected $raw;
-
-    /**
      * [__construct description]
      * @param string $id [description]
      */
-    public function __construct($id = 'main')
+    public function __construct(Repository $repository = null, $id = 'main')
     {
         if (!is_string($id)) {
             throw new NormException('Connection must specified id');
         }
 
+        parent::__construct($repository);
+
         $this->id = $id;
+    }
+
+    public function setRepository(Repository $repository)
+    {
+        $this->parent = $repository;
+        return $this;
     }
 
     /**
@@ -50,22 +51,12 @@ abstract class Connection
      * @param  array  $rows         [description]
      * @return [type]               [description]
      */
-    public function multiPersist($collectionId, array $rows)
-    {
-        return array_map(function ($row) {
-            return $this->persist($collectionId, $row);
-        }, $rows);
-    }
-
-    /**
-     * Getter for raw-type of connection
-     *
-     * @return mixed Raw-type of connection
-     */
-    public function getRaw()
-    {
-        return $this->raw;
-    }
+    // public function multiPersist($collectionId, array $rows)
+    // {
+    //     return array_map(function ($row) {
+    //         return $this->persist($collectionId, $row);
+    //     }, $rows);
+    // }
 
     /**
      * [getId description]
@@ -88,12 +79,8 @@ abstract class Connection
      *
      * @return array Friendly norm data
      */
-    public function unmarshall($assoc)
+    public function unmarshall(array $assoc)
     {
-        if (!is_array($assoc) && !($assoc instanceof Traversable)) {
-            throw new NormException('Unmarshall only accept array or traversable');
-        }
-
         $result = [];
         foreach ($assoc as $key => $value) {
             if ($key[0] === '_') {
@@ -125,10 +112,10 @@ abstract class Connection
             $result = [];
 
             foreach ($object as $key => $value) {
-                if ($key[0] === '$') {
-                    if (($key === '$id' && is_null($primaryKey)) || $key === '$type') {
+                if ('$' === substr($key, 0, 1)) {
+                    if ((null === $primaryKey && '$id' === $key) || '$type' === $key) {
                         continue;
-                    } elseif ($key === '$id') {
+                    } elseif ('$id' === $key) {
                         $result[$primaryKey] = $this->marshall($value);
                     } else {
                         $result['_'.substr($key, 1)] = $this->marshall($value);
@@ -150,6 +137,18 @@ abstract class Connection
         return $object;
     }
 
+    public function factory($collectionId, $connectionId = '')
+    {
+        return $this->parent->factory($collectionId, $connectionId ?: $this->id);
+    }
+
+    /**
+     * Getter for raw-type of connection
+     *
+     * @return mixed Raw-type of connection
+     */
+    abstract public function getRaw();
+
     /**
      * Persist specified attributes with current connection
      *
@@ -162,39 +161,38 @@ abstract class Connection
 
     /**
      * [remove description]
-     * @param  string         $collectionId [description]
-     * @param  string|integer $rowId        [description]
-     * @return [type]                       [description]
-     */
-    abstract public function remove($collectionId, $rowId);
-
-    /**
-     * [cursorDistinct description]
      * @param  Cursor $cursor [description]
      * @return [type]         [description]
      */
-    abstract public function cursorDistinct(Cursor $cursor);
+    abstract public function remove(Cursor $cursor);
 
     /**
-     * [cursorFetch description]
+     * [distinct description]
      * @param  Cursor $cursor [description]
      * @return [type]         [description]
      */
-    abstract public function cursorFetch(Cursor $cursor);
+    abstract public function distinct(Cursor $cursor);
 
     /**
-     * [cursorSize description]
+     * [fetch description]
+     * @param  Cursor $cursor [description]
+     * @return [type]         [description]
+     */
+    abstract public function fetch(Cursor $cursor);
+
+    /**
+     * [size description]
      * @param  Cursor  $cursor        [description]
      * @param  boolean $withLimitSkip [description]
      * @return [type]                 [description]
      */
-    abstract public function cursorSize(Cursor $cursor, $withLimitSkip = false);
+    abstract public function size(Cursor $cursor, $withLimitSkip = false);
 
     /**
-     * [cursorRead description]
+     * [read description]
      * @param  mixed   $context  [description]
      * @param  integer $position [description]
      * @return [type]            [description]
      */
-    abstract public function cursorRead($context, $position = 0);
+    abstract public function read($context, $position = 0);
 }

@@ -6,7 +6,18 @@ use Norm\Type\Secret as Secret;
 
 class NPassword extends NField
 {
-    public function toJSON($value)
+    public function prepare($value)
+    {
+        if ($value instanceof Secret) {
+            return $value;
+        } elseif (empty($value)) {
+            return null;
+        } else {
+            return new Secret($value);
+        }
+    }
+
+    protected function formatJson($value, $model = null)
     {
         return null;
     }
@@ -25,17 +36,8 @@ class NPassword extends NField
 
     protected function formatReadonly($value, $model = null)
     {
-        return '<span class="field">*hidden*</span>';
-    }
-
-    public function prepare($value)
-    {
-        if ($value instanceof Secret) {
-            return $value;
-        } elseif (empty($value)) {
-            return null;
-        } else {
-            return new Secret($value);
-        }
+        return $this->render('__norm__/npassword/readonly', [
+            'self' => $this,
+        ]);
     }
 }

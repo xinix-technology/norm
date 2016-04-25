@@ -23,42 +23,42 @@ if (!function_exists('rrmdir')) {
 
 class FileTest extends PHPUnit_Framework_TestCase
 {
-    protected $repository;
+    // protected $repository;
 
-    public function setUp()
-    {
-        @rrmdir('db-files');
+    // public function setUp()
+    // {
+    //     @rrmdir('db-files');
 
-        $this->repository = new Repository([
-            'connections' => [
-                [ File::class, [
-                    'id' => 'file',
-                    'options' => [
-                        'dataDir' => 'db-files'
-                    ],
+    //     $this->repository = new Repository([
+    //         'connections' => [
+    //             [ File::class, [
+    //                 'id' => 'file',
+    //                 'options' => [
+    //                     'dataDir' => 'db-files'
+    //                 ],
 
-                ]],
-            ],
-        ]);
+    //             ]],
+    //         ],
+    //     ]);
 
-        $model = $this->repository->factory('Foo')->newInstance();
-        $model->set(['fname' => 'Jane', 'lname' => 'Doe']);
-        $model->save();
-        $model = $this->repository->factory('Foo')->newInstance();
-        $model->set(['fname' => 'Ganesha', 'lname' => 'M']);
-        $model->save();
-    }
+    //     $model = $this->repository->factory('Foo')->newInstance();
+    //     $model->set(['fname' => 'Jane', 'lname' => 'Doe']);
+    //     $model->save();
+    //     $model = $this->repository->factory('Foo')->newInstance();
+    //     $model->set(['fname' => 'Ganesha', 'lname' => 'M']);
+    //     $model->save();
+    // }
 
-    public function tearDown() {
-        @rrmdir('db-files');
-    }
+    // public function tearDown() {
+    //     @rrmdir('db-files');
+    // }
 
-    public function testSearch()
-    {
-        $cursor = $this->repository->factory('Foo')->find();
+    // public function testSearch()
+    // {
+    //     $cursor = $this->repository->factory('Foo')->find();
 
-        $this->assertInstanceOf(Cursor::class, $cursor);
-    }
+    //     $this->assertInstanceOf(Cursor::class, $cursor);
+    // }
 
     // public function testCreate()
     // {

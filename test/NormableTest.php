@@ -7,40 +7,36 @@ use PHPUnit_Framework_TestCase;
 
 class NormableTest extends PHPUnit_Framework_TestCase
 {
-    protected $repository;
-
-    protected $normable;
-
-    public function setUp()
-    {
-        $this->repository = new Repository();
-        $this->normable = $this->getMock(Normable::class, [ 'factory' ], [
-            $this->repository,
-        ]);
-    }
-
-    public function testConstruct()
-    {
-        $this->assertInstanceOf(Normable::class, $this->normable);
-    }
-
     public function testGetAttribute()
     {
-        $this->repository->setAttribute('foo', 'bar');
+        $parent = $this->getMock(Normable::class);
+        $parent->expects($this->once())->method('getAttribute')->will($this->returnValue('bar'));
+        $normable = $this->getMockForAbstractClass(Normable::class, [$parent]);
 
-        $this->assertEquals($this->normable->getAttribute('foo'), 'bar');
+        $this->assertEquals($normable->getAttribute('foo'), 'bar');
     }
 
     public function testTranslate()
     {
-        $this->assertEquals($this->normable->translate('Foo'), 'Foo');
+        $parent = $this->getMock(Normable::class);
+        $parent->expects($this->once())->method('translate');
+        $normable = $this->getMockForAbstractClass(Normable::class, [$parent]);
+        $normable->translate('foo');
     }
 
     public function testRender()
     {
-        $this->repository->setRenderer(function() {
-            return 'Foo';
-        });
-        $this->assertEquals($this->normable->render('foo'), 'Foo');
+        $parent = $this->getMock(Normable::class);
+        $parent->expects($this->once())->method('render');
+        $normable = $this->getMockForAbstractClass(Normable::class, [$parent]);
+        $normable->render('foo');
+    }
+
+    public function testFactory()
+    {
+        $parent = $this->getMock(Normable::class);
+        $parent->expects($this->once())->method('factory');
+        $normable = $this->getMockForAbstractClass(Normable::class, [$parent]);
+        $normable->factory('Foo');
     }
 }

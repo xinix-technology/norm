@@ -2,36 +2,25 @@
 namespace Norm\Test\Observer;
 
 use PHPUnit_Framework_TestCase;
-use Norm\Repository;
 use Norm\Collection;
+use Norm\Connection;
+use Norm\Repository;
 use Norm\Adapter\Memory;
 
 abstract class AbstractObserverTest extends PHPUnit_Framework_TestCase
 {
-    protected $repository;
-
     public function __construct()
     {
         date_default_timezone_set('UTC');
     }
 
-    public function setUp()
-    {
-        $this->repository = new Repository();
-        $this->repository->add(new Memory('default'));
-    }
-
     public function getCollection($observer)
     {
-        $collection = $this->repository->resolve(Collection::class, [
-            'connection' => $this->repository->getConnection(),
-            'options' => [
-                'name' => 'Foo',
-            ],
-        ]);
-
+        $repository = new Repository();
+        $connection = new Memory($repository);
+        $repository->addConnection($connection);
+        $collection = new Collection($connection, 'Foo');
         $collection->observe($observer);
-
         return $collection;
     }
 }

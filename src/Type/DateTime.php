@@ -2,9 +2,9 @@
 namespace Norm\Type;
 
 use DateTimeZone;
-use DateTime as NDateTime;
+use DateTime as PhpDateTime;
 use JsonKit\JsonSerializer;
-use Norm\Repository;
+use Norm\Normable;
 
 /**
  * Collection abstract class.
@@ -14,50 +14,35 @@ use Norm\Repository;
  * @link      http://sagara.id/p/product Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
-class DateTime extends NDateTime implements JsonSerializer
+class DateTime extends PhpDateTime implements JsonSerializer
 {
-    protected $repository;
+    protected $serverTz;
 
-    function __construct(Repository $repository, $t = null, $tz = null)
+    public function __construct($dt = null, $tz = null)
     {
-        $this->repository = $repository;
-        switch(func_num_args()) {
-            case 1:
+        $this->serverTz = new DateTimeZone(date_default_timezone_get());
+
+        if (is_string($tz)) {
+            $tz = new DateTimeZone($tz);
+        }
+
+        switch (func_num_args()) {
+            case 0:
                 return parent::__construct();
-            case 2:
-                return parent::__construct($t);
-            default:
-                return parent::__construct($t, $tz);
-        }
-    }
-
-    /**
-     * Formatting date time implementation.
-     *
-     * @param string $format format
-     *
-     * @return mixed
-     */
-    public function localFormat($format)
-    {
-        return $this->tzFormat($format);
-    }
-
-    /**
-     * Formatting by timezone
-     *
-     * @param string $format
-     * @param string $tz
-     *
-     * @return mixed
-     */
-    public function tzFormat($format, $tz = null)
-    {
-        if (isset($tz)) {
-            $this->setTimezone(new DateTimeZone($tz));
+            case 1:
+                return parent::__construct($dt);
         }
 
-        return $this->format($format);
+        return parent::__construct($dt, $tz);
+    }
+
+    public function serverFormat($format)
+    {
+        $original = $this->getTimezone();
+        $this->setTimezone($this->serverTz);
+        $result = $this->format($format);
+        $this->setTimezone($original);
+        return $result;
     }
 
     /**
@@ -68,11 +53,6 @@ class DateTime extends NDateTime implements JsonSerializer
     public function jsonSerialize()
     {
         return $this->__toString();
-        // if (null !== $this->repository->getAttribute('timezone')) {
-        //     $this->setTimezone(new DateTimeZone($this->repository->getAttribute('timezone')));
-        // }
-
-        // return $this->format('c');
     }
 
     /**
@@ -82,11 +62,14 @@ class DateTime extends NDateTime implements JsonSerializer
      */
     public function __toString()
     {
+        return $this->serverFormat('c');
+    }
 
-        if (null !== $this->repository->getAttribute('timezone')) {
-            $this->setTimezone(new DateTimeZone($this->repository->getAttribute('timezone')));
-        }
-
-        return $this->format('c');
+    public function __debugInfo()
+    {
+        return [
+            'client' => $this->format('c'),
+            'server' => $this->serverFormat('c'),
+        ];
     }
 }

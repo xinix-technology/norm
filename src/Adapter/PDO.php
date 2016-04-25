@@ -92,14 +92,14 @@ class PDO extends Connection
         return $this->execute($sql, ['id' => $rowId]);
     }
 
-    public function cursorDistinct(Cursor $cursor)
+    public function distinct(Cursor $cursor)
     {
         throw new Exception('Unimplemented yet!');
     }
 
-    public function cursorFetch(Cursor $cursor)
+    public function fetch(Cursor $cursor)
     {
-        $sql = $this->dialect->grammarSelect($cursor->getCollectionId());
+        $sql = $this->dialect->grammarSelect($cursor->getCollection()->getId());
         $statement = $this->getRaw()->prepare($sql);
         $statement->execute();
         return new Collection([
@@ -109,12 +109,12 @@ class PDO extends Connection
         ]);
     }
 
-    public function cursorSize(Cursor $cursor, $withLimitSkip = false)
+    public function size(Cursor $cursor, $withLimitSkip = false)
     {
         throw new Exception('Unimplemented yet!');
     }
 
-    public function cursorRead($context, $position = 0)
+    public function read($context, $position = 0)
     {
         if ($position >= $context['position']) {
             for ($i = $context['position']; $i <= $position; $i++) {

@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use Iterator;
 use Countable;
 use JsonKit\JsonSerializer;
+use Norm\Normable;
 
 /**
  * Cursor abstract class.
@@ -16,18 +17,11 @@ use JsonKit\JsonSerializer;
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-class Cursor implements Iterator, Countable, JsonSerializer
+class Cursor extends Normable implements Iterator, Countable, JsonSerializer
 {
     const SORT_ASC = 1;
 
     const SORT_DESC = -1;
-
-    /**
-     * Norm Collection implementation
-     *
-     * @var Norm\Collection
-     */
-    protected $collection;
 
     /**
      * Criteria
@@ -84,19 +78,20 @@ class Cursor implements Iterator, Countable, JsonSerializer
      */
     public function __construct(Collection $collection, array $criteria = [])
     {
-        $this->collection = $collection;
+        parent::__construct($collection);
+
         $this->criteria = $criteria;
     }
 
     // getter / setter *********************************************************
 
     /**
-     * [getCollectionId description]
-     * @return string [description]
+     * [getCollection description]
+     * @return Collection [description]
      */
-    public function getCollectionId()
+    public function getCollection()
     {
-        return $this->collection->getId();
+        return $this->parent;
     }
 
     /**
@@ -211,7 +206,7 @@ class Cursor implements Iterator, Countable, JsonSerializer
             if ($plain) {
                 $result[] = $value->toArray();
             } else {
-                // $result[] = $this->collection->unmarshall($value);
+                // $result[] = $this->parent->unmarshall($value);
                 $result[] = $value;
             }
         }
@@ -227,7 +222,7 @@ class Cursor implements Iterator, Countable, JsonSerializer
     public function getContext()
     {
         if (is_null($this->context)) {
-            $this->context = $this->collection->cursorFetch($this);
+            $this->context = $this->parent->fetch($this);
         }
         return $this->context;
     }
@@ -241,7 +236,7 @@ class Cursor implements Iterator, Countable, JsonSerializer
      */
     public function distinct($key)
     {
-        return $this->collection->cursorDistinct($this, $key);
+        return $this->parent->distinct($this, $key);
     }
 
     /**
@@ -250,7 +245,7 @@ class Cursor implements Iterator, Countable, JsonSerializer
      */
     public function current()
     {
-        return $this->collection->cursorRead($this->getContext(), $this->position);
+        return $this->parent->read($this->getContext(), $this->position);
     }
 
     /**
@@ -309,7 +304,12 @@ class Cursor implements Iterator, Countable, JsonSerializer
      */
     public function size($respectLimitSkip = false)
     {
-        return $this->collection->cursorSize($this, $respectLimitSkip);
+        return $this->parent->size($this, $respectLimitSkip);
+    }
+
+    public function remove(array $options = [])
+    {
+        return $this->parent->remove($this, $options);
     }
 
     /**

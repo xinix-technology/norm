@@ -22,7 +22,7 @@
     ],
     "require": {
         "php": "^5.4",
-        "reekoheek/jsonkit": "~0.1.0",
+        "reekoheek/jsonkit": "~1.0.0",
         "reekoheek/util": "~1.1.0",
         "ramsey/uuid": "~2.8"
     },
@@ -34,7 +34,8 @@
         "psr-4": {
             "Norm\\Test\\": "test/",
             "Norm\\": "src/",
-            "ROH\\Util\\": "/Users/jafar/Workspaces/php/lib/php-util/src/ROH/Util/"
+            "ROH\\Util\\": "/Users/jafar/Workspaces/php/lib/php-util/src/ROH/Util/",
+            "JsonKit\\": "/Users/jafar/Workspaces/php/lib/php-jsonkit/src/JsonKit/"
         }
     }
 }

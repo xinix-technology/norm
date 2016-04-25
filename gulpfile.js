@@ -2,6 +2,7 @@
 
 const gulp = require('gulp');
 const spawn = require('child_process').spawn;
+const exec = require('child_process').exec;
 const fs = require('fs-promise');
 
 gulp.task('update', () => {
@@ -13,11 +14,23 @@ gulp.task('test', () => {
 });
 
 gulp.task('coverage', () => {
-  fs.remove('./coverage')
-    .then(() => fs.mkdirp('./coverage'))
-    .then(() => {
-      spawn('./vendor/bin/phpunit', ['--whitelist=./src/', '--coverage-html=./coverage', 'test'], { stdio: 'inherit' });
-    });
+  exec('./vendor/bin/phpunit --version', function(err, result) {
+    var args = [];
+
+    var version = result.match(/^PHPUnit ([^ ]+)/i)[1];
+
+    if (version.match(/^5.*/)) {
+      args.push('--whitelist=./src/');
+    }
+    args.push('--coverage-html=./coverage');
+    args.push('test');
+
+    fs.remove('./coverage')
+      .then(() => fs.mkdirp('./coverage'))
+      .then(() => {
+        spawn('./vendor/bin/phpunit', args, { stdio: 'inherit' });
+      });
+  })
 });
 
 gulp.task('doc', () => {

@@ -5,24 +5,22 @@ namespace Norm;
 use Norm\Exception\NormException;
 use ROH\Util\Collection as UtilCollection;
 
-abstract class Normable extends UtilCollection
+abstract class Normable
 {
     /**
-     * [$repository description]
-     * @var Repository
+     * [$parent description]
+     * @var Normable
      */
-    protected $repository;
+    protected $parent;
 
     /**
      * [__construct description]
-     * @param Repository $repository [description]
+     * @param Normable   $parent [description]
      * @param array      $attributes [description]
      */
-    public function __construct(Repository $repository, array $attributes = [])
+    public function __construct(Normable $parent = null)
     {
-        $this->repository = $repository;
-
-        parent::__construct($attributes);
+        $this->parent = $parent;
     }
 
     /**
@@ -32,7 +30,7 @@ abstract class Normable extends UtilCollection
      */
     public function getAttribute($key)
     {
-        return $this->repository->getAttribute($key);
+        return $this->parent->getAttribute($key);
     }
 
     /**
@@ -42,7 +40,7 @@ abstract class Normable extends UtilCollection
      */
     public function translate($message)
     {
-        return call_user_func_array([$this->repository, 'translate'], func_get_args());
+        return call_user_func_array([$this->parent, 'translate'], func_get_args());
     }
 
     /**
@@ -53,7 +51,7 @@ abstract class Normable extends UtilCollection
      */
     public function render($template, array $data = [])
     {
-        return $this->repository->render($template, $data);
+        return $this->parent->render($template, $data);
     }
 
     /**
@@ -64,12 +62,15 @@ abstract class Normable extends UtilCollection
      */
     public function resolve($contract, array $args = [])
     {
-        return $this->repository->resolve($contract, $args);
+        return $this->parent->resolve($contract, $args);
     }
 
     /**
      * [factory description]
      * @return Collection [description]
      */
-    abstract public function factory();
+    public function factory($collectionId, $connectionId = '')
+    {
+        return $this->parent->factory($collectionId, $connectionId);
+    }
 }

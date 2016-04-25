@@ -2,12 +2,36 @@
 namespace Norm\Test\Observer;
 
 use Norm\Observer\Actorable;
-use Norm\Collection;
+use Norm\Exception\NormException;
 
 class ActorableTest extends AbstractObserverTest
 {
+    public function testConstruct()
+    {
+        try {
+            $collection = $this->getCollection(new Actorable([
+                'userCallback' => 'foo'
+            ]));
+            $this->fail('Must not here');
+        } catch (NormException $e) {
+            if ($e->getMessage() !== 'Actorable needs userCallback as callable') {
+                throw $e;
+            }
+        }
+    }
+
     public function testSave()
     {
+        $_SESSION['user']['$id'] = 'session-user';
+
+        $collection = $this->getCollection(new Actorable());
+
+        $model = $collection->newInstance();
+        $model->save();
+
+        $this->assertEquals('session-user', $model['$created_by']);
+        $this->assertEquals('session-user', $model['$updated_by']);
+
         $collection = $this->getCollection(new Actorable([
             'userCallback' => function () {
                 return 'me';

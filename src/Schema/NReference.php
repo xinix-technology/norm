@@ -2,107 +2,91 @@
 
 namespace Norm\Schema;
 
-use Exception;
 use ArrayAccess;
-use Norm\Model;
 use Norm\Schema;
 use Norm\Collection;
-use Norm\Repository;
-use Closure;
-use InvalidArgumentException;
+use Norm\Exception\NormException;
 use ROH\Util\StringFormatter;
 
 class NReference extends NField
 {
-    protected $options;
+    protected $cache;
 
-    function __construct(Repository $repository, Schema $schema, array $options = [])
+    protected $fetcher;
+
+    public function __construct(Schema $schema = null, $name = '', $filter = null, $to = null, array $attributes = [])
     {
-        parent::__construct($repository, $schema, $options);
+        parent::__construct($schema, $name, $filter, $attributes);
 
-        if (isset($options['to'])) {
-            $this->to($options['to']);
+        $this->to($to);
+    }
+
+    public function fetch($key = null, $offset = 0, $limit = 100)
+    {
+        $fetcher = $this->fetcher;
+        if ($this['nocache']) {
+            return $fetcher($key, $offset, $limit);
+        } else {
+            if (null === $this->cache) {
+                $this->cache = $fetcher();
+            }
+
+            if (null === $key) {
+                return $this->cache;
+            } else {
+                return isset($this->cache[$key]) ? $this->cache[$key] : null;
+            }
         }
     }
 
-    public function to($foreign, $foreignLabel = null)
+    public function to($foreign)
     {
-        if (!is_callable($foreign) &&
-            !is_array($foreign) &&
-            !is_string($foreign) &&
-            !($foreign instanceof Collection)
-        ) {
-            throw new InvalidArgumentException('Foreign must be instance of string, array, callable or Collection');
-        }
+        $this['nocache'] = $this['nocache'] ?: false;
+        if (is_string($foreign)) {
+            $query = [];
+            @list($meta, $qs) = explode('?', $foreign, 2);
+            parse_str($qs, $query);
+            @list($col, $params) = explode(':', $meta, 2);
+            @list($key, $label) = explode(',', $params);
 
-        if (!is_null($foreignLabel) && !is_string($foreignLabel) && !is_callable($foreignLabel)) {
-            throw new InvalidArgumentException('Foreign label must be instance of string or callable');
-        }
+            $this['to$collection'] = trim($col);
+            $this['to$key'] = trim($key) ?: '$id';
+            $this['to$label'] = trim($label) ?: '';
 
-        if (is_callable($foreign)) {
-            $this['foreign'] = $foreign;
-        } elseif (is_array($foreign)) {
-            $this->options = $foreign;
-            $this['foreign'] = [$this, 'fetchForeign'];
-        } else {
-            $foreign = explode(':', $foreign);
-            $this['foreignCollectionId'] = $foreign[0];
-            $this['foreignKey'] = isset($foreign[1]) ? $foreign[1] : '$id';
-            $this['foreign'] = [$this, 'fetchForeign'];
-        }
+            if (isset($query['!sort'])) {
+                $this['to$sort'] = $query['!sort'];
+                unset($query['!sort']);
+            }
+            if (!empty($query)) {
+                $this['to$criteria'] = $query;
+            }
 
+            $this->fetcher = function($key = null, $offset = 0, $limit = 100) {
+                $cursor = $this->factory($this['to$collection'])
+                    ->find($this['to$criteria'])
+                    ->skip($offset)
+                    ->limit($limit);
 
-        $this['foreignLabel'] = is_callable($foreignLabel) ?
-            $foreignLabel :
-            function ($model) use ($foreignLabel) {
-                if (empty($foreignLabel)) {
-                    return $model->format();
-                } else {
-                    $formatter = new StringFormatter($foreignLabel);
-                    if ($formatter->isStatic()) {
-                        return $model[$foreignLabel];
-                    } else {
-                        return $formatter->format($model);
+                if ($this['to$sort']) {
+                    $cursor->sort($this['to$sort']);
+                }
+
+                if (null === $key) {
+                    $result = [];
+                    foreach($cursor->toArray() as $entry) {
+                        $result[$entry[$this['to$key']]] = $entry;
                     }
+                    return $result;
+                } else {
+                    return $cursor->first();
                 }
             };
-
-        return $this;
-    }
-
-    public function setSort($sort = [])
-    {
-        $this['foreignSort'] = $sort;
-        return $this;
-    }
-
-    public function setCriteria($criteria = [])
-    {
-        $this['foreignCriteria'] = $criteria;
-        return $this;
-    }
-
-    public function fetchForeign($id = null)
-    {
-        if (is_null($this->options)) {
-            $this->options = [];
-
-            $cursor = $this->factory($this['foreignCollectionId'])
-                ->find($this['foreignCriteria']);
-            if ($this['foreignSort']) {
-                $cursor->sort($this['foreignSort']);
-            }
-            foreach ($cursor as $model) {
-                $this->options[$model[$this['foreignKey']]] = $this['foreignLabel']($model);
-            }
-        }
-
-        if (0 === func_num_args()) {
-            return $this->options;
-        } elseif (is_null($id)) {
-            return null;
+        } elseif (is_array($foreign)) {
+            $this->cache = $foreign;
+        } elseif (is_callable($foreign)) {
+            $this->fetcher = $foreign;
         } else {
-            return $this->options[$id];
+            throw new NormException('Foreign must be instance of string, array, callable or Collection');
         }
     }
 
@@ -111,62 +95,38 @@ class NReference extends NField
         $value = $value ?: null;
 
         if (is_array($value) || $value instanceof ArrayAccess) {
-            if (isset($value['$id'])) {
-                return $value['$id'];
+            if (null !== $this['to$key'] && isset($value[$this['to$key']])) {
+                return $value[$this['to$key']];
             } else {
-                throw new \Exception('Unable to get reference id from value');
+                throw new NormException('Unable to get reference key from value');
             }
         } else {
             return $value;
         }
     }
 
-    public function toJSON($value)
+    protected function formatJson($value, $options = [])
     {
-        if (!is_string($this['foreign'])) {
-            $foreign = val($this['foreign']);
-            if (isset($foreign[$value])) {
-                if (is_scalar($foreign[$value])) {
-                    return $value;
-                } else {
-                    return $foreign[$value];
-                }
-            }
-            return null;
+        if (null !== $this['to$key'] && !empty($options['include'])) {
+            return $this->fetch($value);
+        } else {
+            return $value;
         }
-
-        $foreignCollection = Norm::factory($this['foreign']);
-
-        if (Norm::options('include')) {
-            $foreignKey = $this['foreignKey'];
-
-            if (is_null($foreignKey)) {
-                return $foreignCollection->findOne($value);
-            } else {
-                return $foreignCollection->findOne(array($this['foreignKey'] => $value));
-            }
-        }
-
-        return $value;
-    }
-
-    public function format($name, $valueOrCallable, $model = null)
-    {
-        if (is_null($this['foreign'])) {
-            throw new Exception('Reference schema should invoke Reference::to()');
-        }
-
-        return parent::format($name, $valueOrCallable, $model);
     }
 
     protected function formatPlain($value, $model = null)
     {
-        return $this['foreign']($value);
+        $row = $this->fetch($value);
+        if ($this['to$label']) {
+            return $row[$this['to$label']];
+        } else {
+            return $row;
+        }
     }
 
     protected function formatInput($value, $model = null)
     {
-        return $this->render('_schema/reference/input', array(
+        return $this->render('__norm__/nreference/input', array(
             'self' => $this,
             'value' => $value,
             'entry' => $model,

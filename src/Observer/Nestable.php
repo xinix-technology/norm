@@ -8,17 +8,13 @@ class Nestable
 {
     public function initialize($context)
     {
-        $context['collection']->getSchema()
-            ->addField([ NInteger::class, [
-                'options' => [
-                    'name' => '$lft'
-                ]
-            ]])->end()
-            ->addField([ NInteger::class, [
-                'options' => [
-                    'name' => '$rgt'
-                ]
-            ]]);
+        $schema = $context['collection']->getSchema();
+        $schema->addField([ NInteger::class, [
+            'name' => '$lft'
+        ]]);
+        $schema->addField([ NInteger::class, [
+            'name' => '$rgt'
+        ]]);
     }
 
     public function save($context, $next)
@@ -28,18 +24,18 @@ class Nestable
         $this->rebuildTree($context['collection'], null, 0);
     }
 
-    public function remove($model, $next)
+    public function remove($context, $next)
     {
-        $entries = $context['collection']->find([
-            '$lft!gt' => $model['$lft'],
-            '$rgt!lt' => $model['$rgt'],
-        ]);
+        if ($context['model']) {
+            $entries = $context['collection']->find([
+                '$lft!gt' => $context['model']['$lft'],
+                '$rgt!lt' => $context['model']['$rgt'],
+            ]);
 
-        $entries->remove();
-
-        // foreach ($entries as $entry) {
-        //     $context['collection']->connection->remove($entry);
-        // }
+            if ($entries->count()) {
+                $entries->remove();
+            }
+        }
 
         $next($context);
 

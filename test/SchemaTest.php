@@ -2,121 +2,111 @@
 namespace Norm\Test;
 
 use PHPUnit_Framework_TestCase;
-use Closure;
-use Norm\Schema;
-use Norm\Repository;
 use Norm\Collection;
 use Norm\Connection;
-use Norm\Schema\NString;
+use Norm\Model;
+use Norm\Schema;
+use Norm\Schema\NField;
 use Norm\Schema\NUnknown;
 use Norm\Exception\NormException;
 
 class SchemaTest extends PHPUnit_Framework_TestCase
 {
-    protected $repository;
-
-    protected $collection;
-
-    protected $schema;
-
-    public function setUp()
+    public function testConstruct()
     {
-        parent::setUp();
-
-        $connection = $this->getMock(Connection::class);
-
-        $this->repository = new Repository();
-        $this->repository->singleton(Connection::class, $connection);
-
-        $this->collection = $this->repository->resolve(Collection::class, [
-            'options' => [
-                'name' => 'Test'
-            ]
-        ]);
-
-        $this->repository->singleton(Collection::class, $this->collection);
-
-        $this->schema = $this->repository->resolve(Schema::class);
+        $schema = new Schema($this->getMock(Collection::class, [], [$this->getMock(Connection::class), 'Foo']));
+        $this->assertNotNull($schema->getFormatter('plain'));
+        $this->assertNull($schema->getFormatter('notfound'));
     }
 
     public function testAddFieldByMetadata()
     {
+        $collection = $this->getMock(Collection::class, [], [$this->getMock(Connection::class), 'Foo']);
+        $collection->expects($this->once())->method('resolve')->will($this->returnCallback(function($contract, $args) {
+            $field = $this->getMockForAbstractClass(NField::class, [
+                $args['schema'],
+                $contract[1]['name'],
+            ]);
+            return $field;
+        }));
+        $schema = new Schema($collection);
 
-        $field = $this->schema->addField([ NString::class, [
-            'options' => [
-                'name' => 'foo',
-            ],
+        $field = $schema->addField([ NString::class, [
+            'name' => 'foo',
         ]]);
 
-        $this->assertInstanceOf(NString::class, $field);
-        $this->assertInstanceOf(NUnknown::class, $this->schema['bar']);
-        $this->assertEquals($field, $this->schema['foo']);
+        $this->assertInstanceOf(NField::class, $field);
+        $this->assertInstanceOf(NUnknown::class, $schema->getField('bar'));
+        $this->assertEquals($field, $schema->getField('foo'));
     }
 
     public function testAddFieldByInstance()
     {
-        $originalField = new NString($this->repository, $this->schema, ['name' => 'foo']);
-        $field = $this->schema->addField($originalField);
+        $schema = new Schema($this->getMock(Collection::class, [], [$this->getMock(Connection::class), 'Foo']));
+
+        $originalField = $this->getMockForAbstractClass(NField::class, [$schema, 'foo']);
+        $field = $schema->addField($originalField);
 
         $this->assertEquals($field, $originalField);
     }
 
     public function testGetFilterRules()
     {
-        $this->schema->addField([ NString::class, [
-            'options' => [
-                'name' => 'foo',
-                'filter' => 'trim|required'
-            ]
-        ]]);
+        $schema = new Schema($this->getMock(Collection::class, [], [$this->getMock(Connection::class), 'Foo']));
 
-        $rules = $this->schema->getFilterRules();
+        $field = $this->getMock(NField::class, null, [$schema, 'foo']);
+        $field->addFilter('trim|required');
+        $schema->addField($field);
+
+        $rules = $schema->getFilterRules();
         $this->assertEquals($rules['foo']['filters'], ['trim', 'required']);
     }
 
     public function testFormatPlain()
     {
-        $this->schema->addField([ NString::class, [
-            'options' => [
-                'name' => 'foo',
-            ]
-        ]]);
+        $collection = $this->getMock(Collection::class, [], [$this->getMock(Connection::class), 'Foo']);
+        $schema = new Schema($collection);
 
-        $model = $this->collection->newInstance([
-            'foo' => 'Foo Bar',
-        ]);
-        $formatted = $this->schema->format('plain', $model);
-        $this->assertEquals($formatted, 'Foo Bar');
+        $schema->addField($this->getMock(NField::class, [], [$schema, 'foo']));
+
+        $model = $this->getMock(Model::class, [], [ $collection ]);
+
+        try {
+            $formatted = $schema->format('plain', $model);
+            $this->fail('Must not here');
+        } catch (NormException $e) {
+            if ($e->getMessage() !== 'Cannot format explicit schema fields') {
+                throw $e;
+            }
+        }
     }
 
     public function testAddAndGetFormatterAndFormat()
     {
-        $model = $this->collection->newInstance([
-            'foo' => 'Foo',
-            'bar' => 'Bar',
-        ]);
+        $collection = $this->getMock(Collection::class, [], [$this->getMock(Connection::class), 'Foo']);
+        $schema = new Schema($collection);
+
+        $model = $this->getMock(Model::class, [], [ $collection ]);
 
         // function
         $formatter = function () { return 'function foo bar'; };
-        $this->schema->addFormatter('plain', $formatter);
-        $this->assertEquals($this->schema->getFormatter('plain'), $formatter);
-        $this->assertEquals('function foo bar', $this->schema->format('plain', $model));
+        $schema->addFormatter('plain', $formatter);
+        $this->assertEquals($schema->getFormatter('plain'), $formatter);
+        $this->assertEquals('function foo bar', $schema->format('plain', $model));
 
         // string variably format
         $formatter = '{foo}-{bar}';
-        $this->schema->addFormatter('plain', $formatter);
-        $this->assertInstanceof(Closure::class, $this->schema->getFormatter('plain'));
-        $this->assertEquals('Foo-Bar', $this->schema->format('plain', $model));
+        $schema->addFormatter('plain', $formatter);
+        $this->assertEquals('-', $schema->format('plain', $model));
 
         // string static format
         $formatter = 'bar';
-        $this->schema->addFormatter('plain', $formatter);
-        $this->assertInstanceof(Closure::class, $this->schema->getFormatter('plain'));
-        $this->assertEquals('Bar', $this->schema->format('plain', $model));
+        $schema->addFormatter('plain', $formatter);
+        $this->assertEquals('', $schema->format('plain', $model));
 
         // rejected format
         try {
-            $this->schema->addFormatter('plain', 99);
+            $schema->addFormatter('plain', 99);
             $this->fail('Must not here');
         } catch (NormException $e) {
             if ($e->getMessage() !== 'Formatter should be callable or string format') {
@@ -125,7 +115,7 @@ class SchemaTest extends PHPUnit_Framework_TestCase
         }
 
         try {
-            $this->schema->getFormatter(88);
+            $schema->getFormatter(88);
         } catch (NormException $e) {
             if ($e->getMessage() !== 'Format key must be string') {
                 throw $e;
@@ -133,7 +123,7 @@ class SchemaTest extends PHPUnit_Framework_TestCase
         }
 
         try {
-            $this->schema->format('not-found', $model);
+            $schema->format('not-found', $model);
         } catch (NormException $e) {
             if (strpos($e->getMessage(), 'not found') < 0) {
                 throw $e;
@@ -143,17 +133,25 @@ class SchemaTest extends PHPUnit_Framework_TestCase
 
     public function testFactory()
     {
+        $collection = $this->getMock(Collection::class, [], [$this->getMock(Connection::class), 'Foo']);
         // own collection
-        $this->assertEquals($this->schema->factory(), $this->collection);
+        $schema = new Schema($collection);
+        $this->assertEquals($schema->factory(), $collection);
 
         // not found collection
-        try {
-            $this->schema->factory('Bar');
-            $this->fail('Must not here');
-        } catch (NormException $e) {
-            if (strpos($e->getMessage(), 'No connection available to create collection') < 0) {
-                throw $e;
-            }
-        }
+        $resultCollection = $schema->factory('Bar');
+        $this->assertNotEquals($resultCollection, $collection);
+    }
+
+    public function testDebugInfo()
+    {
+
+        $schema = new Schema($this->getMock(Collection::class, [], [$this->getMock(Connection::class), 'Foo']));
+
+        $field = $this->getMock(NField::class, null, [ $schema, 'foo' ]);
+
+        $schema->addField($field);
+
+        $this->assertEquals($schema->__debugInfo(),  ['foo' => get_class($field)]);
     }
 }

@@ -48,12 +48,12 @@ class File extends Memory
         @unlink($collectionDir . $rowId . '.json');
     }
 
-    public function cursorDistinct(Cursor $cursor)
+    public function distinct(Cursor $cursor)
     {
         throw new \Exception('Unimplemented yet!');
     }
 
-    public function cursorFetch(Cursor $cursor)
+    public function fetch(Cursor $cursor)
     {
         $context = [];
 
@@ -67,7 +67,7 @@ class File extends Memory
             'sort' => $cursor->getSort(),
         ];
 
-        $collectionId = $cursor->getCollectionId();
+        $collectionId = $cursor->getCollection()->getId();
 
         $collectionDir = $this->dataDir . DIRECTORY_SEPARATOR . $collectionId . DIRECTORY_SEPARATOR;
 
@@ -126,7 +126,7 @@ class File extends Memory
         return $context;
     }
 
-    public function cursorSize(Cursor $cursor, $withLimitSkip = false)
+    public function size(Cursor $cursor, $withLimitSkip = false)
     {
         return count($cursor->getContext());
     }

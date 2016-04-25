@@ -16,35 +16,37 @@ class Actorable
             'createdKey' => '$created_by',
             'updatedKey' => '$updated_by',
             'createdField' => [ NReference::class, [
-                'options' => [
-                    'to' => 'User'
-                ]
+                'to' => 'User',
+                'filter' => [],
             ]],
             'updatedField' => [ NReference::class, [
-                'options' => [
-                    'to' => 'User'
-                ]
+                'to' => 'User',
+                'filter' => [],
             ]],
             'userCallback' => function () {
                 return isset($_SESSION['user']['$id']) ? $_SESSION['user']['$id'] : null;
             }
         ])->merge($options)->toArray();
 
-        $this->options['createdField'][1]['options']['name'] = $this->options['createdKey'];
-        $this->options['updatedField'][1]['options']['name'] = $this->options['updatedKey'];
+        $this->options['createdField'][1]['name'] = $this->options['createdKey'];
+        $this->options['updatedField'][1]['name'] = $this->options['updatedKey'];
 
         if (!is_callable($this->options['userCallback'])) {
             throw new NormException('Actorable needs userCallback as callable');
         }
     }
 
-    public function initialize($context, $next)
+    public function initialize($context)
     {
-        $context['collection']->getSchema()
-            ->addField($this->options['createdField'])->end()
-            ->addField($this->options['updatedField']);
+        $schema = $context['collection']->getSchema();
 
-        $next($context);
+        $createdField = $this->options['createdField'];
+        $createdField[1]['schema'] = $schema;
+        $schema->addField($createdField);
+
+        $updatedField = $this->options['updatedField'];
+        $updatedField[1]['schema'] = $schema;
+        $schema->addField($updatedField);
     }
 
     public function save($context, $next)

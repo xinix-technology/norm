@@ -87,14 +87,14 @@ class Mongo extends Connection
         }
     }
 
-    public function cursorDistinct(Cursor $cursor)
+    public function distinct(Cursor $cursor)
     {
         throw new \Exception('Unimplemented yet!');
     }
 
-    public function cursorFetch(Cursor $cursor)
+    public function fetch(Cursor $cursor)
     {
-        $rawCollection = $this->getRaw()->{$cursor->getCollectionId()};
+        $rawCollection = $this->getRaw()->{$cursor->getCollection()->getId()};
 
         $criteria = $cursor->getCriteria();
         $rawCursor = empty($criteria) ?
@@ -119,12 +119,12 @@ class Mongo extends Connection
         return $rawCursor;
     }
 
-    public function cursorSize(Cursor $cursor, $withLimitSkip = false)
+    public function size(Cursor $cursor, $withLimitSkip = false)
     {
         throw new \Exception('Unimplemented yet!');
     }
 
-    public function cursorRead($context, $position = 0)
+    public function read($context, $position = 0)
     {
         $ctxInfo = $context->info();
         if (!$ctxInfo['started_iterating']) {

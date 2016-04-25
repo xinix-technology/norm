@@ -5,78 +5,112 @@ use Norm\Exception\NormException;
 use ROH\Util\Options;
 use ROH\Util\Injector;
 
-class Repository extends Injector
+class Repository extends Normable
 {
     const TEMPLATE_PATH = __DIR__ . '/../templates/';
 
+    /**
+     * [$injector description]
+     * @var Injector
+     */
+    protected $injector;
+
+    /**
+     * [$useConnection description]
+     * @var boolean
+     */
     protected $useConnection;
 
-    protected $default;
+    /**
+     * [$default description]
+     * @var array
+     */
+    protected $default = [];
 
+    /**
+     * [$connections description]
+     * @var array
+     */
     protected $connections = [];
 
+    /**
+     * [$resolvers description]
+     * @var array
+     */
     protected $resolvers = [];
 
-    protected $translator;
+    /**
+     * [$translator description]
+     * @var callable
+     */
+    protected $translator = 'sprintf';
 
+    /**
+     * [$renderer description]
+     * @var callable
+     */
     protected $renderer;
 
+    /**
+     * [$collections description]
+     * @var array
+     */
     protected $collections = [];
 
+    /**
+     * [$attributes description]
+     * @var array
+     */
     protected $attributes = [];
 
     /**
      * [__construct description]
-     * @param array $options [description]
+     * @param array $attributes [description]
      */
-    public function __construct(array $options = [])
+    public function __construct(array $connections = [], array $attributes = [])
     {
-        $this->singleton(Repository::class, $this);
+        // $this->injector = new Injector();
+        // $this->injector->singleton(Repository::class, $this);
 
-        if (isset($options['attributes'])) {
-            $this->attributes = $options['attributes'];
+        parent::__construct();
+
+        $this->attributes = $attributes;
+
+        foreach ($connections as $meta) {
+            $this->addConnection($this->resolve($meta));
         }
 
-        if (isset($options['connections'])) {
-            foreach ($options['connections'] as $meta) {
-                $this->add($this->resolve($meta));
-            }
-        }
+        // if (isset($attributes['collections'])) {
+        //     if (isset($attributes['collections']['default'])) {
+        //         $this->setDefault($attributes['collections']['default']);
+        //     }
 
-        if (isset($options['collections'])) {
-            if (isset($options['collections']['default'])) {
-                $this->setDefault($options['collections']['default']);
-            }
+        //     if (isset($attributes['collections']['resolvers'])) {
+        //         foreach ($attributes['collections']['resolvers'] as $resolver) {
+        //             $this->addResolver($this->resolve($resolver));
+        //         }
+        //     }
+        // }
 
-            if (isset($options['collections']['resolvers'])) {
-                foreach ($options['collections']['resolvers'] as $resolver) {
-                    $this->addResolver($this->resolve($resolver));
-                }
-            }
-        }
-
-        if (isset($options['renderer'])) {
-            $this->renderer = $options['renderer'];
-        }
-
-        if (isset($options['translator'])) {
-            $this->translator = $options['translator'];
-        } else {
-            $this->translator = 'sprintf';
-        }
+        // if (isset($options['renderer'])) {
+        //     $this->renderer = $options['renderer'];
+        // }
     }
 
     /**
      * [add description]
      * @param Connection $connection [description]
      */
-    public function add(Connection $connection)
+    public function addConnection(Connection $connection)
     {
+        $connection->setRepository($this);
+
         $id = $connection->getId();
-        $this->connections[$id] = $connection;
         if (is_null($this->useConnection)) {
             $this->useConnection = $id;
         }
+
+        $this->connections[$id] = $connection;
 
         return $this;
     }
@@ -97,26 +131,26 @@ class Repository extends Injector
             null;
     }
 
-    /**
-     * [getAttribute description]
-     * @param  string $key [description]
-     * @return mixed       [description]
-     */
-    public function getAttribute($key)
-    {
-        return isset($this->attributes[$key]) ? $this->attributes[$key] : null;
-    }
+    // /**
+    //  * [getAttribute description]
+    //  * @param  string $key [description]
+    //  * @return mixed       [description]
+    //  */
+    // public function getAttribute($key)
+    // {
+    //     return isset($this->attributes[$key]) ? $this->attributes[$key] : null;
+    // }
 
-    /**
-     * [setAttribute description]
-     * @param string $key   [description]
-     * @param string $value [description]
-     */
-    public function setAttribute($key, $value)
-    {
-        $this->attributes[$key] = $value;
-        return $this;
-    }
+    // /**
+    //  * [setAttribute description]
+    //  * @param string $key   [description]
+    //  * @param string $value [description]
+    //  */
+    // public function setAttribute($key, $value)
+    // {
+    //     $this->attributes[$key] = $value;
+    //     return $this;
+    // }
 
     /**
      * [addResolver description]
@@ -152,15 +186,15 @@ class Repository extends Injector
 
         $connection = $this->getConnection($connectionId ?: $this->useConnection);
         if (is_null($connection)) {
-            throw new NormException('No connection available to create collection');
+            throw new NormException('Undefined connection to create collection');
         }
 
         $collectionSignature = $collectionId . '.' . $connection->getId();
         if (!isset($this->collections[$collectionSignature])) {
-            $options = Options::create($this->default)
-                ->merge([
-                    'name' => $collectionId,
-                ]);
+            $options = Options::create($this->default);
+                // ->merge([
+                //     'name' => $collectionId,
+                // ]);
 
             $found = false;
             foreach ($this->resolvers as $resolver) {
@@ -172,10 +206,12 @@ class Repository extends Injector
                 }
             }
 
-            $this->collections[$collectionSignature] = $this->resolve(Collection::class, [
+            $options->merge([
                 'connection' => $connection,
-                'options' => $options
+                'name' => $collectionId,
             ]);
+
+            $this->collections[$collectionSignature] = $this->resolve(Collection::class, $options->toArray());
         }
 
         return $this->collections[$collectionSignature];
@@ -265,5 +301,36 @@ class Repository extends Injector
             'connections' => $this->connections,
             'use' => $this->useConnection,
         ];
+    }
+
+    public function getInjector()
+    {
+        if (null === $this->injector) {
+            $this->setInjector(new Injector());
+        }
+        return $this->injector;
+    }
+
+    public function setInjector(Injector $injector)
+    {
+        $this->injector = $injector;
+        $this->injector->singleton(Normable::class, $this);
+        return $this;
+    }
+
+    public function resolve($contract, array $args = [])
+    {
+        return $this->getInjector()->resolve($contract, $args);
+    }
+
+    public function getAttribute($key)
+    {
+        return isset($this->attributes[$key]) ? $this->attributes[$key] : null;
+    }
+
+    public function setAttribute($key, $value)
+    {
+        $this->attributes[$key] = $value;
+        return $this;
     }
 }

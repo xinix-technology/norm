@@ -17,21 +17,15 @@ class Timestampable
         ])->merge($options);
     }
 
-    public function initialize($context, $next)
+    public function initialize($context)
     {
-        $context['collection']->getSchema()
-            ->addField([ NDateTime::class, [
-                'options' => [
-                    'name' => $this->options['createdKey']
-                ]
-            ]])->end()
-            ->addField([ NDateTime::class, [
-                'options' => [
-                    'name' => $this->options['updatedKey']
-                ]
-            ]]);
-
-        $next($context);
+        $schema = $context['collection']->getSchema();
+        $schema->addField([ NDateTime::class, [
+            'name' => $this->options['createdKey']
+        ]]);
+        $schema->addField([ NDateTime::class, [
+            'name' => $this->options['updatedKey']
+        ]]);
     }
 
     public function save($context, $next)

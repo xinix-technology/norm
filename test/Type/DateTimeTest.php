@@ -8,36 +8,26 @@ use DateTimeZone;
 
 class DateTimeTest extends PHPUnit_Framework_TestCase
 {
-    public function setUp()
+    public function testFormat()
     {
-        $this->repository = new Repository();
-    }
+        $dt = new DateTime('now', new DateTimeZone('Asia/Jakarta'));
 
-    public function testTzFormat()
-    {
-        $dt = $this->repository->resolve(DateTime::class);
-
-        $this->assertEquals(date('H'), $dt->tzFormat('H'));
-        $this->assertEquals(date('H')+7, $dt->tzFormat('H', 'Asia/Jakarta'));
-    }
-
-    public function testLocalFormat()
-    {
-        $dt = $this->repository->resolve(DateTime::class);
-        $this->assertEquals(date('H'), $dt->localFormat('H'));
-    }
-
-    public function testJsonSerializeToString()
-    {
-        $dt = $this->repository->resolve(DateTime::class);
-        $this->assertEquals(date('c'), $dt->jsonSerialize());
-        $this->repository->setAttribute('timezone', 'Asia/Jakarta');
-        $this->assertEquals(strtotime($dt->jsonSerialize()), time());
+        $this->assertEquals((date('H')+7)%24, $dt->format('H'));
+        $this->assertEquals(date('H'), $dt->serverFormat('H'));
     }
 
     public function testConstruct()
     {
-        $dt = new DateTime($this->repository, '+1 Days', new DateTimeZone('Asia/Jakarta'));
-        $this->assertEquals($dt->getTimeZone()->getName(), 'Asia/Jakarta');
+        $dt = new DateTime();
+        $this->assertEquals($dt->format('H'), $dt->serverFormat('H'));
+
+        $this->assertEquals($dt->__debugInfo()['server'], date('c'));
+    }
+
+    public function testJsonSerializeOrToString()
+    {
+        $dt = new DateTime();
+        $this->assertEquals(date('c'), $dt->jsonSerialize());
+        $this->assertEquals(date('c'), $dt->__toString());
     }
 }

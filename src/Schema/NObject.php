@@ -6,12 +6,11 @@ use Norm\Type\Object as TypeObject;
 
 class NObject extends NField
 {
-
     public function prepare($value)
     {
 
         if (empty($value)) {
-            return new TypeObject();
+            return null;
         } elseif ($value instanceof TypeObject) {
             return $value;
         } elseif (is_string($value)) {
@@ -23,29 +22,17 @@ class NObject extends NField
 
     protected function formatReadonly($value, $model = null)
     {
-        if (isset($value)) {
-            // TODO this checking should available on JsonKit
-            // if (substr(phpversion(), 0, 3) === '5.3') {
-            //     $value = json_encode($value->toArray(), JSON_PRETTY_PRINT);
-            // } else {
-            $value = json_encode($value->toObject());
-            // }
-        }
-
-        return parent::formatReadonly($value, $model);
+        return $this->render('__norm__/nobject/readonly', [
+            'value' => $value,
+            'self' => $this,
+        ]);
     }
 
     protected function formatInput($value, $model = null)
     {
-        if (isset($value)) {
-            // TODO this checking should available on JsonKit
-            // if (substr(phpversion(), 0, 3) === '5.3') {
-            //     $value = json_encode($value->toArray(), JSON_PRETTY_PRINT);
-            // } else {
-            $value = json_encode($value->toObject());
-            // }
-        }
-
-        return '<textarea name="'.$this['name'].'">'.$value.'</textarea>';
+        return $this->render('__norm__/nobject/input', [
+            'value' => $value,
+            'self' => $this,
+        ]);
     }
 }

@@ -6,9 +6,9 @@ use Norm\Schema;
 
 class NUnknown extends NField
 {
-    public function __construct(Repository $repository, Schema $schema, array $options = [])
+    public function __construct(Schema $schema = null, $name = '', $filter = null, array $attributes = [])
     {
-        parent::__construct($repository, $schema, $options);
+        parent::__construct($schema, $name, $filter, $attributes);
 
         $this['unknown'] = true;
     }

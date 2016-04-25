@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-class NText extends String
+class NText extends NString
 {
 
     protected function formatReadonly($value, $model = null)
@@ -12,6 +12,9 @@ class NText extends String
 
     protected function formatInput($value, $model = null)
     {
-        return '<textarea name="'.$this['name'].'" placeholder="'.$this['label'].'">'.$value.'</textarea>';
+        return $this->render('__norm__/ntext/input', [
+            'self' => $this,
+            'value' => $value,
+        ]);
     }
 }

@@ -2,10 +2,11 @@
 namespace Norm\Test\Observer;
 
 use Norm\Observer\Nestable;
+use PHPUnit_Framework_TestCase;
 
 class NestableTest extends AbstractObserverTest
 {
-    public function testSave()
+    public function testSaveAndRemove()
     {
         $collection = $this->getCollection(new Nestable());
 
@@ -15,12 +16,12 @@ class NestableTest extends AbstractObserverTest
 
 
         $child1 = $collection->newInstance();
-        $parent['name'] = 'child1';
+        $child1['name'] = 'child1';
         $child1['parent'] = $parent['$id'];
         $child1->save();
 
         $child2 = $collection->newInstance();
-        $parent['name'] = 'child2';
+        $child1['name'] = 'child2';
         $child2['parent'] = $parent['$id'];
         $child2->save();
 
@@ -40,5 +41,9 @@ class NestableTest extends AbstractObserverTest
                     break;
             }
         }
+
+        $parent = $collection->findOne($parent['$id']);
+        $parent->remove();
+        $this->assertEquals($collection->find()->count(), 0);
     }
 }

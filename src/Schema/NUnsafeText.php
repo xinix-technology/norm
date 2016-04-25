@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-class NUnsafeText extends Text
+class NUnsafeText extends NText
 {
     public function prepare($value)
     {

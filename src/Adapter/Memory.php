@@ -8,49 +8,57 @@ use Rhumsaa\Uuid\Uuid;
 
 class Memory extends Connection
 {
-    protected $context;
+    /**
+     * [$raw description]
+     * @var array
+     */
+    protected $raw = [];
 
-    public function __construct($id, array $options = [])
+    public function getRaw()
     {
-        parent::__construct($id);
-    }
-
-    public function getContext()
-    {
-        return $this->context;
+        return $this->raw;
     }
 
     public function persist($collectionName, array $row)
     {
-        $this->context[$collectionName] = isset($this->context[$collectionName]) ?
-            $this->context[$collectionName] : [];
+        $this->raw[$collectionName] = isset($this->raw[$collectionName]) ?
+            $this->raw[$collectionName] : [];
 
         $id = isset($row['$id']) ? $row['$id'] : Uuid::uuid1()->__toString();
 
         $row = $this->marshall($row);
         $row['id'] = $id;
 
-        $this->context[$collectionName][$id] = $row;
+        $this->raw[$collectionName][$id] = $row;
 
         return $this->unmarshall($row);
     }
 
-    public function remove($collectionName, $rowId)
+    public function remove(Cursor $cursor)
     {
-        $this->context[$collectionName] = isset($this->context[$collectionName]) ?
-            $this->context[$collectionName] : [];
+        $collectionId = $cursor->getCollection()->getId();
+        if (empty($cursor->getCriteria()) && $cursor->getSkip() === 0 && $cursor->getLimit() === -1) {
+            // all
+            $this->raw[$collectionId] = [];
+        } else {
+            // partial
+            $this->raw[$collectionId] = isset($this->raw[$collectionId]) ?
+                $this->raw[$collectionId] : [];
 
-        if (isset($this->context[$collectionName][$rowId])) {
-            unset($this->context[$collectionName][$rowId]);
+            foreach ($cursor as $row) {
+                if (isset($this->raw[$collectionId][$row['$id']])) {
+                    unset($this->raw[$collectionId][$row['$id']]);
+                }
+            }
         }
     }
 
-    public function cursorDistinct(Cursor $cursor)
+    public function distinct(Cursor $cursor)
     {
-        throw new \Exception('Unimplemented yet!');
+        throw new NormException('Unimplemented yet!');
     }
 
-    public function cursorFetch(Cursor $cursor)
+    public function fetch(Cursor $cursor)
     {
         $criteria = $this->marshall($cursor->getCriteria(), 'id');
 
@@ -61,8 +69,8 @@ class Memory extends Connection
             'sort' => $cursor->getSort(),
         ];
 
-        $collectionId = $cursor->getCollectionId();
-        $contextAll = isset($this->context[$collectionId]) ? $this->context[$collectionId] : [];
+        $collectionId = $cursor->getCollection()->getId();
+        $contextAll = isset($this->raw[$collectionId]) ? $this->raw[$collectionId] : [];
         $context = [];
 
         $i = 0;
@@ -104,17 +112,17 @@ class Memory extends Connection
         return $context;
     }
 
-    public function cursorSize(Cursor $cursor, $withLimitSkip = false)
+    public function size(Cursor $cursor, $withLimitSkip = false)
     {
         $clone = clone $cursor;
         if ($withLimitSkip) {
             return count($clone->toArray());
         } else {
-            $clone->limit(-1)->skip(0);
+            return count($clone->limit(-1)->skip(0)->toArray());
         }
     }
 
-    public function cursorRead($context, $position = 0)
+    public function read($context, $position = 0)
     {
         return isset($context[$position]) ? $this->unmarshall($context[$position]) : null;
     }
@@ -134,6 +142,7 @@ class Memory extends Connection
                     return false;
                 }
             } else {
+
                 $query = explode('!', $ck);
                 $op = isset($query[1]) ? $query[1] : 'eq';
                 $key = $query[0];
@@ -151,22 +160,22 @@ class Memory extends Connection
                         }
                         break;
                     case 'lt':
-                        if ($cv >= $rowValue) {
-                            return false;
-                        }
-                        break;
-                    case 'lte':
-                        if ($cv > $rowValue) {
-                            return false;
-                        }
-                        break;
-                    case 'gt':
                         if ($cv <= $rowValue) {
                             return false;
                         }
                         break;
-                    case 'gte':
+                    case 'lte':
                         if ($cv < $rowValue) {
+                            return false;
+                        }
+                        break;
+                    case 'gt':
+                        if ($cv >= $rowValue) {
+                            return false;
+                        }
+                        break;
+                    case 'gte':
+                        if ($cv > $rowValue) {
                             return false;
                         }
                         break;
@@ -176,7 +185,7 @@ class Memory extends Connection
                         }
                         break;
                     default:
-                        throw new NormException("Operator '$operator' is not implemented yet!");
+                        throw new NormException("Operator '$op' is not implemented yet!");
                 }
             }
         }

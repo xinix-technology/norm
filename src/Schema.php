@@ -7,15 +7,10 @@ use Norm\Collection;
 use ROH\Util\StringFormatter;
 use Norm\Schema\NUnknown;
 use Norm\Schema\NField;
+use Norm\Normable;
 
 class Schema extends Normable
 {
-    /**
-     * [$collection description]
-     * @var Collection
-     */
-    protected $collection;
-
     /**
      * [$formatters description]
      * @var array
@@ -23,26 +18,25 @@ class Schema extends Normable
     protected $formatters;
 
     /**
-     * [$firstKey description]
+     * [$fields description]
+     * @var array
+     */
+    protected $fields = [];
+
+    /**
+     * [$firstField description]
      * @var string
      */
-    protected $firstKey;
+    protected $firstField;
 
     /**
      * [__construct description]
-     * @param Repository $repository [description]
      * @param Collection $collection [description]
      * @param array      $fields     [description]
      */
-    public function __construct(Repository $repository, Collection $collection, array $fields = [])
+    public function __construct(Collection $collection = null)
     {
-        $this->collection = $collection;
-
-        parent::__construct($repository);
-
-        foreach ($fields as $field) {
-            $this->addField($field);
-        }
+        parent::__construct($collection);
 
         $this->formatters = [
             'plain' => [$this, 'formatPlain'],
@@ -63,10 +57,10 @@ class Schema extends Normable
             ]);
         }
 
-        $this[$field['name']] = $field;
+        $this->fields[$field['name']] = $field;
 
-        if (is_null($this->firstKey)) {
-            $this->firstKey = $field['name'];
+        if (is_null($this->firstField)) {
+            $this->firstField = $field['name'];
         }
 
         return $field;
@@ -79,7 +73,7 @@ class Schema extends Normable
     public function getFilterRules()
     {
         $rules = [];
-        foreach ($this as $k => $field) {
+        foreach ($this->fields as $k => $field) {
             // there will be no null field
             // if (is_null($field)) {
             //     continue;
@@ -101,7 +95,10 @@ class Schema extends Normable
      */
     protected function formatPlain(Model $model)
     {
-        return $model[$this->firstKey];
+        if (null === $this->firstField) {
+            throw new NormException('Cannot format explicit schema fields');
+        }
+        return $model[$this->firstField];
     }
 
     /**
@@ -168,15 +165,12 @@ class Schema extends Normable
      * @param  string $key [description]
      * @return NField      [description]
      */
-    public function offsetGet($key)
+    public function getField($key)
     {
-        if (!$this->offsetExists($key)) {
-            // $this->attributes[$key] =
-            return new NUnknown($this->repository, $this, [
-                'name' => $key
-            ]);
+        if (!isset($this->fields[$key])) {
+            return new NUnknown($this, $key);
         }
-        return $this->attributes[$key];
+        return $this->fields[$key];
     }
 
     /**
@@ -188,8 +182,17 @@ class Schema extends Normable
     public function factory($collectionId = '', $connectionId = '')
     {
         if ('' === $collectionId) {
-            return $this->collection;
+            return $this->parent;
         }
-        return $this->collection->factory($collectionId, $connectionId);
+        return $this->parent->factory($collectionId, $connectionId);
+    }
+
+    public function __debugInfo()
+    {
+        $result = [];
+        foreach ($this->fields as $key => $value) {
+            $result[$key] = get_class($value);
+        }
+        return $result;
     }
 }

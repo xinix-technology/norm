@@ -22,9 +22,12 @@ use ROH\Util\Composition;
  */
 class Collection extends Normable
 {
+    /**
+     * [$compositions description]
+     * @var array
+     */
     protected $compositions = [];
 
-    protected $repository;
     /**
      * Logical id
      *
@@ -38,13 +41,6 @@ class Collection extends Normable
      * @var string
      */
     protected $name;
-
-    /**
-     * Norm Connection
-     *
-     * @var Norm\Connection
-     */
-    protected $connection;
 
     /**
      * Schema
@@ -68,14 +64,15 @@ class Collection extends Normable
     protected $filter;
 
     /**
-     * Collection cache
-     *
-     * @var array
+     * [$primaryKey description]
+     * @var string
      */
-    // protected $cache;
-
     protected $primaryKey = 'id';
 
+    /**
+     * [$modelClass description]
+     * @var string
+     */
     protected $modelClass;
 
     /**
@@ -83,60 +80,46 @@ class Collection extends Normable
      *
      * @param array $options
      */
-    public function __construct(Repository $repository, Connection $connection, $options = [])
+    public function __construct(Connection $connection = null, $name = '', Schema $schema = null, $model = Model::class)
     {
-        if (!isset($options['name'])) {
-            throw new NormException('Missing name, check collection configuration!');
+        parent::__construct($connection);
+
+        // $options = Options::create([
+        //     'schema' => [],
+        //     'model' => Model::class,
+        //     'observers' => [],
+        // ])->merge($options);
+
+        if (is_string($name) && '' !== $name) {
+            $this->name = Inflector::classify($name);
+            $this->id = Inflector::tableize($this->name);
+        } elseif (is_array($name)) {
+            $this->name = $name[0];
+            $this->id = $name[1];
+        } else {
+            throw new NormException('Collection name must be string');
         }
 
-        $this->repository = $repository;
-        $this->connection = $connection;
+        $this->schema = $schema;
+        $this->modelClass = $model;
 
-        $options = Options::create([
-            'schema' => [],
-            'model' => Model::class,
-            'observers' => [],
-        ])->merge($options);
+        // foreach ($options['observers'] as $meta) {
+        //     if (is_array($meta) && !isset($meta[0])) {
+        //         $this->observe($meta);
+        //     } else {
+        //         $this->observe($this->resolve($meta));
+        //     }
+        // }
 
-        $this->name = Inflector::classify($options['name']);
-        $this->id = isset($options['id']) ? $options['id'] : Inflector::tableize($this->name);
-        $this->modelClass = $options['model'];
+        // $this->schema = $this->resolve(Schema::class, [
+        //     'collection' => $this,
+        //     'fields' => $options['schema']
+        // ]); //new Schema($this, $options['schema']);
 
-        foreach ($options['observers'] as $meta) {
-            if (is_array($meta) && !isset($meta[0])) {
-                $this->observe($meta);
-            } else {
-                $this->observe($this->resolve($meta));
-            }
-        }
-
-        $this->schema = $this->resolve(Schema::class, [
-            'collection' => $this,
-            'fields' => $options['schema']
-        ]); //new Schema($this, $options['schema']);
-
-        if (isset($options['format'])) {
-            $this->schema->addFormatter($options['format']);
-        }
+        // if (isset($options['format'])) {
+        //     $this->schema->addFormatter($options['format']);
+        // }
     }
-
-    // public function withConnection(Connection $connection)
-    // {
-    //     $this->connection = $connection;
-
-    //     return $this;
-    // }
-
-    /**
-     * Getter of collection name. Collection name usually mapped to table name or
-     * collection name
-     *
-     * @return string
-     */
-    // public function getName()
-    // {
-    //     return $this->name;
-    // }
 
     /**
      * Getter of collection class
@@ -153,35 +136,6 @@ class Collection extends Normable
         return $this->name;
     }
 
-    // /**
-    //  * Getter of connection
-    //  *
-    //  * @return Norm\Connection
-    //  */
-    // protected function getConnection()
-    // {
-    //     if (is_null($this->connection)) {
-    //         throw new NormException('Connection not found');
-    //     }
-    //     return $this->connection;
-    // }
-
-    // /**
-    //  * Getter of collection option
-    //  *
-    //  * @param string $key
-    //  *
-    //  * @return mixed
-    //  */
-    // public function option($key = null)
-    // {
-    //     if (func_num_args() ===  0) {
-    //         return $this->options;
-    //     } elseif (isset($this->options[$key])) {
-    //         return $this->options[$key];
-    //     }
-    // }
-
     /**
      * Getter and setter of collection schema. If there is no argument specified,
      * the method will set and override schema. If argument specified, method will
@@ -193,20 +147,16 @@ class Collection extends Normable
      */
     public function getSchema()
     {
+        if (null === $this->schema) {
+            $this->schema = new Schema($this);
+        }
         return $this->schema;
     }
-
-    // public function withSchema($schema)
-    // {
-    //     $this->schema = new Schema($this, $schema);
-
-    //     return $this;
-    // }
 
     public function getFilter()
     {
         if (is_null($this->filter)) {
-            $this->filter = new Filter($this, $this->schema->getFilterRules());
+            $this->filter = new Filter($this, $this->getSchema()->getFilterRules());
         }
 
         return $this->filter;
@@ -215,11 +165,11 @@ class Collection extends Normable
     /**
      * Attach document to Norm system as model.
      *
-     * @param mixed document Raw document data
+     * @param array document Raw document data
      *
      * @return Norm\Model Attached model
      */
-    public function attach($document)
+    public function attach(array $document)
     {
         // document should already marshalled from connection
 
@@ -250,6 +200,7 @@ class Collection extends Normable
                 '$id' => $criteria,
             ];
         }
+
 
         // wrap criteria as object instance to make sure it can be override by hooks
         $context = new UtilCollection([
@@ -321,7 +272,7 @@ class Collection extends Normable
      *
      * @return void
      */
-    public function save(Model $model, $options = [])
+    public function save(Model $model, array $options = [])
     {
         $options = array_merge([
             'filter' => true,
@@ -333,7 +284,7 @@ class Collection extends Normable
         }
 
         $save = function ($context) {
-            $context['modified'] = $this->connection->persist($this->getId(), $context['model']->dump());
+            $context['modified'] = $this->parent->persist($this->getId(), $context['model']->dump());
         };
 
         $context = new UtilCollection([
@@ -356,27 +307,37 @@ class Collection extends Normable
      *
      * @return void
      */
-    public function remove(Model $model = null)
+    public function remove($modelOrCursor = null, array $options = [])
     {
-        if (func_num_args() === 0) {
-            $this->connection->remove($this);
-        } else {
-            // avoid remove empty model
-            if (is_null($model)) {
-                throw new NormException('Cannot remove null model');
+        $options = array_merge([
+            'observer' => true,
+        ], $options);
+
+        $context = new UtilCollection([
+            'collection' => $this,
+        ]);
+
+        if (null === $modelOrCursor) {
+            $cursor = $this->find();
+        } elseif ($modelOrCursor instanceof Model) {
+            $context['model'] = $modelOrCursor;
+            $cursor = $this->find($modelOrCursor['$id']);
+        } elseif ($modelOrCursor instanceof Cursor) {
+            $cursor = $modelOrCursor;
+        }
+        $context['cursor'] = $cursor;
+
+        $remove = function ($context) {
+            $this->parent->remove($context['cursor']);
+            if (null !== $context['model']) {
+                $context['model']->reset(true);
             }
+        };
 
-            $context = new UtilCollection([
-                'collection' => $this,
-                'model' => $model,
-            ]);
-
-            $this->apply('remove', $context, function ($context) {
-                $result = $this->connection->remove($this->getId(), $context['model']['$id']);
-                if ($result) {
-                    $context['model']->reset();
-                }
-            });
+        if ($options['observer']) {
+            $this->apply('remove', $context, $remove);
+        } else {
+            $remove($context);
         }
     }
 
@@ -389,12 +350,20 @@ class Collection extends Normable
      */
     public function observe($observer)
     {
-        $methods = [ 'save', 'filter', 'remove', 'search', 'attach', 'initialize', ];
+        $context = new UtilCollection([
+            'collection' => $this,
+        ]);
+
+        $methods = [ 'save', 'filter', 'remove', 'search', 'attach', ]; //'initialize', ];
         if (is_array($observer)) {
             foreach ($methods as $method) {
                 if (isset($observer[$method]) && is_callable($observer[$method])) {
                     $this->compose($method, $observer[$method]);
                 }
+            }
+
+            if (isset($observer['initialize']) && is_callable($observer['initialize'])) {
+                $observer['initialize']($context);
             }
         } elseif (is_object($observer)) {
             foreach ($methods as $method) {
@@ -402,50 +371,36 @@ class Collection extends Normable
                     $this->compose($method, [$observer, $method]);
                 }
             }
+
+            if (method_exists($observer, 'initialize')) {
+                $observer->initialize($context);
+            }
         } else {
             throw new NormException('Observer must be array or object');
         }
 
-        $context = new UtilCollection([
-            'collection' => $this,
-        ]);
-        $this->apply('initialize', $context);
+        // $this->apply('initialize', $context);
     }
 
-    /**
-     * Json serialization of this id.
-     *
-     * @method jsonSerialize
-     *
-     * @return string
-     */
-    // public function jsonSerialize()
-    // {
-    //     return $this->id;
-    // }
-
-    public function __call($method, $args)
+    public function distinct(Cursor $cursor)
     {
-        switch ($method) {
-            case 'cursorDistinct':
-            case 'cursorFetch':
-            case 'cursorSize':
-            case 'cursorRead':
-                return call_user_func_array([$this->connection, $method], $args);
-            default:
-                throw new NormException('Collection does not have method ' . $method);
-        }
+        return $this->parent->distinct($cursor);
     }
 
-    public function cursorRead($context, $position = 0)
+    public function fetch(Cursor $cursor)
     {
-        $row = $this->connection->cursorRead($context, $position);
+        return $this->parent->fetch($cursor);
+    }
+
+    public function size(Cursor $cursor, $withLimitSkip = false)
+    {
+        return $this->parent->size($cursor, $withLimitSkip);
+    }
+
+    public function read($context, $position = 0)
+    {
+        $row = $this->parent->read($context, $position);
         return is_null($row) ? $row : $this->attach($row);
-    }
-
-    public function factory($collectionId = '', $connectionId = '')
-    {
-        return $this->repository->factory($collectionId, $connectionId ?: $this->connection->getId());
     }
 
     public function __debugInfo()
@@ -453,7 +408,7 @@ class Collection extends Normable
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'connectionClass' => $this->connection ? get_class($this->connection) : null,
+            'connectionClass' => $this->parent ? get_class($this->parent) : null,
         ];
     }
 

@@ -6,33 +6,19 @@ use Norm\Repository;
 use Norm\Collection;
 use Norm\Connection;
 use Norm\Exception\NormException;
+use ROH\Util\Injector;
 
 class NormTest extends PHPUnit_Framework_TestCase
 {
-    public function testConstruct()
-    {
-        $repository = new Repository([
-            'attributes' => [
-                'foo' => 'bar',
-            ],
-            'collections' => [
-                'default' => [],
-                'resolvers' => [
-                    function () {
-
-                    }
-                ],
-            ],
-            'renderer' => function () {},
-            'translator' => function () {},
-        ]);
-
-        $this->assertEquals($repository->getAttribute('foo'), 'bar');
-    }
-
-    public function testGetConnection()
+    public function testConnectionAddAndGet()
     {
         $repository = new Repository();
+        $this->assertNull($repository->getConnection());
+
+        $connection = $this->getMockForAbstractClass(Connection::class);
+        $repository->addConnection($connection);
+        $this->assertEquals($repository->getConnection(), $connection);
+
         try {
             $repository->getConnection(33);
             $this->fail('Must not here');
@@ -43,14 +29,32 @@ class NormTest extends PHPUnit_Framework_TestCase
         }
     }
 
+    public function testAttributesSetUnsetAndGet()
+    {
+        $repository = new Repository([], [ 'foo' => 'bar' ]);
+
+        $this->assertEquals($repository->getAttribute('foo'), 'bar');
+
+        $repository->setAttribute('foo', null);
+        $repository->setAttribute('baz', 'baz');
+
+        $this->assertEquals($repository->getAttribute('foo'), null);
+        $this->assertEquals($repository->getAttribute('baz'), 'baz');
+    }
+
     public function testFactory()
     {
-        $connection = $this->getMock(Connection::class);
-        $repository = new Repository([
-            'connections' => [
-                $connection,
-            ],
-        ]);
+        $repository = new Repository();
+
+        try {
+            $collection = $repository->factory('Foo');
+        } catch (NormException $e) {
+            if ($e->getMessage() !== 'Undefined connection to create collection') {
+                throw $e;
+            }
+        }
+
+        $repository->addConnection($this->getMockForAbstractClass(Connection::class));
 
         $collection = $repository->factory('Foo');
         $this->assertInstanceOf(Collection::class, $collection);
@@ -67,15 +71,34 @@ class NormTest extends PHPUnit_Framework_TestCase
             }
         }
 
-        $repository = new Repository();
-        try {
-            $collection = $repository->factory('Foo');
-            $this->fail('Must not here');
-        } catch (NormException $e) {
-            if ($e->getMessage() !== 'No connection available to create collection') {
-                throw $e;
+        $hit = false;
+        $inject = false;
+
+        $injector = new Injector();
+        $injector->delegate(Collection::class, function ($args) use (&$inject) {
+            if (isset($args['foo']) && $args['foo'] === 'bar' &&
+                isset($args['baz']) && $args['baz'] === 'bar') {
+                $inject = true;
             }
-        }
+        });
+
+        $repository = (new Repository([
+                $this->getMockForAbstractClass(Connection::class),
+            ]))
+            ->setDefault([
+                'foo' => 'bar',
+            ])
+            ->addResolver(function() use (&$hit) {
+                $hit = true;
+                return [
+                    'baz' => 'bar',
+                ];
+            })
+            ->setInjector($injector);
+        $collection = $repository->factory('Foo');
+
+        $this->assertTrue($hit);
+        $this->assertTrue($inject);
     }
 
     public function testTranslate()
@@ -92,9 +115,7 @@ class NormTest extends PHPUnit_Framework_TestCase
             }
         }
 
-        $repository = new Repository([
-            'translator' => function() { return 'Bar'; }
-        ]);
+        $repository = (new Repository())->setTranslator(function() { return 'Bar'; });
         $this->assertEquals($repository->translate('Foo'), 'Bar');
 
         $repository->setTranslator(function () { return 'Baz'; });
@@ -105,7 +126,7 @@ class NormTest extends PHPUnit_Framework_TestCase
     {
         $repository = new Repository();
 
-        $result = $repository->render('__norm__/boolean/input', [
+        $result = $repository->render('__norm__/nbool/input', [
             'self' => [
                 'name' => 'foo',
             ],
@@ -126,7 +147,7 @@ class NormTest extends PHPUnit_Framework_TestCase
         }
 
         try {
-            $repository->render('not-found.php');
+            $repository->render('not-found');
             $this->fail('Must not here');
         } catch (NormException $e) {
             if (strpos($e->getMessage(), 'Template not found') < 0) {
@@ -140,11 +161,8 @@ class NormTest extends PHPUnit_Framework_TestCase
 
     public function testDebugInfo()
     {
-        $connection = $this->getMock(Connection::class);
         $repository = new Repository([
-            'connections' => [
-                $connection,
-            ],
+            $this->getMockForAbstractClass(Connection::class),
         ]);
 
         $this->assertEquals(count($repository->__debugInfo()['connections']), 1);

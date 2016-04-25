@@ -1,118 +1,179 @@
 <?php
-
 namespace Norm\Schema;
 
 use Norm\Exception\NormException;
 use ROH\Util\Inflector;
 use Norm\Normable;
 use Norm\Repository;
+use Norm\Model;
 use Norm\Schema;
+use ArrayAccess;
 
-abstract class NField extends Normable
+abstract class NField extends Normable implements ArrayAccess
 {
-    protected $schema;
+    /**
+     * [$attributes description]
+     * @var array
+     */
+    protected $attributes;
 
+    /**
+     * [$filter description]
+     * @var array
+     */
     protected $filter = [];
 
+    /**
+     * [$formatters description]
+     * @var array
+     */
     protected $formatters;
 
+    /**
+     * [$reader description]
+     * @var callable
+     */
     protected $reader;
 
-    public function __construct(Repository $repository, Schema $schema, array $options = [])
+    /**
+     * [__construct description]
+     * @param string           $name       [description]
+     * @param string|array     $filter     [description]
+     * @param array            $attributes [description]
+     */
+    public function __construct(Schema $schema = null, $name = '', $filter = null, array $attributes = [])
     {
-        // if (null === $schema) {
-        //     throw new NormException('Schema is mandatory!');
-        // }
-
-        if (!isset($options['name'])) {
-            throw new NormException('Option name is mandatory!');
+        if ((!is_string($name) && !is_array($name)) || empty($name)) {
+            throw new NormException('Name (2nd argument) must be string or array, and must not empty');
         }
 
-        $this->schema = $schema;
+        parent::__construct($schema);
+
+        $this->attributes = $attributes;
 
         $this->formatters = [
             'readonly' => [$this, 'formatReadonly'],
             'input' => [$this, 'formatInput'],
             'plain' => [$this, 'formatPlain'],
+            'json' => [$this, 'formatJson'],
+            'label' => [$this, 'formatLabel'],
         ];
 
-        if (isset($options['filter'])) {
-            $this->addFilter($options['filter']);
+        if (!empty($filter)) {
+            $this->addFilter($filter);
         }
 
-        parent::__construct($repository, $options);
-
-        if ($this['name'][0] === '$') {
-            $this->hidden();
+        if (is_array($name)) {
+            if (count($name) !== 2) {
+                throw new NormException('Name (2nd argument) must be array consists of name and label');
+            }
+            $this['name'] = $name[0];
+            $this['label'] = $name[1];
+        } else {
+            $this['name'] = $name;
+            $this['label'] = Inflector::humanize($name);
         }
-        if (is_null($this['label'])) {
-            $this['label'] = Inflector::humanize($this['name']);
-        }
 
+        if ('$' === $this['name'][0]) {
+            $this['hidden'] = true;
+        }
     }
 
-    // public function forSchema($schema, $name)
-    // {
-    //     $this->schema = $schema;
-    //     $this['name'] = $name ?: '';
-    //     if ($this['name'][0] === '$') {
-    //         $this->hidden();
-    //     }
-    //     if (is_null($this['label'])) {
-    //         $this['label'] = Inflector::humanize($this['name']);
-    //     }
-    //     return $this;
-    // }
-
+    /**
+     * [factory description]
+     * @param  string $collectionId [description]
+     * @param  string $connectionId [description]
+     * @return Collection           [description]
+     */
     public function factory($collectionId = '', $connectionId = '')
     {
-        return $this->schema->factory($collectionId, $connectionId);
+        if (null === $this->parent) {
+            throw new NormException('Field does not have schema yet!');
+        }
+        return $this->parent->factory($collectionId, $connectionId);
     }
 
+    /**
+     * [prepare description]
+     * @param  [type] $value [description]
+     * @return [type]        [description]
+     */
     public function prepare($value)
     {
         return filter_var($value, FILTER_SANITIZE_STRING);
     }
 
-    public function read($model)
+    /**
+     * [read description]
+     * @param  Model  $model [description]
+     * @return [type]        [description]
+     */
+    public function read(Model $model)
     {
         $reader = $this->reader;
         return $reader($model);
     }
 
-    public function setReader($reader)
+    /**
+     * [setReader description]
+     * @param callable $reader [description]
+     */
+    public function setReader(callable $reader)
     {
         $this->reader = $reader;
         return $this;
     }
 
+    /**
+     * [hasReader description]
+     * @return boolean [description]
+     */
     public function hasReader()
     {
         return isset($this->reader);
     }
 
+    /**
+     * [getFormatter description]
+     * @param  string $format [description]
+     * @return callable         [description]
+     */
     public function getFormatter($format)
     {
         return isset($this->formatters[$format]) ? $this->formatters[$format] : null;
     }
 
-    public function format($format, $value)
+    /**
+     * [format description]
+     * @param  string $format [description]
+     * @param  mixed  $value  [description]
+     * @return string         [description]
+     */
+    public function format($format, $value = null, $arg1 = null)
     {
         if ($format === 'input' && $this['readonly']) {
             $format = 'readonly';
         }
 
         $formatter = $this->getFormatter($format);
-        if (isset($formatter)) {
-            return $formatter($this->prepare($value));
+        if (null === $formatter) {
+            throw new NormException('Formatter not found, ' . $format);
         }
+        return $formatter($this->prepare($value), $arg1);
     }
 
+    /**
+     * [getFilter description]
+     * @return [type] [description]
+     */
     public function getFilter()
     {
         return $this->filter;
     }
 
+    /**
+     * [addFilter description]
+     */
     public function addFilter()
     {
         $filters = func_get_args();
@@ -136,17 +197,33 @@ abstract class NField extends Normable
         return $this;
     }
 
+    /**
+     * [has description]
+     * @param  string  $k [description]
+     * @return boolean    [description]
+     */
     public function has($k)
     {
         return array_key_exists($k, $this->attributes);
     }
 
+    /**
+     * [set description]
+     * @param string $k [description]
+     * @param mixed  $v [description]
+     */
     public function set($k, $v)
     {
         $this->attributes[$k] = $v;
         return $this;
     }
 
+    /**
+     * [get description]
+     * @param  string $k       [description]
+     * @param  mixed  $default [description]
+     * @return mixed           [description]
+     */
     public function get($k, $default = null)
     {
         if (!$this->has($k)) {
@@ -155,32 +232,55 @@ abstract class NField extends Normable
         return $this->attributes[$k];
     }
 
+    /**
+     * [offsetExists description]
+     * @param  string   $offset [description]
+     * @return boolean          [description]
+     */
     public function offsetExists($offset)
     {
         return $this->has($offset);
     }
 
+    /**
+     * [offsetGet description]
+     * @param  string $offset [description]
+     * @return mixed          [description]
+     */
     public function offsetGet($offset)
     {
         return $this->get($offset);
     }
 
+    /**
+     * [offsetSet description]
+     * @param  string $offset [description]
+     * @param  mixed  $value  [description]
+     * @return mixed          [description]
+     */
     public function offsetSet($offset, $value)
     {
         $this->set($offset, $value);
     }
 
+    /**
+     * [offsetUnset description]
+     * @param  string $offset [description]
+     * @return mixed          [description]
+     */
     public function offsetUnset($offset)
     {
         unset($this->attributes[$offset]);
     }
 
-    public function label()
+    protected function formatLabel($value, $model = null)
     {
-        return '<label>'. $this->translate($this['label']).(isset($this['filter.required']) ? '*' : '').'</label>';
+        return $this->render('__norm__/nfield/label', [
+            'self' => $this,
+        ]);
     }
 
-    public function toJSON($value)
+    protected function formatJson($value, $model = null)
     {
         return $value;
     }
@@ -192,7 +292,15 @@ abstract class NField extends Normable
 
     protected function formatReadonly($value, $model = null)
     {
-        return "<span class=\"field\">".($this->formatPlain($value, $model) ?: '&nbsp;')."</span>";
+        if (!empty($value)) {
+            $value = htmlentities($value);
+        }
+
+        return $this->render('__norm__/nfield/readonly', [
+            'self' => $this,
+            'value' => $value,
+            'model' => $model,
+        ]);
     }
 
     protected function formatInput($value, $model = null)
@@ -208,50 +316,69 @@ abstract class NField extends Normable
         ]);
     }
 
-    public function current()
-    {
-        return current($this->attributes);
-    }
+    // public function current()
+    // {
+    //     return current($this->attributes);
+    // }
 
-    public function next()
-    {
-        return next($this->attributes);
-    }
+    // public function next()
+    // {
+    //     return next($this->attributes);
+    // }
 
-    public function key()
-    {
-        return key($this->attributes);
-    }
+    // public function key()
+    // {
+    //     return key($this->attributes);
+    // }
 
-    public function valid()
-    {
-        return $this->current();
-    }
+    // public function valid()
+    // {
+    //     return $this->current();
+    // }
 
-    public function rewind()
-    {
-        return reset($this->attributes);
-    }
+    // public function rewind()
+    // {
+    //     return reset($this->attributes);
+    // }
 
-    public function jsonSerialize()
+    // public function jsonSerialize()
+    // {
+    //     return $this->attributes;
+    // }
+
+    /**
+     * [transient description]
+     * @param  boolean $transient [description]
+     * @return [type]             [description]
+     */
+    // public function transient($transient = true)
+    // {
+    //     $this['transient'] = $transient;
+    //     return $this;
+    // }
+
+    /**
+     * [hidden description]
+     * @param  boolean $hidden [description]
+     * @return [type]          [description]
+     */
+    // public function hidden($hidden = true)
+    // {
+    //     $this['hidden'] = $hidden;
+    //     return $this;
+    // }
+
+    // public function end()
+    // {
+    //     return $this->parent;
+    // }
+
+    /**
+     * [__debugInfo description]
+     * @return [type] [description]
+     */
+    public function __debugInfo()
     {
         return $this->attributes;
-    }
-
-    public function transient($transient = true)
-    {
-        $this['transient'] = $transient;
-        return $this;
-    }
-
-    public function hidden($hidden = true)
-    {
-        $this['hidden'] = $hidden;
-        return $this;
-    }
-
-    public function end()
-    {
-        return $this->schema;
     }
 }

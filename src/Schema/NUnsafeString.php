@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-class NUnsafeString extends String
+class NUnsafeString extends NString
 {
     public function prepare($value)
     {

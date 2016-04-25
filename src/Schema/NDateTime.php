@@ -8,40 +8,54 @@ use Norm\Type\DateTime as TypeDateTime;
 
 class NDateTime extends NField
 {
+    protected function getTimeZone()
+    {
+        if (null !== $this->parent && null !== $this->parent->getAttribute('timezone')) {
+            return $this->parent->getAttribute('timezone');
+        } else {
+            return date_default_timezone_get();
+        }
+    }
+
     public function prepare($value)
     {
+
         if (empty($value)) {
             return null;
         } elseif ($value instanceof TypeDateTime) {
             return $value;
         } elseif ($value instanceof DateTime) {
-            $t = $value->format('c');
+            $t = new TypeDateTime($value->format('c'));
+            $t->setTimeZone(new DateTimeZone($this->getTimeZone()));
+            return $t;
         } elseif (is_string($value)) {
+            $original = date_default_timezone_get();
+            date_default_timezone_set($this->getTimeZone());
             $t = date('c', strtotime($value));
-        } else {
-            $t = date('c', (int) $value);
+            date_default_timezone_set($original);
+            return new TypeDateTime($t);
         }
-        return new TypeDateTime($this->repository, $t);
+
+        $t = new TypeDateTime(date('c', (int) $value));
+        $t->setTimeZone(new DateTimeZone($this->getTimeZone()));
+        return $t;
     }
 
     protected function formatInput($value, $model = null)
     {
-        if ($value) {
-            $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));
-        }
 
-        return '<input type="datetime-local" name="'.$this['name'].'" value="'.
-            ($value ? $value->format("Y-m-d\TH:i") : '').'" placeholder="'.
-            $this['label'].'" autocomplete="off" />';
+        return $this->render('__norm__/ndatetime/input', [
+            'value' => $value,
+            'self' => $this,
+        ]);
     }
 
     protected function formatReadonly($value, $model = null)
     {
-        if ($value) {
-            $value->setTimeZone(new DateTimeZone(date_default_timezone_get()));
-        }
-
-        return '<span class="field">'.($value ? $value->format('c') : '&nbsp;').'</span>';
+        return $this->render('__norm__/ndatetime/readonly', [
+            'value' => $value,
+            'self' => $this,
+        ]);
     }
 
     // DEPRECATED replaced by Field::render

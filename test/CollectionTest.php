@@ -2,73 +2,49 @@
 namespace Norm\Test;
 
 use PHPUnit_Framework_TestCase;
-use Norm\Repository;
 use Norm\Connection;
 use Norm\Collection;
-use Norm\Observer\Timestampable;
+use Norm\Cursor;
+use Norm\Model;
 use Norm\Exception\NormException;
-// use Norm\Schema;
-// use Norm\Schema\NUnknown;
-// use ROH\Util\Collection as UtilCollection;
-// use Norm\Test\NormTestCase;
 
 class CollectionTest extends PHPUnit_Framework_TestCase
 {
-    protected $repository;
-
-    public function setUp()
+    public function testConstructAndObserve()
     {
+        $collection = new Collection(null, 'Foo');
+        $this->assertEquals($collection->getId(), 'foo');
+        $this->assertEquals($collection->getName(), 'Foo');
 
-        $connection = $this->getMock(Connection::class, [
-            'persist',
-            'remove',
-            'cursorDistinct',
-            'cursorFetch',
-            'cursorSize',
-            'cursorRead',
-            'getId',
-        ]);
-        $connection->method('getId')->will($this->returnValue('main'));
-        $this->repository = new Repository([
-            'connections' => [
-                $connection,
-            ]
-        ]);
-        $this->repository->singleton(Connection::class, $connection);
-    }
+        $collection = new Collection(null, ['Foo', 'bar']);
+        $this->assertEquals($collection->getId(), 'bar');
+        $this->assertEquals($collection->getName(), 'Foo');
 
-    public function testConstruct()
-    {
-        $hit = false;
-        $collection = new Collection($this->repository, $this->repository->getConnection(), [
-            'name' => 'Foo',
-            'observers' => [
-                [
-                    'initialize' => function($context, $next) use (&$hit) {
-                        $hit = true;
-                        $next($context);
-                    },
-                ],
-                [ Timestampable::class ],
-            ]
-        ]);
-
-        $this->assertTrue($hit);
+        try {
+            $collection = new Collection(null, 11);
+            $this->fail('Must not here');
+        } catch(NormException $e) {
+            if ($e->getMessage() !== 'Collection name must be string') {
+                throw $e;
+            }
+        }
     }
 
     public function testObserve()
     {
-        $collection = new Collection($this->repository, $this->repository->getConnection(), [
-            'name' => 'Foo',
-        ]);
+        $collection = new Collection(null, 'Foo');
         $collection->observe([
-            'initialize' => function($context, $next) use (&$hit) {
+            'initialize' => function($context) use (&$hit) {
                 $hit = true;
-                $next($context);
-            }
+            },
+            'save' => function($context, $next) {},
         ]);
-
         $this->assertTrue($hit);
+
+        $collection = new Collection(null, 'Foo');
+        $observer = $this->getMock(stdClass::class, ['initialize', 'save']);
+        $observer->expects($this->once())->method('initialize');
+        $collection->observe($observer);
 
         try {
             $collection->observe(0);
@@ -80,22 +56,94 @@ class CollectionTest extends PHPUnit_Framework_TestCase
         }
     }
 
-    public function testDebugInfo()
+    public function testDebugInfoAndGetters()
     {
-        $collection = new Collection($this->repository, $this->repository->getConnection(), [
-            'name' => 'Foo',
-        ]);
+        $collection = new Collection(null, 'Foo');
         $info = $collection->__debugInfo();
         $this->assertEquals($info['id'], 'foo');
         $this->assertEquals($info['name'], 'Foo');
+
+        $this->assertEquals($collection->getId(), 'foo');
+        $this->assertEquals($collection->getName(), 'Foo');
     }
 
-    public function testFactory()
+    public function testAttach()
     {
-        $collection = new Collection($this->repository, $this->repository->getConnection(), [
-            'name' => 'Foo',
+        $collection = new Collection(null, 'Foo');
+        $result = $collection->attach([
+            '$id' => 1,
+            'foo' => 'bar',
+            'bar' => 'baz',
         ]);
 
-        $this->assertEquals($collection->factory('Foo'), $collection);
+        $this->assertInstanceOf(Model::class, $result);
+        $this->assertEquals($result['foo'], 'bar');
+    }
+
+    public function testFindAndFindOne()
+    {
+        $connection = $this->getMock(Connection::class);
+        $connection->method('read')->will($this->returnValue(['foo' => 'bar']));
+        $collection = new Collection($connection, 'Foo');
+
+        $result = $collection->find();
+        $this->assertInstanceOf(Cursor::class, $result);
+
+        $result = $collection->findOne(10);
+        $this->assertInstanceOf(Model::class, $result);
+    }
+
+    public function testNewInstanceSaveAndRemove()
+    {
+        $connection = $this->getMock(Connection::class);
+        $connection->method('persist')->will($this->returnValue(['$id' => 1, 'foo' => 'bar']));
+        $connection->expects($this->once())->method('remove');
+        $collection = new Collection($connection, 'Foo');
+
+        $model = $collection->newInstance();
+        $this->assertInstanceOf(Model::class, $model);
+
+        $model->set('foo', 'bar');
+        $collection->save($model);
+        $this->assertFalse($model->isNew());
+
+        $collection->save($model, ['observer' => false]);
+        $this->assertFalse($model->isNew());
+
+        $collection->remove($model);
+
+        $connection = $this->getMock(Connection::class);
+        $connection->expects($this->once())->method('remove');
+        $collection = new Collection($connection, 'Foo');
+        $model = $collection->newInstance();
+        $collection->remove($model, ['observer' => false]);
+
+        $connection = $this->getMock(Connection::class);
+        $connection->expects($this->once())->method('remove');
+        $collection = new Collection($connection, 'Foo');
+        $collection->remove();
+
+        $connection = $this->getMock(Connection::class);
+        $connection->expects($this->once())->method('remove');
+        $collection = new Collection($connection, 'Foo');
+        $cursor = $collection->find(['foo' => 'bar']);
+        $collection->remove($cursor);
+    }
+
+    public function testDelegateCursorMethods()
+    {
+        $connection = $this->getMock(Connection::class);
+        $connection->expects($this->once())->method('distinct');
+        $connection->expects($this->once())->method('fetch');
+        $connection->expects($this->once())->method('size');
+        $connection->expects($this->once())->method('read');
+        $collection = new Collection($connection, 'Foo');
+
+        $cursor = new Cursor($collection);
+
+        $collection->distinct($cursor);
+        $collection->fetch($cursor);
+        $collection->size($cursor);
+        $collection->read($cursor);
     }
 }

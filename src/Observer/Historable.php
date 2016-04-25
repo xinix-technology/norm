@@ -12,8 +12,8 @@ class Historable
     {
         $context['collection']->getSchema()
             ->addField([ NList::class, [
-                'options' => [
-                    'name' => '$history',
+                'name' => '$history',
+                'attributes' => [
                     'transient' => true,
                 ],
             ]])
@@ -42,52 +42,46 @@ class Historable
             $delta = [];
 
             foreach ($newValues as $key => $value) {
-                if ($key[0] === '$') {
-                    continue;
-                }
+                if ('$' !== substr($key, 0, 1)) {
+                    $old = null;
+                    if (isset($oldValues[$key])) {
+                        $old = $oldValues[$key];
+                    }
 
-                $old = null;
-                if (isset($oldValues[$key])) {
-                    $old = $oldValues[$key];
-                }
+                    // if ($value instanceof UtilCollection && $value->compare($old) == 0) {
+                    //     continue;
+                    // } elseif ($old instanceof UtilCollection && $old->compare($value) == 0) {
+                    //     continue;
+                    // } else
+                    if ($value != $old) {
+                        $delta[$key] = [
+                            'old' => $old,
+                            'new' => $value,
+                        ];
+                    }
 
-                // if ($value instanceof UtilCollection && $value->compare($old) == 0) {
-                //     continue;
-                // } elseif ($old instanceof UtilCollection && $old->compare($value) == 0) {
-                //     continue;
-                // } else
-                if ($value == $old) {
-                    continue;
                 }
-
-                $delta[$key] = [
-                    'old' => $old,
-                    'new' => $value,
-                ];
             }
             foreach ($oldValues as $key => $value) {
-                if ($key[0] === '$') {
-                    continue;
-                }
+                if ('$' !== substr($key, 0, 1)) {
+                    $new = null;
+                    if (isset($newValues[$key])) {
+                        $new = $newValues[$key];
+                    }
 
-                $new = null;
-                if (isset($newValues[$key])) {
-                    $new = $newValues[$key];
-                }
+                    // if ($value instanceof   UtilCollection && $value->compare($new) == 0) {
+                    //     continue;
+                    // } elseif ($new instanceof   UtilCollection && $new->compare($value) == 0) {
+                    //     continue;
+                    // } else
+                    if ($value != $new) {
+                        $delta[$key] = [
+                            'old' => $value,
+                            'new' => $new,
+                        ];
+                    }
 
-                // if ($value instanceof   UtilCollection && $value->compare($new) == 0) {
-                //     continue;
-                // } elseif ($new instanceof   UtilCollection && $new->compare($value) == 0) {
-                //     continue;
-                // } else
-                if ($value == $new) {
-                    continue;
                 }
-
-                $delta[$key] = [
-                    'old' => $value,
-                    'new' => $new,
-                ];
             }
 
 
@@ -108,7 +102,7 @@ class Historable
     {
         $next($context);
 
-        $histCollection = $context['collection']->factory($context['model']->getName().'History');
+        $histCollection = $context['collection']->factory($context['collection']->getName().'History');
 
         $history = $histCollection->newInstance();
         $history['model_id'] = $context['model']['$id'];
