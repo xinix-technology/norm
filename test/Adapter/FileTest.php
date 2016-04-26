@@ -2,110 +2,91 @@
 namespace Norm\Test\Adapter;
 
 use Norm\Cursor;
-use Norm\Repository;
+use Norm\Collection;
 use Norm\Adapter\File;
+use ROH\Util\File as UtilFile;
 use FilesystemIterator;
+use Norm\Exception\NormException;
 use PHPUnit_Framework_TestCase;
-
-if (!function_exists('rrmdir')) {
-    function rrmdir($dir)
-    {
-        foreach (glob($dir . '/*') as $file) {
-            if (is_dir($file)) {
-                rrmdir($file);
-            } else {
-                unlink($file);
-            }
-        }
-        rmdir($dir);
-    }
-}
 
 class FileTest extends PHPUnit_Framework_TestCase
 {
-    // protected $repository;
+    public function setUp()
+    {
+        UtilFile::rm('tmp-db-files');
+    }
 
-    // public function setUp()
-    // {
-    //     @rrmdir('db-files');
+    public function tearDown()
+    {
+        UtilFile::rm('tmp-db-files');
+    }
 
-    //     $this->repository = new Repository([
-    //         'connections' => [
-    //             [ File::class, [
-    //                 'id' => 'file',
-    //                 'options' => [
-    //                     'dataDir' => 'db-files'
-    //                 ],
+    public function testConstruct()
+    {
+        try {
+            $connection = new File(null, 'foo');
+            $this->fail('Must not here');
+        } catch(NormException $e) {}
 
-    //             ]],
-    //         ],
-    //     ]);
+        $connection = new File(null, 'foo', ['dataDir' => 'tmp-db-files']);
+    }
 
-    //     $model = $this->repository->factory('Foo')->newInstance();
-    //     $model->set(['fname' => 'Jane', 'lname' => 'Doe']);
-    //     $model->save();
-    //     $model = $this->repository->factory('Foo')->newInstance();
-    //     $model->set(['fname' => 'Ganesha', 'lname' => 'M']);
-    //     $model->save();
-    // }
+    public function testPersist()
+    {
+        $connection = new File(null, 'foo', ['dataDir' => 'tmp-db-files']);
+        $collection = $this->getMock(Collection::class, null, [$connection, 'Foo']);
 
-    // public function tearDown() {
-    //     @rrmdir('db-files');
-    // }
+        $result = $connection->persist('foo', ['foo' => 1]);
+        $this->assertEquals($result['foo'], 1);
+        $this->assertTrue(is_readable('tmp-db-files/foo/'. $result['$id'] .'.json'));
 
-    // public function testSearch()
-    // {
-    //     $cursor = $this->repository->factory('Foo')->find();
+        $cursor = new Cursor($collection, ['$id' => $result['$id']]);
+        $connection->remove($cursor);
+        $this->assertFalse(is_readable('tmp-db-files/foo/'. $result['$id'] .'.json'));
+    }
 
-    //     $this->assertInstanceOf(Cursor::class, $cursor);
-    // }
+    public function testSize()
+    {
+        $connection = new File(null, 'foo', ['dataDir' => 'tmp-db-files']);
+        $collection = $this->getMock(Collection::class, null, [$connection, 'Foo']);
 
-    // public function testCreate()
-    // {
-    //     $model = $this->repository->factory('Foo')->newInstance();
-    //     $model->set([
-    //         'fname' => 'John',
-    //         'lname' => 'Doe',
-    //     ]);
-    //     $model->save();
+        $result = $connection->persist('foo', ['foo' => 1]);
+        $result = $connection->persist('foo', ['foo' => 2]);
+        $result = $connection->persist('foo', ['foo' => 3]);
 
-    //     $row = json_decode(file_get_contents('db-files/foo/'.$model['$id'].'.json'), 1);
+        $cursor = new Cursor($collection);
+        $this->assertEquals($connection->size($cursor), 3);
+    }
 
-    //     $this->assertEquals(
-    //         $row['fname'],
-    //         $model['fname']
-    //     );
-    // }
+    public function testFetch()
+    {
+        $connection = new File(null, 'foo', ['dataDir' => 'tmp-db-files']);
+        $collection = $this->getMock(Collection::class, null, [$connection, 'Foo']);
 
-    // public function testRead()
-    // {
-    //     $this->testCreate();
+        $connection->persist('foo', ['foo' => 1]);
+        $connection->persist('foo', ['foo' => 2]);
+        $connection->persist('foo', ['foo' => 3]);
 
-    //     $model = $this->repository->factory('Foo')->findOne(['fname' => 'John']);
-    //     $this->assertEquals('Doe', $model['lname']);
+        $this->assertEquals(count($connection->fetch(new Cursor($collection))), 3);
 
-    //     $fi = new FilesystemIterator('db-files/foo', FilesystemIterator::SKIP_DOTS);
-    //     $this->assertEquals(3, iterator_count($fi));
-    // }
+        UtilFile::rm('tmp-db-files');
 
-    // public function testUpdate()
-    // {
-    //     $model = $this->repository->factory('Foo')->findOne(['fname' => 'Ganesha']);
-    //     $model['fname'] = 'Rob';
-    //     $model->save();
+        $this->assertEquals(count($connection->fetch(new Cursor($collection))), 0);
 
-    //     $row = json_decode(file_get_contents('db-files/foo/'.$model['$id'].'.json'), 1);
+        $connection->persist('foo', ['foo' => 1]);
+        $connection->persist('foo', ['foo' => 2]);
+        $connection->persist('foo', ['foo' => 3]);
 
-    //     $this->assertEquals('Rob', $row['fname']);
-    // }
+        $cursor = new Cursor($collection);
+        $cursor->skip(1)->limit(1);
+        $this->assertEquals(count($connection->fetch($cursor)), 1);
 
-    // public function testDelete()
-    // {
-    //     $model = $this->repository->factory('Foo')->findOne(['fname' => 'Ganesha']);
-    //     $model->remove();
+        $cursor = new Cursor($collection);
+        $cursor->sort(['foo' => 1]);
+        $this->assertEquals($connection->fetch($cursor)[0]['foo'], 3);
 
-    //     $fi = new FilesystemIterator('db-files/foo', FilesystemIterator::SKIP_DOTS);
-
-    //     $this->assertEquals(1, iterator_count($fi));
-    // }
+        $cursor = new Cursor($collection);
+        $cursor->sort(['foo' => -1]);
+        $this->assertEquals($connection->fetch($cursor)[0]['foo'], 1);
+    }
 }

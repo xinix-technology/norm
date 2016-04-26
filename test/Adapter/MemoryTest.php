@@ -28,6 +28,10 @@ class MemoryTest extends PHPUnit_Framework_TestCase
         $cursor->skip(1)->limit(10);
         $this->assertEquals(count($connection->fetch($cursor)), 2);
 
+        $cursor = new Cursor($collection);
+        $cursor->sort(['foo' => 1]);
+        $this->assertEquals($connection->fetch($cursor)[0]['foo'], 3);
+
 
         $this->assertEquals(count(
             $connection->fetch(

@@ -3,20 +3,7 @@ namespace Norm\Test\Resolver;
 
 use PHPUnit_Framework_TestCase;
 use Norm\Resolver\DefaultResolver;
-
-if (!function_exists('rrmdir')) {
-    function rrmdir($dir)
-    {
-        foreach (glob($dir . '/*') as $file) {
-            if (is_dir($file)) {
-                rrmdir($file);
-            } else {
-                unlink($file);
-            }
-        }
-        rmdir($dir);
-    }
-}
+use ROH\Util\File;
 
 class DefaultResolverTest extends PHPUnit_Framework_TestCase
 {
@@ -27,7 +14,7 @@ class DefaultResolverTest extends PHPUnit_Framework_TestCase
 
     public function tearDown()
     {
-        rrmdir('./tmp');
+        File::rm('./tmp');
     }
 
     public function testResolve()

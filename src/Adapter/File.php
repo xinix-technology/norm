@@ -1,20 +1,20 @@
 <?php
 namespace Norm\Adapter;
 
-use InvalidArgumentException;
 use Norm\Cursor;
+use Norm\Exception\NormException;
 use Rhumsaa\Uuid\Uuid;
 
 class File extends Memory
 {
     protected $dataDir;
 
-    public function __construct($id, array $options = [])
+    public function __construct(Repository $repository = null, $id = 'main', array $options = [])
     {
-        parent::__construct($id);
+        parent::__construct($repository, $id);
 
         if (!isset($options['dataDir'])) {
-            throw new InvalidArgumentException(
+            throw new NormException(
                 'File adapter does not have data directory is not available, please check your configuration.'
             );
         }
@@ -32,7 +32,6 @@ class File extends Memory
         $collectionDir = $this->dataDir . DIRECTORY_SEPARATOR . $collectionName . DIRECTORY_SEPARATOR;
 
         if (!is_dir($collectionDir)) {
-            @unlink($collectionDir);
             mkdir($collectionDir, 0755, true);
         }
 
@@ -41,16 +40,18 @@ class File extends Memory
         return $this->unmarshall($row);
     }
 
-    public function remove($collectionName, $rowId)
+    public function remove(Cursor $cursor)
     {
-        $collectionDir = $this->dataDir . DIRECTORY_SEPARATOR . $collectionName . DIRECTORY_SEPARATOR;
+        $collectionDir = $this->dataDir . DIRECTORY_SEPARATOR . $cursor->getCollection()->getId() . DIRECTORY_SEPARATOR;
 
-        @unlink($collectionDir . $rowId . '.json');
+        foreach ($cursor as $row) {
+            @unlink($collectionDir . $row['$id'] . '.json');
+        }
     }
 
     public function distinct(Cursor $cursor)
     {
-        throw new \Exception('Unimplemented yet!');
+        throw new NormException('Unimplemented yet!');
     }
 
     public function fetch(Cursor $cursor)
@@ -72,8 +73,7 @@ class File extends Memory
         $collectionDir = $this->dataDir . DIRECTORY_SEPARATOR . $collectionId . DIRECTORY_SEPARATOR;
 
         if (!is_dir($collectionDir)) {
-            @unlink($collectionDir);
-            mkdir($collectionDir, 0755, true);
+            @mkdir($collectionDir, 0755, true);
             return $context;
         }
 

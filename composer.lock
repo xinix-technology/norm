@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "82ef00ead03d107b98296c6b789dd105",
-    "content-hash": "1c4ef948cdf9ac7651c6aff58ee33ff7",
+    "hash": "7bd1675446c23355343ae20152edada9",
+    "content-hash": "760d020140c098b8336c8f6778cf71c0",
     "packages": [
         {
             "name": "paragonie/random_compat",
@@ -166,16 +166,16 @@
         },
         {
             "name": "reekoheek/util",
-            "version": "1.1.0",
+            "version": "1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reekoheek/php-util.git",
-                "reference": "76d8e88b8f3c84ee8307f0d83022f2de68253300"
+                "reference": "3cc9de68e5f9f350dc0eea08d760f6cff17b3a55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reekoheek/php-util/zipball/76d8e88b8f3c84ee8307f0d83022f2de68253300",
-                "reference": "76d8e88b8f3c84ee8307f0d83022f2de68253300",
+                "url": "https://api.github.com/repos/reekoheek/php-util/zipball/3cc9de68e5f9f350dc0eea08d760f6cff17b3a55",
+                "reference": "3cc9de68e5f9f350dc0eea08d760f6cff17b3a55",
                 "shasum": ""
             },
             "require": {
@@ -200,7 +200,7 @@
                 }
             ],
             "description": "php common utility library",
-            "time": "2016-04-08 10:06:50"
+            "time": "2016-04-25 20:31:13"
         }
     ],
     "packages-dev": [
