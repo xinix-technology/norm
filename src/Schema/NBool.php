@@ -11,7 +11,7 @@ class NBool extends NField
 
     protected function formatInput($value, $model = null)
     {
-        return $this->render('_schema/nbool/input', array(
+        return $this->render('__norm__/nbool/input', array(
             'value' => $value,
             'entry' => $model,
         ));

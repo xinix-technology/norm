@@ -8,7 +8,6 @@ class NObject extends NField
 {
     public function prepare($value)
     {
-
         if (empty($value)) {
             return null;
         } elseif ($value instanceof TypeObject) {

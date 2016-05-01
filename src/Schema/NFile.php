@@ -2,13 +2,29 @@
 
 namespace Norm\Schema;
 
-use Exception;
+use Norm\Exception\NormException;
+use Norm\Schema;
+use Norm\Type\File;
 
-class NFile extends Object
+class NFile extends NField
 {
     public function prepare($value)
     {
-        throw new Exception('Unimplemented please revisit this');
+        if (null === $value) {
+            // return null;
+        } elseif ($value instanceof File) {
+            if ($value->getBaseDirectory() !== $this['dataDir']) {
+                throw new NormException('Incompatible file');
+            }
+            return $value;
+        } elseif (is_string($value)) {
+            return new File($this['dataDir'], $value);
+        // } else {
+        //     throw new NormException('Unimplemented yet');
+        }
+
+        return null;
+
         // $app = App::getInstance();
 
         // if ($app->request->isPost() && !empty($_FILES)) {
@@ -67,14 +83,19 @@ class NFile extends Object
 
     protected function formatReadonly($value, $model = null)
     {
-        return '<span class="field">'.($value['name'] ?: '-').'</span>';
+        return $this->render('__norm__/nfile/readonly', [
+            'self' => $this,
+            'value' => $value,
+            'model' => $model,
+        ]);
     }
 
     protected function formatInput($value, $model = null)
     {
-        return '
-            <input type="hidden" name="'.$this['name'].'">
-            <input type="file" name="'.$this['name'].'">
-        '.@$value['name'];
+        return $this->render('__norm__/nfile/input', [
+            'self' => $this,
+            'value' => $value,
+            'model' => $model,
+        ]);
     }
 }

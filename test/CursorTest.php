@@ -78,14 +78,16 @@ class CursorTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($cursor->key(), 0);
         $cursor->next();
         $this->assertEquals($cursor->key(), 1);
+        $cursor->prev();
+        $this->assertEquals($cursor->key(), 0);
     }
 
     public function testToArray()
     {
         $collection = $this->getMock(Collection::class, [], [null, 'Foo']);
-        $collection->method('read')->will($this->returnCallback(function($x, $id) use ($collection) {
-            if ($id < 10) {
-                return new Model($collection, ['foo' => 'bar'.$id]);
+        $collection->method('read')->will($this->returnCallback(function($cursor) use ($collection) {
+            if ($cursor->key() < 10) {
+                return new Model($collection, ['foo' => 'bar'.$cursor->key()]);
             }
         }));
         $schema = new Schema($collection);
@@ -110,5 +112,15 @@ class CursorTest extends PHPUnit_Framework_TestCase
         $collection->expects($this->once())->method('remove');
         $cursor = new Cursor($collection);
         $cursor->remove();
+    }
+
+    public function testDebugInfo()
+    {
+        $cursor = new Cursor($this->getMock(Collection::class, null, [null, 'Foo']), ['foo' => 'bar']);
+        $cursor->skip(1)->limit(2)->sort(['foo' => Cursor::SORT_ASC]);
+        $this->assertEquals($cursor->__debugInfo()['criteria'], ['foo' => 'bar']);
+        $this->assertEquals($cursor->__debugInfo()['skip'], 1);
+        $this->assertEquals($cursor->__debugInfo()['limit'], 2);
+        $this->assertEquals($cursor->__debugInfo()['sort'], ['foo' => 1]);
     }
 }

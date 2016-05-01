@@ -23,6 +23,13 @@ class ConnectionTest extends PHPUnit_Framework_TestCase
         }
     }
 
+    public function testMarshallKV()
+    {
+        $connection = $this->getMockForAbstractClass(Connection::class);
+
+        $this->assertEquals($connection->marshallKV('$id', 10), ['id', 10]);
+    }
+
     public function testUnmarshallAndMarshall()
     {
         $connection = $this->getMockForAbstractClass(Connection::class, [], '', true, true, true, ['getAttribute']);
@@ -47,11 +54,6 @@ class ConnectionTest extends PHPUnit_Framework_TestCase
         $this->assertFalse(isset($marshalled['$id']));
         $this->assertEquals($marshalled['_hidden'], true);
         $this->assertEquals($marshalled['dt'], $now->format('c'));
-
-        $marshalled = $connection->marshall([
-            '$id' => 10,
-        ], 'key');
-        $this->assertEquals($marshalled['key'], 10);
 
         $unmarshalled = $connection->unmarshall([
             'id' => 10,

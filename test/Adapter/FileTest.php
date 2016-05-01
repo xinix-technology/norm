@@ -54,8 +54,7 @@ class FileTest extends PHPUnit_Framework_TestCase
         $result = $connection->persist('foo', ['foo' => 2]);
         $result = $connection->persist('foo', ['foo' => 3]);
 
-        $cursor = new Cursor($collection);
-        $this->assertEquals($connection->size($cursor), 3);
+        $this->assertEquals($connection->size(new Cursor($collection)), 3);
     }
 
     public function testFetch()
@@ -67,11 +66,11 @@ class FileTest extends PHPUnit_Framework_TestCase
         $connection->persist('foo', ['foo' => 2]);
         $connection->persist('foo', ['foo' => 3]);
 
-        $this->assertEquals(count($connection->fetch(new Cursor($collection))), 3);
+        $this->assertEquals($connection->read(new Cursor($collection))['foo'], 1);
 
         UtilFile::rm('tmp-db-files');
 
-        $this->assertEquals(count($connection->fetch(new Cursor($collection))), 0);
+        $this->assertEquals($connection->read(new Cursor($collection)), null);
 
         $connection->persist('foo', ['foo' => 1]);
         $connection->persist('foo', ['foo' => 2]);
@@ -79,14 +78,29 @@ class FileTest extends PHPUnit_Framework_TestCase
 
         $cursor = new Cursor($collection);
         $cursor->skip(1)->limit(1);
-        $this->assertEquals(count($connection->fetch($cursor)), 1);
+        $this->assertEquals($connection->read($cursor)['foo'], 2);
 
         $cursor = new Cursor($collection);
         $cursor->sort(['foo' => 1]);
-        $this->assertEquals($connection->fetch($cursor)[0]['foo'], 3);
+        $this->assertEquals($connection->read($cursor)['foo'], 3);
 
         $cursor = new Cursor($collection);
         $cursor->sort(['foo' => -1]);
-        $this->assertEquals($connection->fetch($cursor)[0]['foo'], 1);
+        $this->assertEquals($connection->read($cursor)['foo'], 1);
+    }
+
+    public function testDistinct()
+    {
+        $connection = new File(null, 'foo', ['dataDir' => 'tmp-db-files']);
+        $collection = $this->getMock(Collection::class, null, [$connection, 'Foo']);
+
+        $connection->persist('foo', ['foo' => 1]);
+        $connection->persist('foo', ['foo' => 2]);
+        $connection->persist('foo', ['foo' => 2]);
+        $connection->persist('foo', ['foo' => 3]);
+        $connection->persist('foo', ['foo' => 3]);
+        $connection->persist('foo', ['foo' => 3]);
+
+        $this->assertEquals($connection->distinct(new Cursor($collection), 'foo'), [1,2,3]);
     }
 }

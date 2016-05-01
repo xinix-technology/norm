@@ -14,7 +14,6 @@ class NestableTest extends AbstractObserverTest
         $parent['name'] = 'parent';
         $parent->save();
 
-
         $child1 = $collection->newInstance();
         $child1['name'] = 'child1';
         $child1['parent'] = $parent['$id'];

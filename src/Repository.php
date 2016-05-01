@@ -101,6 +101,7 @@ class Repository extends Normable
      * [add description]
      * @param Connection $connection [description]
      */
+    // TODO do we need this?
     public function addConnection(Connection $connection)
     {
         $connection->setRepository($this);
@@ -192,9 +193,6 @@ class Repository extends Normable
         $collectionSignature = $collectionId . '.' . $connection->getId();
         if (!isset($this->collections[$collectionSignature])) {
             $options = Options::create($this->default);
-                // ->merge([
-                //     'name' => $collectionId,
-                // ]);
 
             $found = false;
             foreach ($this->resolvers as $resolver) {

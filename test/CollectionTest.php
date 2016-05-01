@@ -134,15 +134,13 @@ class CollectionTest extends PHPUnit_Framework_TestCase
     {
         $connection = $this->getMock(Connection::class);
         $connection->expects($this->once())->method('distinct');
-        $connection->expects($this->once())->method('fetch');
         $connection->expects($this->once())->method('size');
         $connection->expects($this->once())->method('read');
         $collection = new Collection($connection, 'Foo');
 
         $cursor = new Cursor($collection);
 
-        $collection->distinct($cursor);
-        $collection->fetch($cursor);
+        $collection->distinct($cursor, 'foo');
         $collection->size($cursor);
         $collection->read($cursor);
     }

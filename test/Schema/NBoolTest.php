@@ -30,7 +30,7 @@ class NBoolTest extends PHPUnit_Framework_TestCase
         }));
         $field = new NBool($schema, 'foo');
         $result = $field->format('input');
-        $this->assertEquals($result, '_schema/nbool/input');
+        $this->assertEquals($result, '__norm__/nbool/input');
     }
 
     public function testFormatPlain()

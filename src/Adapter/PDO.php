@@ -2,20 +2,23 @@
 namespace Norm\Adapter;
 
 use Exception;
-use InvalidArgumentException;
+use Norm\Exception\NormException;
 use PDO as ThePDO;
 use Norm\Cursor;
+use Norm\Collection;
 use Norm\Connection;
 use Norm\Dialect\MySql;
 use Norm\Dialect\Sqlite;
-use ROH\Util\Collection;
+use ROH\Util\Collection as UtilCollection;
 
 class PDO extends Connection
 {
-    protected $DIALECT_MAP = [
-        'mysql' => MySql::class,
+    const DIALECTS = [
+        'mysql' => Mysql::class,
         'sqlite' => Sqlite::class,
     ];
+
+    protected $context;
 
     protected $prefix;
 
@@ -29,55 +32,51 @@ class PDO extends Connection
 
     protected $pdoOptions;
 
-    public function __construct($id, array $options = [])
+    public function __construct(Repository $repository = null, $id = 'main', array $options = [])
     {
-        parent::__construct($id);
+        parent::__construct($repository, $id);
 
         if (!isset($options['dsn'])) {
-            throw new InvalidArgumentException('DSN is required');
+            throw new NormException('DSN is required');
         }
 
         $this->dsn = $options['dsn'];
         $this->prefix = parse_url($this->dsn, PHP_URL_SCHEME);
 
-        $Dialect = $this->DIALECT_MAP[$this->prefix];
+        $Dialect = static::DIALECTS[$this->prefix];
         $this->dialect = new $Dialect($this);
 
         $this->pdoOptions = [
             ThePDO::ATTR_ERRMODE => ThePDO::ERRMODE_EXCEPTION,
             ThePDO::ATTR_EMULATE_PREPARES => false,
+            ThePDO::ATTR_DEFAULT_FETCH_MODE => ThePDO::FETCH_ASSOC,
         ];
     }
 
-    public function getRaw()
+    public function getContext()
     {
-        if (is_null($this->raw)) {
-            $this->raw = new ThePDO($this->dsn, $this->user, $this->password, $this->pdoOptions);
+        if (is_null($this->context)) {
+            $this->context = new ThePDO($this->dsn, $this->user, $this->password, $this->pdoOptions);
         }
 
-        return $this->raw;
+        return $this->context;
     }
 
-    public function persist($collectionName, array $row)
+    public function persist($collectionId, array $row)
     {
         $marshalledRow = $this->marshall($row);
 
         if (isset($row['$id'])) {
-            $sql = $this->dialect->grammarUpdate($collectionName, $marshalledRow, ['id' => $row['$id']]);
+            $sql = $this->dialect->grammarUpdate($collectionId, $marshalledRow, ['id' => $row['$id']]);
             $marshalledRow['id'] = $row['$id'];
 
             $this->execute($sql, $marshalledRow);
         } else {
-            $sql = $this->dialect->grammarInsert($collectionName, $marshalledRow);
+            $sql = $this->dialect->grammarInsert($collectionId, $marshalledRow);
 
-            $succeed = $this->execute($sql, $marshalledRow);
+            $this->execute($sql, $marshalledRow);
 
-            if ($succeed) {
-                $id = $this->getRaw()->lastInsertId();
-            } else {
-                throw new Exception('PDO Insert error.');
-            }
-
+            $id = $this->getContext()->lastInsertId();
             if (!is_null($id)) {
                 $marshalledRow['id'] = $id;
             }
@@ -86,60 +85,86 @@ class PDO extends Connection
         return $this->unmarshall($marshalledRow);
     }
 
-    public function remove($collectionName, $rowId)
+    public function remove(Cursor $cursor)
     {
-        $sql = $this->dialect->grammarDelete($collectionName, $rowId);
-        return $this->execute($sql, ['id' => $rowId]);
+        $sql = $this->dialect->grammarDelete($cursor->getCollection()->getId(), $cursor->getCriteria());
+        return $this->execute($sql, $cursor->getCriteria());
     }
 
-    public function distinct(Cursor $cursor)
+    public function distinct(Cursor $cursor, $key)
     {
-        throw new Exception('Unimplemented yet!');
+        $sql = $this->dialect->grammarDistinct($cursor->getCollection()->getId(), 'foo');
+        $statement = $this->query($sql, $cursor->getCriteria());
+        $result = [];
+        foreach ($statement as $row) {
+            $result[] = $row[$key];
+        }
+        return $result;
     }
 
-    public function fetch(Cursor $cursor)
+    protected function fetch(Cursor $cursor)
     {
-        $sql = $this->dialect->grammarSelect($cursor->getCollection()->getId());
-        $statement = $this->getRaw()->prepare($sql);
-        $statement->execute();
-        return new Collection([
-            'statement' => $statement,
-            'position' => 0,
-            'cache' => new Collection(),
-        ]);
+        if (null === $cursor->getContext()) {
+            $sql = $this->dialect->grammarSelect($cursor->getCollection()->getId());
+            $statement = $this->getContext()->prepare($sql);
+            $statement->execute();
+
+            $cursor->setContext(new UtilCollection([
+                'statement' => $statement,
+                'current' => 0,
+                'cache' => new UtilCollection(),
+            ]));
+        }
     }
 
     public function size(Cursor $cursor, $withLimitSkip = false)
     {
-        throw new Exception('Unimplemented yet!');
+        $sql = $this->dialect->grammarCount(
+            $cursor->getCollection()->getId(),
+            $cursor->getCriteria(),
+            $cursor->getSort(),
+            $cursor->getSkip(),
+            $cursor->getLimit()
+        );
+        $result = $this->query($sql, $cursor->getCriteria());
+        return (int) $result->fetch()['count'];
     }
 
-    public function read($context, $position = 0)
+    public function read(Cursor $cursor)
     {
-        if ($position >= $context['position']) {
-            for ($i = $context['position']; $i <= $position; $i++) {
-                if (!isset($context['cache'][$i])) {
-                    $row = $context['statement']->fetch(ThePDO::FETCH_ASSOC);
-                    if ($row) {
-                        $context['cache'][$i] = $row;
-                        $context['position'] = $i;
-                    }
-                } else {
-                    $row = $context['cache'][$i];
-                }
+        $this->fetch($cursor);
 
-                if ($i === $position) {
-                    return $row ? $this->unmarshall($row) : null;
+        $expectedPosition = $cursor->key();
+        $cursorContext = $cursor->getContext();
+        $currentPosition = $cursorContext['current'];
+        $cache = $cursorContext['cache'];
+        $statement = $cursorContext['statement'];
+
+        if ($expectedPosition >= $currentPosition) {
+            $row = null;
+            for ($i = $currentPosition; $i <= $expectedPosition; $i++) {
+                if (!isset($cache[$i]) && ($fetched = $statement->fetch())) {
+                    $cache[$i] = $this->unmarshall($fetched);
+                    $cursorContext['current'] = $i;
                 }
             }
-        } else {
-            throw new Exception('Unimplemented yet!');
         }
+
+        return isset($cache[$expectedPosition]) ? $cache[$expectedPosition] : null;
+    }
+
+    protected function query($sql, array $data = [])
+    {
+        $statement = $this->getContext()->prepare($sql);
+
+        $statement->execute($data);
+
+        return $statement;
     }
 
     protected function execute($sql, array $data = [])
     {
-        $statement = $this->getRaw()->prepare($sql);
+        $statement = $this->getContext()->prepare($sql);
 
         return $statement->execute($data);
     }

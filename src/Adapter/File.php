@@ -2,6 +2,7 @@
 namespace Norm\Adapter;
 
 use Norm\Cursor;
+use Norm\Collection;
 use Norm\Exception\NormException;
 use Rhumsaa\Uuid\Uuid;
 
@@ -22,14 +23,14 @@ class File extends Memory
         $this->dataDir = $options['dataDir'];
     }
 
-    public function persist($collectionName, array $row)
+    public function persist($collectionId, array $row)
     {
         $id = isset($row['$id']) ? $row['$id'] : Uuid::uuid1()->__toString();
 
         $row = $this->marshall($row);
         $row['id'] = $id;
 
-        $collectionDir = $this->dataDir . DIRECTORY_SEPARATOR . $collectionName . DIRECTORY_SEPARATOR;
+        $collectionDir = $this->dataDir . DIRECTORY_SEPARATOR . $collectionId . DIRECTORY_SEPARATOR;
 
         if (!is_dir($collectionDir)) {
             mkdir($collectionDir, 0755, true);
@@ -49,85 +50,104 @@ class File extends Memory
         }
     }
 
-    public function distinct(Cursor $cursor)
+    public function distinct(Cursor $cursor, $key)
     {
-        throw new NormException('Unimplemented yet!');
+        $this->fetch($cursor);
+
+        $result = [];
+        foreach ($cursor->getContext() as $row) {
+            $v = $row[$key];
+            if (!in_array($v, $result)) {
+                $result[] = $v;
+            }
+        }
+        return $result;
     }
 
-    public function fetch(Cursor $cursor)
+    protected function fetch(Cursor $cursor)
     {
-        $context = [];
+        if (null === $cursor->getContext()) {
+            $cursorContext = [];
 
+            $query = [
+                'criteria' => $this->marshallCriteria($cursor->getCriteria()),
+                'limit' => $cursor->getLimit(),
+                'skip' => $cursor->getSkip(),
+                'sort' => $cursor->getSort(),
+            ];
 
-        $criteria = $this->marshall($cursor->getCriteria(), 'id');
+            $collectionId = $cursor->getCollection()->getId();
 
-        $query = [
-            'criteria' => $criteria,
-            'limit' => $cursor->getLimit(),
-            'skip' => $cursor->getSkip(),
-            'sort' => $cursor->getSort(),
-        ];
+            $collectionDir = $this->dataDir . DIRECTORY_SEPARATOR . $collectionId . DIRECTORY_SEPARATOR;
 
-        $collectionId = $cursor->getCollection()->getId();
+            if (!is_dir($collectionDir)) {
+                @mkdir($collectionDir, 0755, true);
+            } elseif ($dh = opendir($collectionDir)) {
+                $i = 0;
+                $skip = 0;
 
-        $collectionDir = $this->dataDir . DIRECTORY_SEPARATOR . $collectionId . DIRECTORY_SEPARATOR;
+                while (($file = readdir($dh)) !== false) {
+                    $filename = $collectionDir . $file;
+                    if (is_file($filename)) {
+                        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+                        if (strtolower($ext) === 'json') {
+                            $row = file_get_contents($filename);
+                            $row = json_decode($row, true);
 
-        if (!is_dir($collectionDir)) {
-            @mkdir($collectionDir, 0755, true);
-            return $context;
-        }
+                            if ($this->criteriaMatch($row, $query['criteria'])) {
+                                if (isset($query['skip']) && $query['skip'] > $skip) {
+                                    $skip++;
+                                    continue;
+                                }
 
-        if ($dh = opendir($collectionDir)) {
-            $i = 0;
-            $skip = 0;
+                                $cursorContext[] = $row;
 
-            while (($file = readdir($dh)) !== false) {
-                $filename = $collectionDir . $file;
-                if (is_file($filename)) {
-                    $ext = pathinfo($filename, PATHINFO_EXTENSION);
-                    if (strtolower($ext) === 'json') {
-                        $row = file_get_contents($filename);
-                        $row = json_decode($row, true);
-
-                        if ($this->criteriaMatch($row, $query['criteria'])) {
-                            if (isset($query['skip']) && $query['skip'] > $skip) {
-                                $skip++;
-                                continue;
-                            }
-
-                            $context[] = $row;
-
-                            $i++;
-                            if (isset($query['limit']) && $query['limit'] == $i) {
-                                break;
+                                $i++;
+                                if (isset($query['limit']) && $query['limit'] == $i) {
+                                    break;
+                                }
                             }
                         }
                     }
                 }
+                closedir($dh);
             }
-            closedir($dh);
-        }
 
-        $sortValues = $query['sort'];
-        if (empty($sortValues)) {
-            return $context;
-        }
-
-        usort($context, function ($a, $b) use ($sortValues) {
-            $context = 0;
-            foreach ($sortValues as $sortKey => $sortVal) {
-                $context = strcmp($a[$sortKey], $b[$sortKey]) * $sortVal * -1;
-                if ($context !== 0) {
-                    break;
-                }
+            $sortValues = $query['sort'];
+            if (!empty($sortValues)) {
+                usort($cursorContext, function ($a, $b) use ($sortValues) {
+                    $value = 0;
+                    foreach ($sortValues as $sortKey => $sortVal) {
+                        $value = strcmp($a[$sortKey], $b[$sortKey]) * $sortVal * -1;
+                        if ($value !== 0) {
+                            break;
+                        }
+                    }
+                    return $value;
+                });
             }
-            return $context;
-        });
-        return $context;
+
+            $cursor->setContext($cursorContext);
+            return $cursorContext;
+        }
     }
 
     public function size(Cursor $cursor, $withLimitSkip = false)
     {
+        $this->fetch($cursor);
         return count($cursor->getContext());
     }
+
+    // public function marshallCriteria(array $criteria, $deep = false)
+    // {
+    //     var_dump(parent::marshallCriteria($criteria, $deep));
+    //     exit;
+    //     // $newCriteria = [];
+    //     // foreach ($criteria as $key => $value) {
+    //     //     var_dump($key);
+    //     //     exit;
+    //     //     // $newCriteria
+    //     // }
+    //     // return $newCriteria;
+    // }
 }

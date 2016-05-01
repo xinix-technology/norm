@@ -9,50 +9,49 @@ use Norm\Cursor;
 use ROH\Util\Options;
 use ROH\Util\Collection as UtilCollection;
 use Norm\Exception\NormException;
-use Norm\Type\DateTime as NormDateTime;
+// use Norm\Type\DateTime as NormDateTime;
+use DateTime;
 
 class Mongo extends Connection
 {
+    protected $context;
+
     protected $client;
 
-    public function __construct($id, array $options = [])
-    {
-        parent::__construct($id);
+    protected $connectionString;
 
-        $options = Options::create([
-            'hostname' => MongoClient::DEFAULT_HOST,
-            'port' => MongoClient::DEFAULT_PORT,
-        ])->merge($options);
+    protected $database;
+
+    public function __construct(Repository $repository = null, $id = 'main', array $options = [])
+    {
+        $prefix = '';
+        if (isset($options['username'])) {
+            $prefix = $options['username'].':'.$options['password'].'@';
+        }
+        $hostname = isset($options['hostname']) ? $options['hostname'] : MongoClient::DEFAULT_HOST;
+        $port = isset($options['port']) ? $options['port'] : MongoClient::DEFAULT_PORT;
 
         if (!isset($options['database'])) {
-            throw new InvalidArgumentException('Missing database name for Mongo connection, '.
-                'please check your configuration');
+            throw new NormException('Unspecified database name');
         }
 
-        parent::__construct($options);
+        $this->connectionString = "mongodb://$prefix$hostname:$port";
+        $this->database = $options['database'];
+
+        parent::__construct($repository, $id);
     }
 
-    public function getRaw()
+    public function getContext()
     {
-        if (is_null($this->raw)) {
-            $prefix = '';
-            if (isset($this->options['username'])) {
-                $prefix = $this->options['username'].':'.$this->options['password'].'@';
-            }
-            $hostname = $this->options['hostname'];
-            $port = $this->options['port'];
-            $database = $this->options['database'];
-
-            $connectionStr = "mongodb://$prefix$hostname:$port/$database";
-
-            $this->client = new MongoClient($connectionStr);
-            $this->raw = $this->client->$database;
+        if (is_null($this->context)) {
+            $this->client = new MongoClient($this->connectionString);
+            $this->context = $this->client->{$this->database};
         }
 
-        return $this->raw;
+        return $this->context;
     }
 
-    public function persist($collectionName, array $row)
+    public function persist($collectionId, array $row)
     {
         $marshalledRow = $this->marshall($row);
 
@@ -61,72 +60,86 @@ class Mongo extends Connection
                 '_id' => new MongoId($row['$id']),
             ];
 
-            $marshalledRow = $this->getRaw()->$collectionName->findAndModify(
+            $marshalledRow = $this->getContext()->$collectionId->findAndModify(
                 $criteria,
                 ['$set' => $marshalledRow],
                 null,
                 ['new' => true]
             );
         } else {
-            $retval = $this->getRaw()->$collectionName->insert($marshalledRow);
+            $retval = $this->getContext()->$collectionId->insert($marshalledRow);
 
-            if (!$retval['ok']) {
-                throw new NormException($retval['errmsg']);
-            }
+            // do we need this?
+            // if (!$retval['ok']) {
+            //     throw new NormException($retval['errmsg']);
+            // }
         }
 
         return $this->unmarshall($marshalledRow);
     }
 
-    public function remove($collectionName, $rowId)
+    public function remove(Cursor $cursor)
     {
-        $result = $this->getRaw()->$collectionName->remove(['_id' => new MongoId($rowId)]);
+        $result = $this->getContext()->{$cursor->getCollection()->getId()}
+            ->remove($this->marshallCriteria($cursor->getCriteria()));
 
-        if ((int) $result['ok'] !== 1) {
-            throw new NormException($result['errmsg']);
-        }
+        // do we need this?
+        // if ((int) $result['ok'] !== 1) {
+        //     throw new NormException($result['errmsg']);
+        // }
     }
 
-    public function distinct(Cursor $cursor)
+    public function distinct(Cursor $cursor, $key)
     {
-        throw new \Exception('Unimplemented yet!');
+        $this->fetch($cursor);
+        return $this->getContext()->{$cursor->getCollection()->getId()}->distinct($key);
     }
 
-    public function fetch(Cursor $cursor)
+    protected function fetch(Cursor $cursor)
     {
-        $rawCollection = $this->getRaw()->{$cursor->getCollection()->getId()};
+        if (null === $cursor->getContext()) {
+            $rawCollection = $this->getContext()->{$cursor->getCollection()->getId()};
 
-        $criteria = $cursor->getCriteria();
-        $rawCursor = empty($criteria) ?
-            $rawCollection->find() :
-            $rawCollection->find($this->translateCriteria($criteria));
+            $criteria = $this->marshallCriteria($cursor->getCriteria());
+            $rawCursor = empty($criteria) ?
+                $rawCollection->find() :
+                $rawCollection->find($criteria);
 
-        $sort = $cursor->getSort();
-        if (isset($sort)) {
-            $rawCursor->sort($sort);
+            $sort = $cursor->getSort();
+            if (!empty($sort)) {
+                $rawCursor->sort($sort);
+            }
+
+            $skip = $cursor->getSkip();
+            if ($skip >= 0) {
+                $rawCursor->skip($skip);
+            }
+
+            $limit = $cursor->getLimit();
+            if ($limit  >= 0) {
+                $rawCursor->limit($limit);
+            }
+
+            $cursor->setContext($rawCursor);
         }
 
-        $skip = $cursor->getSkip();
-        if (isset($skip)) {
-            $rawCursor->skip($skip);
-        }
-
-        $limit = $cursor->getLimit();
-        if (isset($limit)) {
-            $rawCursor->limit($limit);
-        }
-
-        return $rawCursor;
+        return $cursor->getContext();
     }
 
     public function size(Cursor $cursor, $withLimitSkip = false)
     {
-        throw new \Exception('Unimplemented yet!');
+        $this->fetch($cursor);
+        $context = $cursor->getContext();
+        return $context->count($withLimitSkip);
     }
 
-    public function read($context, $position = 0)
+    public function read(Cursor $cursor)
     {
+        $this->fetch($cursor);
+        $position = $cursor->key();
+        $context = $cursor->getContext();
         $ctxInfo = $context->info();
+
         if (!$ctxInfo['started_iterating']) {
             $context->next();
         } else {
@@ -135,8 +148,8 @@ class Mongo extends Connection
                 for ($i = 0; $i < $offset; $i++) {
                     $context->next();
                 }
-            } elseif ($position < $ctxInfo['at']) {
-                throw new \Exception('Unimplemented backward');
+            // } elseif ($position < $ctxInfo['at']) {
+            //     throw new NormException('Unimplemented backward');
             }
         }
 
@@ -144,45 +157,36 @@ class Mongo extends Connection
         return is_null($found) ? null : $this->unmarshall($found);
     }
 
-    public function unmarshall($object)
+    public function unmarshallKV($key, $value)
     {
-        if (isset($object['_id'])) {
-            $object['$id'] = (string) $object['_id'];
-            unset($object['_id']);
+        if ('_id' === $key) {
+            return ['$id', (string) $value];
         }
 
-        foreach ($object as $key => &$value) {
-            if ($value instanceof MongoDate) {
-                $value = new DateTime('@'.$value->sec);
-            } elseif ($value instanceof MongoId) {
-                $value = (string) $value;
-            }
-
-            if ($key[0] === '_') {
-                unset($object[$key]);
-                $key[0] = '$';
-                $object[$key] = $value;
-            }
+        if ($value instanceof MongoDate) {
+            $value = new DateTime('@'.$value->sec);
+        } elseif ($value instanceof MongoId) {
+            $value = (string) $value;
         }
 
-        return $object;
+        return parent::unmarshallKV($key, $value);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function marshall($object)
+    public function marshallKV($key, $value)
     {
-        if ($object instanceof NormDateTime) {
-            return new MongoDate($object->getTimestamp());
-        } elseif ($object instanceof UtilCollection) {
-            return $object->toArray();
-        } else {
-            return parent::marshall($object);
+        if ($value instanceof DateTime) {
+            $value = new MongoDate($value->getTimestamp());
+        } elseif ($value instanceof UtilCollection) {
+            $value = $value->toArray();
         }
+
+        return parent::marshallKV($key, $value);
     }
 
-    protected function translateCriteria($criteria)
+    public function marshallCriteria(array $criteria)
     {
         return $criteria;
     }

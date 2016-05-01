@@ -8,7 +8,7 @@ $uniqid = uniqid('ref-array-');
   <div class="container">
     <?php if (!empty($value)): ?>
     <?php foreach ($value as $k => $v): ?>
-      <?php echo $self->render('_schema/reference/input', [
+      <?php echo $self->render('__norm__/nreference/input', [
             'name' => $self['name'].'[]',
             'value' => $v,
             // 'entry' => '',
@@ -16,7 +16,7 @@ $uniqid = uniqid('ref-array-');
     <?php endforeach ?>
     <?php endif ?>
 
-    <?php echo $self->render('_schema/reference/input', [
+    <?php echo $self->render('__norm__/nreference/input', [
             'name' => $self['name'].'[]',
             'value' => '',
             // 'entry' => '',

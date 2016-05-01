@@ -64,12 +64,6 @@ class Collection extends Normable
     protected $filter;
 
     /**
-     * [$primaryKey description]
-     * @var string
-     */
-    protected $primaryKey = 'id';
-
-    /**
      * [$modelClass description]
      * @var string
      */
@@ -165,7 +159,7 @@ class Collection extends Normable
     /**
      * Attach document to Norm system as model.
      *
-     * @param array document Raw document data
+     * @param array Raw document data
      *
      * @return Norm\Model Attached model
      */
@@ -195,12 +189,11 @@ class Collection extends Normable
      */
     public function find($criteria = [])
     {
-        if (!is_null($criteria) && !is_array($criteria)) {
+        if (null !== $criteria && !is_array($criteria)) {
             $criteria = [
                 '$id' => $criteria,
             ];
         }
-
 
         // wrap criteria as object instance to make sure it can be override by hooks
         $context = new UtilCollection([
@@ -382,25 +375,25 @@ class Collection extends Normable
         // $this->apply('initialize', $context);
     }
 
-    public function distinct(Cursor $cursor)
+    public function distinct(Cursor $cursor, $key)
     {
-        return $this->parent->distinct($cursor);
+        return $this->parent->distinct($cursor, $key);
     }
 
-    public function fetch(Cursor $cursor)
-    {
-        return $this->parent->fetch($cursor);
-    }
+    // public function fetch(Cursor $cursor)
+    // {
+    //     return $this->parent->fetch($cursor);
+    // }
 
     public function size(Cursor $cursor, $withLimitSkip = false)
     {
         return $this->parent->size($cursor, $withLimitSkip);
     }
 
-    public function read($context, $position = 0)
+    public function read(Cursor $cursor)
     {
-        $row = $this->parent->read($context, $position);
-        return is_null($row) ? $row : $this->attach($row);
+        $row = $this->parent->read($cursor);
+        return null === $row ? $row : $this->attach($row);
     }
 
     public function __debugInfo()

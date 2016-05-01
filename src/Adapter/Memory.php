@@ -3,33 +3,34 @@ namespace Norm\Adapter;
 
 use Norm\Cursor;
 use Norm\Connection;
+use Norm\Collection;
 use Norm\Exception\NormException;
 use Rhumsaa\Uuid\Uuid;
 
 class Memory extends Connection
 {
     /**
-     * [$raw description]
+     * [$context description]
      * @var array
      */
-    protected $raw = [];
+    protected $context = [];
 
-    public function getRaw()
+    public function getContext()
     {
-        return $this->raw;
+        return $this->context;
     }
 
-    public function persist($collectionName, array $row)
+    public function persist($collectionId, array $row)
     {
-        $this->raw[$collectionName] = isset($this->raw[$collectionName]) ?
-            $this->raw[$collectionName] : [];
+        $this->context[$collectionId] = isset($this->context[$collectionId]) ?
+            $this->context[$collectionId] : [];
 
         $id = isset($row['$id']) ? $row['$id'] : Uuid::uuid1()->__toString();
 
         $row = $this->marshall($row);
         $row['id'] = $id;
 
-        $this->raw[$collectionName][$id] = $row;
+        $this->context[$collectionId][$id] = $row;
 
         return $this->unmarshall($row);
     }
@@ -39,77 +40,86 @@ class Memory extends Connection
         $collectionId = $cursor->getCollection()->getId();
         if (empty($cursor->getCriteria()) && $cursor->getSkip() === 0 && $cursor->getLimit() === -1) {
             // all
-            $this->raw[$collectionId] = [];
+            $this->context[$collectionId] = [];
         } else {
             // partial
-            $this->raw[$collectionId] = isset($this->raw[$collectionId]) ?
-                $this->raw[$collectionId] : [];
+            $this->context[$collectionId] = isset($this->context[$collectionId]) ?
+                $this->context[$collectionId] : [];
 
             foreach ($cursor as $row) {
-                if (isset($this->raw[$collectionId][$row['$id']])) {
-                    unset($this->raw[$collectionId][$row['$id']]);
+                if (isset($this->context[$collectionId][$row['$id']])) {
+                    unset($this->context[$collectionId][$row['$id']]);
                 }
             }
         }
     }
 
-    public function distinct(Cursor $cursor)
+    public function distinct(Cursor $cursor, $key)
     {
-        throw new NormException('Unimplemented yet!');
+        $context = $this->fetch($cursor);
+
+        $result = [];
+        foreach ($context as $row) {
+            $v = $row[$key];
+            if (!in_array($v, $result)) {
+                $result[] = $v;
+            }
+        }
+        return $result;
     }
 
-    public function fetch(Cursor $cursor)
+    protected function fetch(Cursor $cursor)
     {
-        $criteria = $this->marshall($cursor->getCriteria(), 'id');
+        if (null === ($cursorContext = $cursor->getContext())) {
+            $query = [
+                'criteria' => $this->marshallCriteria($cursor->getCriteria()),
+                'limit' => $cursor->getLimit(),
+                'skip' => $cursor->getSkip(),
+                'sort' => $this->marshall($cursor->getSort()),
+            ];
 
-        $query = [
-            'criteria' => $criteria,
-            'limit' => $cursor->getLimit(),
-            'skip' => $cursor->getSkip(),
-            'sort' => $cursor->getSort(),
-        ];
+            $collectionId = $cursor->getCollection()->getId();
+            $allContext = isset($this->context[$collectionId]) ? $this->context[$collectionId] : [];
+            $cursorContext = [];
 
-        $collectionId = $cursor->getCollection()->getId();
-        $contextAll = isset($this->raw[$collectionId]) ? $this->raw[$collectionId] : [];
-        $context = [];
+            $i = 0;
+            $skip = 0;
+            foreach ($allContext as $key => $value) {
+                if ($this->criteriaMatch($value, $query['criteria'])) {
+                    if (isset($query['skip']) && $query['skip'] > $skip) {
+                        $skip++;
+                        continue;
+                    }
 
-        $i = 0;
-        $skip = 0;
-        foreach ($contextAll as $key => $value) {
-            if ($this->criteriaMatch($value, $query['criteria'])) {
-                if (isset($query['skip']) && $query['skip'] > $skip) {
-                    $skip++;
-                    continue;
-                }
+                    $cursorContext[] = $value;
 
-                $context[] = $value;
-
-                $i++;
-                if (isset($query['limit']) && $query['limit'] == $i) {
-                    break;
-                }
-            }
-        }
-
-        $sortValues = $query['sort'];
-        if (empty($sortValues)) {
-            return $context;
-        }
-
-        usort($context, function ($a, $b) use ($sortValues) {
-            $context = 0;
-            foreach ($sortValues as $sortKey => $sortVal) {
-                $aKey = isset($a[$sortKey]) ? $a[$sortKey] : null;
-                $bKey = isset($b[$sortKey]) ? $b[$sortKey] : null;
-                $context = strcmp($aKey, $bKey) * $sortVal * -1;
-                if ($context !== 0) {
-                    break;
+                    $i++;
+                    if (isset($query['limit']) && $query['limit'] == $i) {
+                        break;
+                    }
                 }
             }
-            return $context;
-        });
 
-        return $context;
+            $sortValues = $query['sort'];
+            if (!empty($sortValues)) {
+                usort($cursorContext, function ($a, $b) use ($sortValues) {
+                    $value = 0;
+                    foreach ($sortValues as $sortKey => $sortVal) {
+                        $aKey = isset($a[$sortKey]) ? $a[$sortKey] : null;
+                        $bKey = isset($b[$sortKey]) ? $b[$sortKey] : null;
+                        $value = strcmp($aKey, $bKey) * $sortVal * -1;
+                        if ($value !== 0) {
+                            break;
+                        }
+                    }
+                    return $value;
+                });
+            }
+
+            $cursor->setContext($cursorContext);
+        }
+
+        return $cursorContext;
     }
 
     public function size(Cursor $cursor, $withLimitSkip = false)
@@ -122,9 +132,10 @@ class Memory extends Connection
         }
     }
 
-    public function read($context, $position = 0)
+    public function read(Cursor $cursor)
     {
-        return isset($context[$position]) ? $this->unmarshall($context[$position]) : null;
+        $cursorContext = $this->fetch($cursor);
+        return isset($cursorContext[$cursor->key()]) ? $this->unmarshall($cursorContext[$cursor->key()]) : null;
     }
 
     protected function criteriaMatch($value, $criteria)

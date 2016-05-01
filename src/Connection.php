@@ -6,6 +6,7 @@ use Norm\Exception\NormException;
 use Norm\Type\DateTime;
 use Norm\Type\ArrayList;
 use Norm\Cursor;
+use Norm\Collection;
 
 /**
  * Base class for connection instance
@@ -23,6 +24,8 @@ abstract class Connection extends Normable
      * @var string
      */
     protected $id;
+
+    protected $primaryKey = 'id';
 
     /**
      * [__construct description]
@@ -46,19 +49,6 @@ abstract class Connection extends Normable
     }
 
     /**
-     * [multiPersist description]
-     * @param  string $collectionId [description]
-     * @param  array  $rows         [description]
-     * @return [type]               [description]
-     */
-    // public function multiPersist($collectionId, array $rows)
-    // {
-    //     return array_map(function ($row) {
-    //         return $this->persist($collectionId, $row);
-    //     }, $rows);
-    // }
-
-    /**
      * [getId description]
      * @return string [description]
      */
@@ -79,20 +69,27 @@ abstract class Connection extends Normable
      *
      * @return array Friendly norm data
      */
-    public function unmarshall(array $assoc)
+    public function unmarshall(array $object)
     {
         $result = [];
-        foreach ($assoc as $key => $value) {
-            if ($key[0] === '_') {
-                $key[0] = '$';
-                $result[$key] = $value;
-            } elseif ($key === 'id') {
-                $result['$id'] = $assoc['id'];
-            } else {
-                $result[$key] = $value;
+        foreach ($object as $key => $value) {
+            list($k, $v) = $this->unmarshallKV($key, $value);
+            if (null !== $k) {
+                $result[$k] = $v;
             }
         }
         return $result;
+    }
+
+    public function unmarshallKV($key, $value)
+    {
+        if ($this->primaryKey === $key) {
+            return [ '$id', $value ];
+        } elseif ('_' === substr($key, 0, 1)) {
+            $key = '$'.substr($key, 1);
+        }
+
+        return [ $key, $value ];
     }
 
     /**
@@ -106,35 +103,50 @@ abstract class Connection extends Normable
      *
      * @return mixed Friendly data source object
      */
-    public function marshall($object, $primaryKey = null)
+    public function marshall(array $object)
     {
-        if (is_array($object)) {
-            $result = [];
-
-            foreach ($object as $key => $value) {
-                if ('$' === substr($key, 0, 1)) {
-                    if ((null === $primaryKey && '$id' === $key) || '$type' === $key) {
-                        continue;
-                    } elseif ('$id' === $key) {
-                        $result[$primaryKey] = $this->marshall($value);
-                    } else {
-                        $result['_'.substr($key, 1)] = $this->marshall($value);
-                    }
-                } else {
-                    $result[$key] = $this->marshall($value);
-                }
+        $result = [];
+        foreach ($object as $key => $value) {
+            if ('$id' === $key || '$type' === $key) {
+                continue;
             }
+            list($k, $v) = $this->marshallKV($key, $value);
+            $result[$k] = $v;
+        }
+        return $result;
+    }
 
-            return $result;
-        } elseif ($object instanceof DateTime) {
-            return $object->format('c');
-        } elseif ($object instanceof ArrayList) {
-            return json_encode($object->toArray());
-        } elseif (method_exists($object, 'marshall')) {
-            return $object->marshall();
+    public function marshallKV($key, $value)
+    {
+        if ('$id' === $key) {
+            return [ $this->primaryKey, $value ];
+        } elseif ('$' === substr($key, 0, 1)) {
+            $key = '_'.substr($key, 1);
         }
 
-        return $object;
+        if ($value instanceof DateTime) {
+            $value = $value->format('c');
+        } elseif ($value instanceof ArrayList) {
+            $value = json_encode($value->toArray());
+        } elseif (method_exists($value, 'marshall')) {
+            $value = $value->marshall();
+        }
+
+        return [ $key, $value ];
+    }
+
+    /**
+     * [marshallCriteria description]
+     * @param  array  $criteria [description]
+     * @return [type]           [description]
+     */
+    public function marshallCriteria(array $criteria) {
+        $result = [];
+        foreach ($criteria as $key => $value) {
+            list($k, $v) = $this->marshallKV($key, $value);
+            $result[$k] = $v;
+        }
+        return $result;
     }
 
     public function factory($collectionId, $connectionId = '')
@@ -143,11 +155,11 @@ abstract class Connection extends Normable
     }
 
     /**
-     * Getter for raw-type of connection
+     * Getter for context-type of connection
      *
-     * @return mixed Raw-type of connection
+     * @return mixed context-type of connection
      */
-    abstract public function getRaw();
+    abstract public function getContext();
 
     /**
      * Persist specified attributes with current connection
@@ -169,16 +181,17 @@ abstract class Connection extends Normable
     /**
      * [distinct description]
      * @param  Cursor $cursor [description]
+     * @param  [type] $key    [description]
      * @return [type]         [description]
      */
-    abstract public function distinct(Cursor $cursor);
+    abstract public function distinct(Cursor $cursor, $key);
 
     /**
      * [fetch description]
      * @param  Cursor $cursor [description]
      * @return [type]         [description]
      */
-    abstract public function fetch(Cursor $cursor);
+    // abstract public function fetch(Cursor $cursor);
 
     /**
      * [size description]
@@ -190,9 +203,8 @@ abstract class Connection extends Normable
 
     /**
      * [read description]
-     * @param  mixed   $context  [description]
-     * @param  integer $position [description]
+     * @param  Cursor  $cursor   [description]
      * @return [type]            [description]
      */
-    abstract public function read($context, $position = 0);
+    abstract public function read(Cursor $cursor);
 }
