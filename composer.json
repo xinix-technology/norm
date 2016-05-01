@@ -26,15 +26,13 @@
         "ramsey/uuid": "~2.8"
     },
     "require-dev": {
-        "phpunit/phpunit": "*",
+        "phpunit/phpunit": "~4.0",
         "guzzlehttp/guzzle": "~5.0"
     },
     "autoload": {
         "psr-4": {
             "Norm\\Test\\": "test/",
-            "Norm\\": "src/",
-            "ROH\\Util\\": "/Users/jafar/Workspaces/php/lib/php-util/src/ROH/Util/",
-            "JsonKit\\": "/Users/jafar/Workspaces/php/lib/php-jsonkit/src/JsonKit/"
+            "Norm\\": "src/"
         }
     }
 }
