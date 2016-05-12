@@ -5,6 +5,7 @@ use Exception;
 use Norm\Exception\NormException;
 use PDO as ThePDO;
 use Norm\Cursor;
+use Norm\Repository;
 use Norm\Collection;
 use Norm\Connection;
 use Norm\Dialect\MySql;
@@ -32,7 +33,7 @@ class PDO extends Connection
 
     protected $pdoOptions;
 
-    public function __construct(Repository $repository = null, $id = 'main', array $options = [])
+    public function __construct(Repository $repository, $id = 'main', array $options = [])
     {
         parent::__construct($repository, $id);
 
@@ -55,7 +56,7 @@ class PDO extends Connection
 
     public function getContext()
     {
-        if (is_null($this->context)) {
+        if (null === $this->context) {
             $this->context = new ThePDO($this->dsn, $this->user, $this->password, $this->pdoOptions);
         }
 
@@ -77,7 +78,7 @@ class PDO extends Connection
             $this->execute($sql, $marshalledRow);
 
             $id = $this->getContext()->lastInsertId();
-            if (!is_null($id)) {
+            if (null !== $id) {
                 $marshalledRow['id'] = $id;
             }
         }

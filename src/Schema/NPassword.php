@@ -29,14 +29,14 @@ class NPassword extends NField
 
     protected function formatInput($value, $model = null)
     {
-        return $this->render('__norm__/npassword/input', [
+        return $this->repository->render('__norm__/npassword/input', [
             'self' => $this,
         ]);
     }
 
     protected function formatReadonly($value, $model = null)
     {
-        return $this->render('__norm__/npassword/readonly', [
+        return $this->repository->render('__norm__/npassword/readonly', [
             'self' => $this,
         ]);
     }

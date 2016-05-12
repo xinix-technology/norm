@@ -83,7 +83,7 @@ class NFile extends NField
 
     protected function formatReadonly($value, $model = null)
     {
-        return $this->render('__norm__/nfile/readonly', [
+        return $this->repository->render('__norm__/nfile/readonly', [
             'self' => $this,
             'value' => $value,
             'model' => $model,
@@ -92,7 +92,7 @@ class NFile extends NField
 
     protected function formatInput($value, $model = null)
     {
-        return $this->render('__norm__/nfile/input', [
+        return $this->repository->render('__norm__/nfile/input', [
             'self' => $this,
             'value' => $value,
             'model' => $model,

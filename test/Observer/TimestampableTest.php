@@ -3,7 +3,6 @@ namespace Norm\Test\Observer;
 
 use Norm\Observer\Timestampable;
 use Norm\Schema\NDateTime;
-use PHPUnit_Framework_TestCase;
 
 class TimestampableTest extends AbstractObserverTest
 {
@@ -11,16 +10,16 @@ class TimestampableTest extends AbstractObserverTest
     {
         $collection = $this->getCollection(new Timestampable());
 
-        $this->assertInstanceOf(NDateTime::class, $collection->getSchema()->getField('$created_time'));
-        $this->assertInstanceOf(NDateTime::class, $collection->getSchema()->getField('$updated_time'));
+        $this->assertInstanceOf(NDateTime::class, $collection->getField('$created_time'));
+        $this->assertInstanceOf(NDateTime::class, $collection->getField('$updated_time'));
 
         $collection = $this->getCollection(new Timestampable([
             'createdKey' => 'createdAt',
             'updatedKey' => 'modifiedAt',
         ]));
 
-        $this->assertInstanceOf(NDateTime::class, $collection->getSchema()->getField('createdAt'));
-        $this->assertInstanceOf(NDateTime::class, $collection->getSchema()->getField('modifiedAt'));
+        $this->assertInstanceOf(NDateTime::class, $collection->getField('createdAt'));
+        $this->assertInstanceOf(NDateTime::class, $collection->getField('modifiedAt'));
     }
 
     public function testSave()

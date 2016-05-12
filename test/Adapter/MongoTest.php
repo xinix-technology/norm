@@ -5,15 +5,18 @@ namespace Norm\Test\Adapter;
 // use MongoId;
 // use MongoConnectionException;
 use Norm\Cursor;
+use Norm\Connection;
 use Norm\Collection;
 use MongoClient;
 use MongoDB;
 use MongoDate;
 use MongoId;
+use MongoConnectionException;
 use Norm\Adapter\Mongo;
 use PHPUnit_Framework_TestCase;
 use Norm\Exception\NormException;
 use ROH\Util\Collection as UtilCollection;
+use ROH\Util\Injector;
 
 class MongoTest extends PHPUnit_Framework_TestCase
 {
@@ -29,9 +32,12 @@ class MongoTest extends PHPUnit_Framework_TestCase
             $this->markTestSkipped('Mongo server is not available.');
         }
 
-        $this->connection = new Mongo(null, 'main', [
-            'database' => 'norm_mongo_test'
+        $this->injector = new injector();
+        $this->connection = $this->injector->resolve(Mongo::class, [
+            'id' => 'name',
+            'options' => [ 'database' => 'norm_mongo_test' ],
         ]);
+        $this->injector->singleton(Connection::class, $this->connection);
         $context = $this->connection->getContext();
         $context->foo->remove();
         for($i = 0; $i < 3; $i++) {
@@ -45,9 +51,12 @@ class MongoTest extends PHPUnit_Framework_TestCase
         $this->assertInstanceOf(MongoDB::class, $context);
 
         try {
-            $this->connection = new Mongo(null, 'main', [
-                'username' => 'foo',
-                'password' => 'foo',
+            $this->connection = $this->injector->resolve(Mongo::class, [
+                'id' => 'main',
+                'options' => [
+                    'username' => 'foo',
+                    'password' => 'foo',
+                ]
             ]);
             $this->fail('Must not here');
         } catch (NormException $e) {
@@ -122,7 +131,7 @@ class MongoTest extends PHPUnit_Framework_TestCase
     {
         $t = new \DateTime();
         $c = new UtilCollection(['foo' => 'bar']);
-        $cursor = new Cursor($this->getMock(Collection::class, null, [null, 'Foo']), ['foo' => 101]);
+        $cursor = new Cursor($this->injector->resolve(Collection::class, ['name' => 'Foo']), ['criteria' => ['foo' => 101]]);
         $result = $this->connection->marshall([
             't' => $t,
             'c' => $c,
@@ -133,7 +142,7 @@ class MongoTest extends PHPUnit_Framework_TestCase
 
     public function testUnmarshall()
     {
-        $cursor = new Cursor($this->getMock(Collection::class, null, [null, 'Foo']), ['foo' => 101]);
+        $cursor = new Cursor($this->injector->resolve(Collection::class, ['name' => 'Foo']), ['criteria' => ['foo' => 101]]);
         $t = time();
         $id = new MongoId();
         $result = $this->connection->unmarshall([

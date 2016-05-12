@@ -9,16 +9,15 @@ use Norm\Adapter\Memory;
 
 abstract class AbstractObserverTest extends PHPUnit_Framework_TestCase
 {
-    public function __construct()
-    {
-        date_default_timezone_set('UTC');
-    }
+    // public function __construct()
+    // {
+    //     date_default_timezone_set('UTC');
+    // }
 
     public function getCollection($observer)
     {
         $repository = new Repository();
         $connection = new Memory($repository);
-        $repository->addConnection($connection);
         $collection = new Collection($connection, 'Foo');
         $collection->observe($observer);
         return $collection;

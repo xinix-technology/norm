@@ -10,11 +10,7 @@ class NDateTime extends NField
 {
     protected function getTimeZone()
     {
-        if (null !== $this->parent && null !== $this->parent->getAttribute('timezone')) {
-            return $this->parent->getAttribute('timezone');
-        } else {
-            return date_default_timezone_get();
-        }
+        return $this->repository->getAttribute('timezone') ?: date_default_timezone_get();
     }
 
     public function prepare($value)
@@ -44,7 +40,7 @@ class NDateTime extends NField
     protected function formatInput($value, $model = null)
     {
 
-        return $this->render('__norm__/ndatetime/input', [
+        return $this->repository->render('__norm__/ndatetime/input', [
             'value' => $value,
             'self' => $this,
         ]);
@@ -52,7 +48,7 @@ class NDateTime extends NField
 
     protected function formatReadonly($value, $model = null)
     {
-        return $this->render('__norm__/ndatetime/readonly', [
+        return $this->repository->render('__norm__/ndatetime/readonly', [
             'value' => $value,
             'self' => $this,
         ]);

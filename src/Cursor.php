@@ -23,6 +23,8 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
 
     const SORT_DESC = -1;
 
+    protected $collection;
+
     /**
      * Criteria
      *
@@ -84,21 +86,12 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
      */
     public function __construct(Collection $collection, array $criteria = [])
     {
-        parent::__construct($collection);
-
+        $this->collection = $collection;
+        $this->repository = $collection->getRepository();
         $this->criteria = $criteria;
     }
 
     // getter / setter *********************************************************
-
-    /**
-     * [getCollection description]
-     * @return Collection [description]
-     */
-    public function getCollection()
-    {
-        return $this->parent;
-    }
 
     /**
      * Getter for criteria
@@ -169,7 +162,7 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
 
     public function distinct($key)
     {
-        return $this->parent->distinct($this, $key);
+        return $this->collection->distinct($this, $key);
     }
 
     /**
@@ -239,6 +232,11 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
         $this->context = $context;
     }
 
+    public function getCollection()
+    {
+        return $this->collection;
+    }
+
     /**
      * [current description]
      * @return Model [description]
@@ -246,7 +244,7 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
     public function current()
     {
         if ($this->current[0] !== $this->position) {
-            $this->current = [$this->position, $this->parent->read($this) ];
+            $this->current = [ $this->position, $this->collection->read($this) ];
         }
 
         return $this->current[1];
@@ -258,9 +256,9 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
      */
     public function next()
     {
-        if ($this->valid()) {
-            $this->position++;
-        }
+        // if ($this->valid()) {
+        $this->position++;
+        // }
     }
 
     /**
@@ -289,9 +287,7 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
      */
     public function valid()
     {
-
-        $row = $this->current();
-        return (is_null($row)) ? false : true;
+        return null !== $this->current();
     }
 
     /**
@@ -319,7 +315,7 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
      */
     public function size($respectLimitSkip = false)
     {
-        return $this->parent->size($this, $respectLimitSkip);
+        return $this->collection->size($this, $respectLimitSkip);
     }
 
     /**
@@ -329,7 +325,7 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
      */
     public function remove(array $options = [])
     {
-        return $this->parent->remove($this, $options);
+        return $this->collection->remove($this, $options);
     }
 
     /**

@@ -5,8 +5,6 @@ namespace Norm;
 use Norm\Exception\NormException;
 use Norm\Type\DateTime;
 use Norm\Type\ArrayList;
-use Norm\Cursor;
-use Norm\Collection;
 
 /**
  * Base class for connection instance
@@ -19,39 +17,26 @@ use Norm\Collection;
  */
 abstract class Connection extends Normable
 {
-    /**
-     * [$id description]
-     * @var string
-     */
+    protected static $generatedId = 0;
+
     protected $id;
 
     protected $primaryKey = 'id';
 
-    /**
-     * [__construct description]
-     * @param string $id [description]
-     */
-    public function __construct(Repository $repository = null, $id = 'main')
+    public static function generateId()
     {
-        if (!is_string($id)) {
-            throw new NormException('Connection must specified id');
-        }
+        return 'connection-' . static::$generatedId++;
+    }
 
+    public function __construct(Repository $repository, $id = null)
+    {
         parent::__construct($repository);
 
-        $this->id = $id;
+        $this->id = null === $id ? static::generateId() : $id;
+
+        $repository->addConnection($this);
     }
 
-    public function setRepository(Repository $repository)
-    {
-        $this->parent = $repository;
-        return $this;
-    }
-
-    /**
-     * [getId description]
-     * @return string [description]
-     */
     public function getId()
     {
         return $this->id;
@@ -147,11 +132,6 @@ abstract class Connection extends Normable
             $result[$k] = $v;
         }
         return $result;
-    }
-
-    public function factory($collectionId, $connectionId = '')
-    {
-        return $this->parent->factory($collectionId, $connectionId ?: $this->id);
     }
 
     /**

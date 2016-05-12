@@ -7,13 +7,19 @@ use Norm\Cursor;
 use Norm\Exception\NormException;
 use PHPUnit_Framework_TestCase;
 use PDO as ThePDO;
+use ROH\Util\Injector;
 
 class PDOTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->connection = new PDO(null, 'main', [
-            'dsn' => 'sqlite::memory:'
+        $this->injector = new Injector();
+
+        $this->connection = $this->injector->resolve(PDO::class, [
+            'id' => 'main',
+            'options' => [
+                'dsn' => 'sqlite::memory:'
+            ]
         ]);
 
         $db = $this->connection->getContext();
@@ -36,7 +42,7 @@ class PDOTest extends PHPUnit_Framework_TestCase
         $this->assertInstanceOf(ThePDO::class, $this->connection->getContext());
 
         try {
-            new PDO();
+            $this->injector->resolve(PDO::class);
             $this->fail('Must not here');
         } catch (NormException $e) {
             if ($e->getMessage() !== 'DSN is required') {

@@ -3,13 +3,28 @@ namespace Norm\Test\Schema;
 
 use PHPUnit_Framework_TestCase;
 use Norm\Schema\NObject;
-use Norm\Schema;
+use Norm\Repository;
+use Norm\Collection;
+use Norm\Connection;
+use ROH\Util\Injector;
 
 class NObjectTest extends PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        $this->injector = new Injector();
+        $repository = $this->getMock(Repository::class, []);
+        $repository->method('render')->will($this->returnCallback(function($template) {
+            return $template;
+        }));
+        $this->injector->singleton(Repository::class, $repository);
+        $this->injector->singleton(Connection::class, $this->getMockForAbstractClass(Connection::class, [$repository]));
+        $this->injector->singleton(Collection::class, $this->getMock(Collection::class, null, [ $this->injector->resolve(Connection::class), 'Foo' ]));
+    }
+
     public function testPrepare()
     {
-        $field = new NObject(null, 'foo');
+        $field = $this->injector->resolve(NObject::class, ['name' => 'foo']);
         $this->assertEquals($field->prepare('{"foo":"bar"}')['foo'], 'bar');
         $this->assertEquals($field->prepare(''), null);
         $obj = new \Norm\Type\Object();
@@ -18,11 +33,8 @@ class NObjectTest extends PHPUnit_Framework_TestCase
 
     public function testFormat()
     {
-        $schema = $this->getMock(Schema::class);
-        $schema->method('render')->will($this->returnCallback(function($t) {
-            return $t;
-        }));
-        $field = new NObject($schema, 'foo');
+        $field = $this->injector->resolve(NObject::class, ['name' => 'foo']);
+
         $this->assertEquals($field->format('input', ['foo' => 'bar']), '__norm__/nobject/input');
         $this->assertEquals($field->format('readonly', ['foo' => 'bar']), '__norm__/nobject/readonly');
     }

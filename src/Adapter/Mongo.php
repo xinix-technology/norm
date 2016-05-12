@@ -4,6 +4,7 @@ namespace Norm\Adapter;
 use MongoId;
 use MongoDate;
 use MongoClient;
+use Norm\Repository;
 use Norm\Connection;
 use Norm\Cursor;
 use ROH\Util\Options;
@@ -22,7 +23,7 @@ class Mongo extends Connection
 
     protected $database;
 
-    public function __construct(Repository $repository = null, $id = 'main', array $options = [])
+    public function __construct(Repository $repository, $id = 'main', array $options = [])
     {
         $prefix = '';
         if (isset($options['username'])) {
@@ -43,7 +44,7 @@ class Mongo extends Connection
 
     public function getContext()
     {
-        if (is_null($this->context)) {
+        if (null === $this->context) {
             $this->client = new MongoClient($this->connectionString);
             $this->context = $this->client->{$this->database};
         }
@@ -154,7 +155,7 @@ class Mongo extends Connection
         }
 
         $found = $context->current();
-        return is_null($found) ? null : $this->unmarshall($found);
+        return null === $found ? null : $this->unmarshall($found);
     }
 
     public function unmarshallKV($key, $value)

@@ -22,16 +22,15 @@
     ],
     "require": {
         "php": "^5.4",
-        "reekoheek/util": "~1.1.3",
+        "reekoheek/util": "~1.2.0",
         "ramsey/uuid": "~2.8"
     },
     "require-dev": {
-        "phpunit/phpunit": "~4.0",
+        "phpunit/phpunit": "*",
         "guzzlehttp/guzzle": "~5.0"
     },
     "autoload": {
         "psr-4": {
-            "Norm\\Test\\": "test/",
             "Norm\\": "src/"
         }
     }

@@ -2,7 +2,6 @@
 namespace Norm\Test\Observer;
 
 use Norm\Observer\Nestable;
-use PHPUnit_Framework_TestCase;
 
 class NestableTest extends AbstractObserverTest
 {

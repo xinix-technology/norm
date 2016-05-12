@@ -12,7 +12,7 @@ class NText extends NString
 
     protected function formatInput($value, $model = null)
     {
-        return $this->render('__norm__/ntext/input', [
+        return $this->repository->render('__norm__/ntext/input', [
             'self' => $this,
             'value' => $value,
         ]);

@@ -8,31 +8,25 @@ use Norm\Exception\NormException;
 use PHPUnit_Framework_TestCase;
 use Norm\Type\ArrayList;
 use Norm\Type\Secret;
+use ROH\Util\Injector;
 
 class ConnectionTest extends PHPUnit_Framework_TestCase
 {
-    public function testConstruct()
+    public function setUp()
     {
-        try {
-            $this->getMockForAbstractClass(Connection::class, [null, 88]);
-            $this->fail('must not here');
-        } catch(NormException $e) {
-            if ($e->getMessage() !== 'Connection must specified id') {
-                throw $e;
-            }
-        }
+        $this->injector = new Injector();
+        $this->repository = new Repository([], $this->injector);
+        $this->injector->singleton(Repository::class, $this->repository);
     }
 
     public function testMarshallKV()
     {
-        $connection = $this->getMockForAbstractClass(Connection::class);
-
-        $this->assertEquals($connection->marshallKV('$id', 10), ['id', 10]);
+        $this->assertEquals($this->getMockForAbstractClass(Connection::class, [$this->repository])->marshallKV('$id', 10), ['id', 10]);
     }
 
     public function testUnmarshallAndMarshall()
     {
-        $connection = $this->getMockForAbstractClass(Connection::class, [], '', true, true, true, ['getAttribute']);
+        $connection = $this->getMockForAbstractClass(Connection::class, [$this->repository], '', true, true, true, ['getAttribute']);
         $connection->method('getAttribute')->will($this->returnValue('Asia/Jakarta'));
 
         $arr = [
@@ -63,5 +57,12 @@ class ConnectionTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($unmarshalled['foo'], 'bar');
         $this->assertEquals($unmarshalled['$id'], 10);
         $this->assertEquals($unmarshalled['$hidden'], true);
+    }
+
+    public function testMarshalCriteria()
+    {
+        $connection = $this->getMockForAbstractClass(Connection::class, [$this->repository]);
+
+        $this->assertEquals($connection->marshallCriteria(['$foo' => 'bar']), ['_foo' => 'bar']);
     }
 }

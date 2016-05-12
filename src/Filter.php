@@ -8,6 +8,8 @@ use Norm\Exception\SkipException;
 use Norm\Exception\FilterException;
 use Norm\Exception\FatalException;
 use Norm\Normable;
+use Norm\Collection;
+use Norm\Schema\NField;
 use Norm\Type\Object as TypeObject;
 
 /**
@@ -23,6 +25,12 @@ class Filter extends Normable
     protected static $registries = [];
 
     /**
+     * [$collection description]
+     * @var Norm\Collection
+     */
+    protected $collection;
+
+    /**
      * Available rules
      *
      * @var array
@@ -35,6 +43,12 @@ class Filter extends Normable
      * @var array
      */
     protected $errors;
+
+    /**
+     * [$immediate description]
+     * @var boolean
+     */
+    protected $immediate = false;
 
     /**
      * Register custom filter to use later
@@ -64,7 +78,9 @@ class Filter extends Normable
      */
     protected static function parseFilterChain($filterChain, &$ruleFilters)
     {
-        if (is_string($filterChain)) {
+        if (is_callable($filterChain)) {
+            $ruleFilters[] = [$filterChain, [], 'f'];
+        } elseif (is_string($filterChain)) {
             $filterArr = explode('|', $filterChain);
             foreach ($filterArr as $singleFilter) {
                 $parsed = explode(':', $singleFilter);
@@ -72,8 +88,10 @@ class Filter extends Normable
                 $parsed[] = 's';
                 $ruleFilters[] = $parsed;
             }
-        } elseif (is_callable($filterChain)) {
-            $ruleFilters[] = [$filterChain, [], 'f'];
+        } elseif (is_array($filterChain)) {
+            foreach ($filterChain as $f) {
+                static::parseFilterChain($f, $ruleFilters);
+            }
         }
     }
 
@@ -82,19 +100,15 @@ class Filter extends Normable
      * @param  array $rules [description]
      * @return array        [description]
      */
-    public static function parseFilterRules(array $rules)
+    public static function parseFilterRules($rules)
     {
         $newRules = [];
 
         foreach ($rules as $k => $rule) {
             $ruleFilters = [];
-            if (isset($rule['filters'])) {
-                foreach ($rule['filters'] as $filterChain) {
-                    static::parseFilterChain($filterChain, $ruleFilters);
-                }
-            }
-            $rule['filters'] = $ruleFilters;
-
+            $filters = $rule instanceof NField ? $rule->getFilter() : (isset($rule['filter']) ? $rule['filter'] : []);
+            static::parseFilterChain($filters, $ruleFilters);
+            $rule['filter'] = $ruleFilters;
             $newRules[$k] = $rule;
         }
 
@@ -106,11 +120,22 @@ class Filter extends Normable
      * @param Collection $collection [description]
      * @param array      $rules      [description]
      */
-    public function __construct(Collection $collection = null, array $rules = [])
+    public function __construct($rules = [], $immediate = false)
     {
-        parent::__construct($collection);
-
+        if ($rules instanceof Collection) {
+            $this->collection = $rules;
+            $this->repository = $rules->getRepository();
+        } else if (!is_array($rules)) {
+            throw new NormException('Rules must be array or instance of Schema');
+        }
         $this->rules = static::parseFilterRules($rules);
+        $this->immediate = $immediate;
+    }
+
+    public function setImmediate($immediate)
+    {
+        $this->immediate = $immediate;
+        return $this;
     }
 
     /**
@@ -148,23 +173,16 @@ class Filter extends Normable
         ];
         if ($filter[2] === 's') {
             $filterFn = static::get($filter[0]);
-            if (isset($filterFn)) {
+            if (null !== $filterFn) {
                 return $filterFn($val, $opts);
             } elseif (is_callable([$this, 'filter'.$filter[0]])) {
                 $fn = 'filter'.$filter[0];
                 return $this->$fn($val, $opts);
-            } elseif (is_callable($filter[0])) {
-                return $filter[0]($val);
             } else {
-                $message = 'Ineligible filter '.$filter[0].' for ';
-                // if ($data instanceof Model) {
-                //     $message .= $data->getCollectionName().'::';
-                // }
-                $message .= $k;
-                throw new FatalException($message);
+                throw new FatalException('Ineligible filter '.$filter[0].' for '.$k);
             }
         } else {
-            return $filter[0]($val, $opts);
+            return $filter[0]($val);
         }
     }
 
@@ -180,7 +198,7 @@ class Filter extends Normable
 
         $rules = null;
 
-        if (is_null($key)) {
+        if (null === $key) {
             $rules = $this->rules;
         } elseif (isset($this->rules[$key])) {
             $rules = [
@@ -190,11 +208,11 @@ class Filter extends Normable
 
         if (is_array($rules)) {
             foreach ($rules as $k => $rule) {
-                // if (empty($rule['filters'])) {
+                // if (empty($rule['filter'])) {
                 //     continue;
                 // }
 
-                foreach ($rule['filters'] as $filter) {
+                foreach ($rule['filter'] as $filter) {
                     try {
                         $data[$k] = $this->execFilter($filter, $data, $k, $rule);
                     } catch (SkipException $e) {
@@ -202,9 +220,12 @@ class Filter extends Normable
                     } catch (FatalException $e) {
                         throw $e;
                     } catch (Exception $e) {
-                        $this->errors[] = $e;
-
-                        break;
+                        if ($this->immediate) {
+                            throw $e;
+                        } else {
+                            $this->errors[] = $e;
+                            break;
+                        }
                     }
                 }
             }
@@ -245,7 +266,7 @@ class Filter extends Normable
      */
     protected function filterRequired($value, $opts)
     {
-        if (is_null($value) || $value === '') {
+        if (null === $value || $value === '') {
             throw (new FilterException('Field %s is required'))
                 ->setContext($opts['key'])
                 ->setArgs($this->getLabel($opts['key']));
@@ -262,7 +283,7 @@ class Filter extends Normable
      */
     protected function filterConfirmed($value, $opts)
     {
-        if (is_null($value) || $value === '') {
+        if (null === $value || $value === '') {
             unset($opts['data'][$opts['key']]);
             unset($opts['data'][$opts['key'].'_confirmation']);
             return '';
@@ -288,8 +309,8 @@ class Filter extends Normable
     protected function filterSalt($value, $opts)
     {
         if (!empty($value)) {
-            $config = $this->getAttribute('salt');
-            if (isset($config)) {
+            $config = null === $this->repository ? null : $this->repository->getAttribute('salt');
+            if (null !== $config) {
                 $method = 'md5';
                 if (is_string($config)) {
                     $key = $config;
@@ -314,24 +335,32 @@ class Filter extends Normable
      */
     protected function filterUnique($value, $opts)
     {
-        if (is_null($value) || $value === '') {
+        if (null === $this->collection) {
+            throw (new FilterException('Filter unique needs collection to be set'));
+        }
+
+        if (null === $value || '' === $value) {
             return '';
         }
 
+        $collection = $this->collection;
         $argCount = count($opts['arguments']);
         switch ($argCount) {
             case 0:
-                $model = $this->parent->findOne([$opts['key'] => $value]);
+                $key = $opts['key'];
                 break;
             case 1:
-                $model = $this->parent->findOne([$opts['arguments'][0] => $value]);
+                $key = $opts['arguments'][0];
                 break;
             default:
-                $model = $this->parent->factory($opts['arguments'][0])->findOne([$opts['arguments'][1] => $value]);
+                $collection = $this->factory($opts['arguments'][0]);
+                $key = $opts['arguments'][1];
         }
 
+        $model = $collection->findOne([$key => $value]);
+
         if (
-            isset($model) &&
+            null !== $model &&
             (
                 (isset($model['$id']) && $model['$id'] != $opts['data']['$id']) ||
                 !isset($model['$id'])
@@ -396,7 +425,7 @@ class Filter extends Normable
      */
     protected function filterMin($value, $opts)
     {
-        if (!is_null($value) && '' !== $value) {
+        if (null !== $value && '' !== $value) {
             if ($value < $opts['arguments'][0]) {
                 throw (new FilterException('Field %s less than '.$opts['arguments'][0]))
                     ->setContext($opts['key'])
@@ -409,7 +438,7 @@ class Filter extends Normable
 
     protected function filterMax($value, $opts)
     {
-        if (!is_null($value) && '' !== $value) {
+        if (null !== $value && '' !== $value) {
             if ($value > $opts['arguments'][0]) {
                 throw (new FilterException('Field %s more than '.$opts['arguments'][0]))
                     ->setContext($opts['key'])
@@ -422,7 +451,7 @@ class Filter extends Normable
 
     protected function filterBetween($value, $opts)
     {
-        if (!is_null($value) && '' !== $value) {
+        if (null !== $value && '' !== $value) {
             if ($value < $opts['arguments'][0] || $value > $opts['arguments'][1]) {
                 throw (new FilterException('Field %s out of %s to %s'))
                     ->setContext($opts['key'])
@@ -441,7 +470,7 @@ class Filter extends Normable
      */
     protected function filterIp($value, $opts)
     {
-        if (!is_null($value) && '' !== $value) {
+        if (null !== $value && '' !== $value) {
             if (!empty($value) && !filter_var($value, FILTER_VALIDATE_IP)) {
                 throw (new FilterException('Field %s is not valid IP Address'))
                     ->setContext($opts['key'])
@@ -460,7 +489,7 @@ class Filter extends Normable
      */
     protected function filterEmail($value, $opts)
     {
-        if (!is_null($value) && '' !== $value) {
+        if (null !== $value && '' !== $value) {
             if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
                 throw (new FilterException('Field %s is not valid email'))
                     ->setContext($opts['key'])

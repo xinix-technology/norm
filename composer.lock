@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "7bd1675446c23355343ae20152edada9",
-    "content-hash": "760d020140c098b8336c8f6778cf71c0",
+    "hash": "a4d251c48dcade9e8a181cfe8dcea5af",
+    "content-hash": "0e4de18824427b5e4b8906df5f77889b",
     "packages": [
         {
             "name": "paragonie/random_compat",
@@ -124,16 +124,16 @@
         },
         {
             "name": "reekoheek/jsonkit",
-            "version": "0.1.1",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reekoheek/php-jsonkit.git",
-                "reference": "dd7f7466b1c48988fe8022ad0da121f014d36e7a"
+                "reference": "27e06482ce5b564e69de489e68ae8de7e3b26d7d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reekoheek/php-jsonkit/zipball/dd7f7466b1c48988fe8022ad0da121f014d36e7a",
-                "reference": "dd7f7466b1c48988fe8022ad0da121f014d36e7a",
+                "url": "https://api.github.com/repos/reekoheek/php-jsonkit/zipball/27e06482ce5b564e69de489e68ae8de7e3b26d7d",
+                "reference": "27e06482ce5b564e69de489e68ae8de7e3b26d7d",
                 "shasum": ""
             },
             "require-dev": {
@@ -162,24 +162,27 @@
                     "role": "Developer"
                 }
             ],
-            "time": "2016-04-11 10:09:41"
+            "time": "2016-04-25 20:31:45"
         },
         {
             "name": "reekoheek/util",
-            "version": "1.1.1",
+            "version": "1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reekoheek/php-util.git",
-                "reference": "3cc9de68e5f9f350dc0eea08d760f6cff17b3a55"
+                "reference": "6ae3c82205841632d8394bba787860a17e5abc32"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reekoheek/php-util/zipball/3cc9de68e5f9f350dc0eea08d760f6cff17b3a55",
-                "reference": "3cc9de68e5f9f350dc0eea08d760f6cff17b3a55",
+                "url": "https://api.github.com/repos/reekoheek/php-util/zipball/6ae3c82205841632d8394bba787860a17e5abc32",
+                "reference": "6ae3c82205841632d8394bba787860a17e5abc32",
                 "shasum": ""
             },
             "require": {
-                "reekoheek/jsonkit": "~0.1.0"
+                "reekoheek/jsonkit": "~1.0.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "*"
             },
             "type": "library",
             "autoload": {
@@ -200,7 +203,7 @@
                 }
             ],
             "description": "php common utility library",
-            "time": "2016-04-25 20:31:13"
+            "time": "2016-05-11 13:12:21"
         }
     ],
     "packages-dev": [
@@ -419,16 +422,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.5.0",
+            "version": "1.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "e3abefcd7f106677fd352cd7c187d6c969aa9ddc"
+                "reference": "a8773992b362b58498eed24bf85005f363c34771"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/e3abefcd7f106677fd352cd7c187d6c969aa9ddc",
-                "reference": "e3abefcd7f106677fd352cd7c187d6c969aa9ddc",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/a8773992b362b58498eed24bf85005f363c34771",
+                "reference": "a8773992b362b58498eed24bf85005f363c34771",
                 "shasum": ""
             },
             "require": {
@@ -457,7 +460,7 @@
                 "object",
                 "object graph"
             ],
-            "time": "2015-11-07 22:20:37"
+            "time": "2015-11-20 12:04:31"
         },
         {
             "name": "phpdocumentor/reflection-docblock",
@@ -944,16 +947,16 @@
         },
         {
             "name": "react/promise",
-            "version": "v2.4.0",
+            "version": "v2.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/promise.git",
-                "reference": "f942da7b505d1a294284ab343d05df42d02ad6d9"
+                "reference": "8025426794f1944de806618671d4fa476dc7626f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/promise/zipball/f942da7b505d1a294284ab343d05df42d02ad6d9",
-                "reference": "f942da7b505d1a294284ab343d05df42d02ad6d9",
+                "url": "https://api.github.com/repos/reactphp/promise/zipball/8025426794f1944de806618671d4fa476dc7626f",
+                "reference": "8025426794f1944de806618671d4fa476dc7626f",
                 "shasum": ""
             },
             "require": {
@@ -984,7 +987,7 @@
                 }
             ],
             "description": "A lightweight implementation of CommonJS Promises/A for PHP",
-            "time": "2016-03-31 13:10:33"
+            "time": "2016-05-03 17:50:52"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -1149,16 +1152,16 @@
         },
         {
             "name": "sebastian/environment",
-            "version": "1.3.5",
+            "version": "1.3.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/environment.git",
-                "reference": "dc7a29032cf72b54f36dac15a1ca5b3a1b6029bf"
+                "reference": "2292b116f43c272ff4328083096114f84ea46a56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/environment/zipball/dc7a29032cf72b54f36dac15a1ca5b3a1b6029bf",
-                "reference": "dc7a29032cf72b54f36dac15a1ca5b3a1b6029bf",
+                "url": "https://api.github.com/repos/sebastianbergmann/environment/zipball/2292b116f43c272ff4328083096114f84ea46a56",
+                "reference": "2292b116f43c272ff4328083096114f84ea46a56",
                 "shasum": ""
             },
             "require": {
@@ -1195,7 +1198,7 @@
                 "environment",
                 "hhvm"
             ],
-            "time": "2016-02-26 18:40:46"
+            "time": "2016-05-04 07:59:13"
         },
         {
             "name": "sebastian/exporter",
@@ -1500,7 +1503,7 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v3.0.4",
+            "version": "v3.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",

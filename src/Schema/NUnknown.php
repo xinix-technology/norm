@@ -1,14 +1,13 @@
 <?php
 namespace Norm\Schema;
 
-use Norm\Repository;
-use Norm\Schema;
+use Norm\Collection;
 
 class NUnknown extends NField
 {
-    public function __construct(Schema $schema = null, $name = '', $filter = null, array $attributes = [])
+    public function __construct(Collection $collection, $name, $filter = null, array $format = [], array $attributes = [])
     {
-        parent::__construct($schema, $name, $filter, $attributes);
+        parent::__construct($collection, $name, $filter, $format, $attributes);
 
         $this['unknown'] = true;
     }

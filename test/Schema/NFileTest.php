@@ -3,18 +3,28 @@ namespace Norm\Test\Schema;
 
 use PHPUnit_Framework_TestCase;
 use Norm\Schema\NFile;
-use Norm\Schema;
 use ROH\Util\File as UtilFile;
 use Norm\Type\File;
 use NOrm\Exception\NormException;
+use ROH\Util\Injector;
+use Norm\Repository;
+use Norm\Connection;
+use Norm\Collection;
 
 class NFileTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        UtilFile::rm('tmp-data');
+        $this->injector = new Injector();
+        $repository = $this->getMock(Repository::class, []);
+        $repository->method('render')->will($this->returnCallback(function($template) {
+            return $template;
+        }));
+        $this->injector->singleton(Repository::class, $repository);
+        $this->injector->singleton(Connection::class, $this->getMockForAbstractClass(Connection::class, [$repository]));
+        $this->injector->singleton(Collection::class, $this->getMock(Collection::class, null, [ $this->injector->resolve(Connection::class), 'Foo' ]));
 
-        $this->schema = $this->getMock(Schema::class);
+        UtilFile::rm('tmp-data');
     }
 
     public function tearDown()
@@ -29,7 +39,7 @@ class NFileTest extends PHPUnit_Framework_TestCase
         @mkdir('tmp-data/bar', 0755, true);
         file_put_contents('tmp-data/bar/baz', 'baz');
 
-        $field = new NFile($this->schema, 'foo');
+        $field = $this->injector->resolve(NFile::class, ['name' => 'foo']);
         $field['dataDir'] = 'tmp-data';
         $this->assertEquals($field->prepare('missing')->isExists(), false);
 
@@ -46,7 +56,7 @@ class NFileTest extends PHPUnit_Framework_TestCase
         $field->prepare(new File('tmp-data', 'foo'));
         $this->assertInstanceOf(File::class, $file);
 
-        $field = new NFile($this->schema, 'foo');
+        $field = $this->injector->resolve(NFile::class, ['name' => 'foo']);
         try {
             $field->prepare(new File('bar', 'foo'));
             $this->fail('Must not here');
@@ -59,11 +69,7 @@ class NFileTest extends PHPUnit_Framework_TestCase
 
     public function testFormat()
     {
-        $schema = $this->getMock(Schema::class);
-        $schema->method('render')->will($this->returnCallback(function($template) {
-            return $template;
-        }));
-        $field = new NFile($schema, 'foo');
+        $field = $this->injector->resolve(NFile::class, ['name' => 'foo']);
 
         $result = $field->format('input');
         $this->assertEquals($result, '__norm__/nfile/input');

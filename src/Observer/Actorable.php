@@ -12,7 +12,7 @@ class Actorable
 
     public function __construct($options = [])
     {
-        $this->options = Options::create([
+        $this->options = (new Options([
             'createdKey' => '$created_by',
             'updatedKey' => '$updated_by',
             'createdField' => [ NReference::class, [
@@ -23,10 +23,8 @@ class Actorable
                 'to' => 'User',
                 'filter' => [],
             ]],
-            'userCallback' => function () {
-                return isset($_SESSION['user']['$id']) ? $_SESSION['user']['$id'] : null;
-            }
-        ])->merge($options)->toArray();
+            'userCallback' => [$this, 'defaultUserCallback'],
+        ]))->merge($options)->toArray();
 
         $this->options['createdField'][1]['name'] = $this->options['createdKey'];
         $this->options['updatedField'][1]['name'] = $this->options['updatedKey'];
@@ -36,17 +34,18 @@ class Actorable
         }
     }
 
+    public function defaultUserCallback()
+    {
+        return isset($_SESSION['user']['$id']) ? $_SESSION['user']['$id'] : null;
+    }
+
     public function initialize($context)
     {
-        $schema = $context['collection']->getSchema();
-
         $createdField = $this->options['createdField'];
-        $createdField[1]['schema'] = $schema;
-        $schema->addField($createdField);
+        $context['collection']->addField($createdField);
 
         $updatedField = $this->options['updatedField'];
-        $updatedField[1]['schema'] = $schema;
-        $schema->addField($updatedField);
+        $context['collection']->addField($updatedField);
     }
 
     public function save($context, $next)

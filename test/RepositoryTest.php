@@ -5,18 +5,24 @@ use PHPUnit_Framework_TestCase;
 use Norm\Repository;
 use Norm\Collection;
 use Norm\Connection;
+use Norm\Schema\NString;
 use Norm\Exception\NormException;
 use ROH\Util\Injector;
 
 class NormTest extends PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        $this->injector = new Injector();
+    }
+
     public function testConnectionAddAndGet()
     {
         $repository = new Repository();
         $this->assertNull($repository->getConnection());
 
-        $connection = $this->getMockForAbstractClass(Connection::class);
-        $repository->addConnection($connection);
+        $connection = $this->getMockForAbstractClass(Connection::class, [ $repository ]);
+
         $this->assertEquals($repository->getConnection(), $connection);
 
         try {
@@ -31,7 +37,7 @@ class NormTest extends PHPUnit_Framework_TestCase
 
     public function testAttributesSetUnsetAndGet()
     {
-        $repository = new Repository([], [ 'foo' => 'bar' ]);
+        $repository = new Repository([ 'foo' => 'bar' ]);
 
         $this->assertEquals($repository->getAttribute('foo'), 'bar');
 
@@ -54,7 +60,7 @@ class NormTest extends PHPUnit_Framework_TestCase
             }
         }
 
-        $repository->addConnection($this->getMockForAbstractClass(Connection::class));
+        $this->getMockForAbstractClass(Connection::class, [ $repository ]);
 
         $collection = $repository->factory('Foo');
         $this->assertInstanceOf(Collection::class, $collection);
@@ -71,34 +77,29 @@ class NormTest extends PHPUnit_Framework_TestCase
             }
         }
 
-        $hit = false;
-        $inject = false;
+        $repository->setDefault([
+            'fields' => [
+                [ NString::class, [ 'name' => 'foo' ]],
+            ]
+        ]);
 
-        $injector = new Injector();
-        $injector->delegate(Collection::class, function ($args) use (&$inject) {
-            if (isset($args['foo']) && $args['foo'] === 'bar' &&
-                isset($args['baz']) && $args['baz'] === 'bar') {
-                $inject = true;
-            }
-        });
+        $this->assertInstanceOf(NString::class, $repository->factory('Bar')->getField('foo'));
+    }
 
-        $repository = (new Repository([
-                $this->getMockForAbstractClass(Connection::class),
-            ]))
-            ->setDefault([
-                'foo' => 'bar',
-            ])
-            ->addResolver(function() use (&$hit) {
-                $hit = true;
-                return [
-                    'baz' => 'bar',
-                ];
-            })
-            ->setInjector($injector);
-        $collection = $repository->factory('Foo');
+    public function testUseConnection()
+    {
+        $repository = new Repository();
+        $connection1 = $this->getMockForAbstractClass(Connection::class, [$repository, 'con1']);
+        $connection2 = $this->getMockForAbstractClass(Connection::class, [$repository, 'con2']);
 
-        $this->assertTrue($hit);
-        $this->assertTrue($inject);
+        $this->assertEquals($repository->getConnection(), $connection1);
+        $repository->useConnection('con2');
+        $this->assertEquals($repository->getConnection(), $connection2);
+
+        try {
+            $repository->useConnection('con3');
+            $this->fail('Must throw error');
+        } catch (NormException $e) {}
     }
 
     public function testTranslate()
@@ -120,6 +121,23 @@ class NormTest extends PHPUnit_Framework_TestCase
 
         $repository->setTranslator(function () { return 'Baz'; });
         $this->assertEquals($repository->translate('Foo'), 'Baz');
+    }
+
+    public function testAddAndGetResolvers()
+    {
+        $repository = new Repository();
+        $this->getMockForAbstractClass(Connection::class, [$repository]);
+
+        $hit1 = false;
+        $hit2 = false;
+        $repository->addResolver(function() use (&$hit1) { $hit1 = true; return []; });
+        $repository->addResolver(function() use (&$hit2) { $hit2 = true; });
+        $this->assertEquals(count($repository->getResolvers()), 2);
+
+        $repository->factory('Foo');
+
+        $this->assertEquals($hit1, true);
+        $this->assertEquals($hit2, false);
     }
 
     public function testRender()
@@ -161,10 +179,7 @@ class NormTest extends PHPUnit_Framework_TestCase
 
     public function testDebugInfo()
     {
-        $repository = new Repository([
-            $this->getMockForAbstractClass(Connection::class),
-        ]);
-
-        $this->assertEquals(count($repository->__debugInfo()['connections']), 1);
+        $repository = new Repository();
+        $this->assertEquals(array_keys($repository->__debugInfo()), ['connections', 'use']);
     }
 }

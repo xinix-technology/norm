@@ -14,9 +14,11 @@ class NReference extends NField
 
     protected $fetcher;
 
-    public function __construct(Schema $schema = null, $name = '', $filter = null, $to = null, array $attributes = [])
+    public function __construct(Collection $collection, $name, $to, $filter = null, array $format = [], array $attributes = [])
     {
-        parent::__construct($schema, $name, $filter, $attributes);
+        parent::__construct($collection, $name, $filter, $format, $attributes);
+
+        $this['nocache'] = $this['nocache'] ?: false;
 
         $this->to($to);
     }
@@ -41,7 +43,6 @@ class NReference extends NField
 
     public function to($foreign)
     {
-        $this['nocache'] = $this['nocache'] ?: false;
         if (is_string($foreign)) {
             $query = [];
             @list($meta, $qs) = explode('?', $foreign, 2);
@@ -61,32 +62,36 @@ class NReference extends NField
                 $this['to$criteria'] = $query;
             }
 
-            $this->fetcher = function($key = null, $offset = 0, $limit = 100) {
-                $cursor = $this->factory($this['to$collection'])
-                    ->find($this['to$criteria'])
-                    ->skip($offset)
-                    ->limit($limit);
-
-                if ($this['to$sort']) {
-                    $cursor->sort($this['to$sort']);
-                }
-
-                if (null === $key) {
-                    $result = [];
-                    foreach($cursor->toArray() as $entry) {
-                        $result[$entry[$this['to$key']]] = $entry;
-                    }
-                    return $result;
-                } else {
-                    return $cursor->first();
-                }
-            };
+            $this->fetcher = [$this, 'normFetcher'];
         } elseif (is_array($foreign)) {
+            $this['nocache'] = false;
             $this->cache = $foreign;
         } elseif (is_callable($foreign)) {
             $this->fetcher = $foreign;
         } else {
             throw new NormException('Foreign must be instance of string, array, callable or Collection');
+        }
+    }
+
+    protected function normFetcher($key = null, $offset = 0, $limit = 100)
+    {
+        $cursor = $this->collection->factory($this['to$collection'])
+            ->find($this['to$criteria'])
+            ->skip($offset)
+            ->limit($limit);
+
+        if ($this['to$sort']) {
+            $cursor->sort($this['to$sort']);
+        }
+
+        if (null === $key) {
+            $result = [];
+            foreach($cursor->toArray() as $entry) {
+                $result[$entry[$this['to$key']]] = $entry;
+            }
+            return $result;
+        } else {
+            return $cursor->first();
         }
     }
 
@@ -126,7 +131,7 @@ class NReference extends NField
 
     protected function formatInput($value, $model = null)
     {
-        return $this->render('__norm__/nreference/input', array(
+        return $this->repository->render('__norm__/nreference/input', array(
             'self' => $this,
             'value' => $value,
             'entry' => $model,

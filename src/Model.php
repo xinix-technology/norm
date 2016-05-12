@@ -43,6 +43,12 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
     const STATE_REMOVED  = 'STATE_REMOVED';
 
     /**
+     * [$collection description]
+     * @var Norm\Collection
+     */
+    protected $collection;
+
+    /**
      * Model attributes. Mostly only published attributes that stored here.
      *
      * @var array
@@ -78,7 +84,8 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
      */
     public function __construct(Collection $collection, array $attributes = [], array $options = [])
     {
-        parent::__construct($collection);
+        $this->collection = $collection;
+        $this->repository = $collection->getRepository();
 
         $this->reset();
         $this->sync($attributes);
@@ -121,19 +128,6 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
     }
 
     /**
-     * Set id of model.
-     *
-     * @return int|string
-     */
-    // public function setId($givenId)
-    // {
-    //     if (!isset($this->id)) {
-    //         $this->id = $givenId;
-    //     }
-    //     return $this->id;
-    // }
-
-    /**
      * Determine if offset is exist in attributes.
      *
      * @method has
@@ -160,7 +154,7 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
             return $this->getId();
         }
 
-        $field = $this->getSchema()->getField($key);
+        $field = $this->collection->getField($key);
         if ($field->hasReader()) {
             return $field->read($this);
         }
@@ -183,7 +177,7 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
         }
 
         foreach ($this->attributes as $key => $value) {
-            if (is_null($this->parent->getSchema()->getField($key)->get('transient'))) {
+            if (null === $this->collection->getField($key)->get('transient')) {
                 $attributes[$key] = $value;
             }
         }
@@ -227,7 +221,7 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
         } elseif ($key === '$id') {
             throw new NormException('Restricting model to set for $id.');
         } else {
-            $this->attributes[$key] = $this->getSchema()->getField($key)->prepare($value);
+            $this->attributes[$key] = $this->collection->getField($key)->prepare($value);
         }
 
         return $this;
@@ -262,7 +256,7 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
      */
     public function save(array $options = [])
     {
-        $this->parent->save($this, $options);
+        $this->collection->save($this, $options);
     }
 
     /**
@@ -276,7 +270,7 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
      */
     public function filter($fieldName = null)
     {
-        return $this->parent->filter($this, $fieldName);
+        return $this->collection->filter($this, $fieldName);
     }
 
     /**
@@ -286,7 +280,7 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
      */
     public function remove(array $options = [])
     {
-        return $this->parent->remove($this, $options);
+        return $this->collection->remove($this, $options);
     }
 
     /**
@@ -308,14 +302,12 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
         //     $this->attributes = [];
         // }
 
-        $schema = $this->getSchema();
-
         if ($fetchType === Model::FETCH_ALL or $fetchType === Model::FETCH_HIDDEN) {
-            $attributes['$type'] = $this->parent->getName();
+            $attributes['$type'] = $this->collection->getName();
             $attributes['$id'] = $this->getId();
 
             foreach ($this->attributes as $key => $value) {
-                if ($schema->getField($key)->get('hidden')) {
+                if ($this->collection->getField($key)->get('hidden')) {
                     $attributes[$key] = $value;
                 }
             }
@@ -323,7 +315,7 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
 
         if ($fetchType === Model::FETCH_ALL or $fetchType === Model::FETCH_PUBLISHED) {
             foreach ($this->attributes as $key => $value) {
-                if (!$schema->getField($key)->get('hidden')) {
+                if (!$this->collection->getField($key)->get('hidden')) {
                     $attributes[$key] = $value;
                 }
             }
@@ -404,12 +396,9 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
         $destination = [];
         $source =  $this->toArray();
 
-        $schema = $this->parent->getSchema();
-
         foreach ($source as $key => $value) {
-            $field = $schema->getField($key);
             $destination[$key] = JsonKit::replaceObject(
-                $field->format('json', $value, $options)
+                $this->collection->getField($key)->format('json', $value, $options)
             );
         }
 
@@ -427,7 +416,7 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
      */
     public function previous($key = null)
     {
-        if (is_null($key)) {
+        if (null === $key) {
             return $this->oldAttributes;
         }
 
@@ -459,40 +448,6 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
     }
 
     /**
-     * Get schema configuration.
-     *
-     * @method schema
-     *
-     * @param string $key
-     *
-     * @return mixed
-     */
-    // public function getSchema($key = null)
-    // {
-    //     return $this->getSchema($key);
-    // }
-
-    /**
-     * Get schema configuration by offset name.
-     *
-     * @method schemaByIndex
-     *
-     * @param string $index
-     *
-     * @return mixed
-     */
-    // public function schemaByIndex($index)
-    // {
-    //     $schema = [];
-
-    //     foreach ($this->parent->schema() as $value) {
-    //         $schema[] = $value;
-    //     }
-
-    //     return (empty($schema[$index])) ? null : $schema[$index];
-    // }
-
-    /**
      * Format the model to HTML string. Bind it's attributes to view.
      *
      * @method format
@@ -507,9 +462,9 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
         switch (func_num_args()) {
             case 0:
             case 1:
-                return $this->getSchema()->format($format, $this);
+                return $this->collection->format($format, $this);
             default:
-                return $this->getSchema()->getField($field)->format($format, $this[$field]);
+                return $this->collection->getField($field)->format($format, $this[$field]);
         }
     }
 
@@ -559,11 +514,6 @@ class Model extends Normable implements JsonSerializer, ArrayAccess
     protected function populateOld()
     {
         $this->oldAttributes = $this->attributes ?: [];
-    }
-
-    public function getSchema()
-    {
-        return $this->parent->getSchema();
     }
 
     public function __debugInfo()

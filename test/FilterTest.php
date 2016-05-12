@@ -7,12 +7,29 @@ use Norm\Filter;
 use Norm\Exception\FilterException;
 use Norm\Collection;
 use Norm\Connection;
+use Norm\Exception\NormException;
 use Norm\Exception\FatalException;
 use Norm\Exception\SkipException;
 use ROH\Util\Collection as UtilCollection;
+use ROH\Util\Injector;
 
 class FilterTest extends PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        $this->injector = new Injector();
+        $this->injector->singleton(Repository::class, new Repository());
+        $this->injector->singleton(Connection::class, $this->getMockForAbstractClass(Connection::class, [$this->injector->resolve(Repository::class)]));
+        $this->injector->singleton(Collection::class, $this->getMock(Collection::class, null, [ $this->injector->resolve(Connection::class), 'Foo' ]));
+    }
+
+    public function testDebugInfo()
+    {
+        $filter = new Filter();
+
+        $this->assertEquals(array_keys($filter->__debugInfo()), []);
+    }
+
     public function testRegister()
     {
         $hit = false;
@@ -22,15 +39,20 @@ class FilterTest extends PHPUnit_Framework_TestCase
         Filter::register('foo', $foo);
         $this->assertEquals(Filter::get('foo'), $foo);
 
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
-                    'foo',
+                'filter' => [
+                    'foo'
                 ]
             ]
         ]);
-        $filter->run([]);
-        $this->assertTrue($hit);
+
+        $data = [
+            'foo' => 'foo',
+        ];
+
+        $filter->run($data);
+        $this->assertEquals($hit, true);
     }
 
     public function testFilterChain()
@@ -38,42 +60,52 @@ class FilterTest extends PHPUnit_Framework_TestCase
         $filter = function() {};
         $rules = Filter::parseFilterRules([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'a|b:c|d:e,f',
                     $filter,
                 ]
             ]
         ]);
 
-        $this->assertEquals(4, count($rules['foo']['filters']));
+        $this->assertEquals(4, count($rules['foo']['filter']));
 
-        $this->assertEquals('a', $rules['foo']['filters'][0][0]);
-        $this->assertEquals([], $rules['foo']['filters'][0][1]);
+        $this->assertEquals('a', $rules['foo']['filter'][0][0]);
+        $this->assertEquals([], $rules['foo']['filter'][0][1]);
 
-        $this->assertEquals('b', $rules['foo']['filters'][1][0]);
-        $this->assertEquals(['c'], $rules['foo']['filters'][1][1]);
+        $this->assertEquals('b', $rules['foo']['filter'][1][0]);
+        $this->assertEquals(['c'], $rules['foo']['filter'][1][1]);
 
-        $this->assertEquals('d', $rules['foo']['filters'][2][0]);
-        $this->assertEquals(['e', 'f'], $rules['foo']['filters'][2][1]);
-        $this->assertEquals($filter, $rules['foo']['filters'][3][0]);
+        $this->assertEquals('d', $rules['foo']['filter'][2][0]);
+        $this->assertEquals(['e', 'f'], $rules['foo']['filter'][2][1]);
+        $this->assertEquals($filter, $rules['foo']['filter'][3][0]);
     }
 
     public function testConstruct()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'a|b:c|d:e,f',
                 ]
             ]
         ]);
 
-        $this->assertEquals(count($filter->__debugInfo()['foo']['filters']), 3);
+        $this->assertEquals(count($filter->__debugInfo()['foo']['filter']), 3);
+
+        try {
+
+            $filter = new Filter('test');
+            $this->fail('Must not here');
+        } catch(NormException $e) {
+            if ($e->getMessage() !== 'Rules must be array or instance of Schema') {
+                throw $e;
+            }
+        }
     }
 
     public function testGetLabel()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [],
             'bar' => [
                 'label' => 'Bar',
@@ -86,13 +118,13 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testRunAllContext()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'paddedstr' => [
-                'filters' => [
+                'filter' => [
                     'trim'
                 ]
             ]
-        ]);
+        ], true);
 
         $data = [
             'paddedstr' => '   this is str   ',
@@ -105,14 +137,14 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testRunSingleField()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'paddedstr' => [
-                'filters' => [
+                'filter' => [
                     'trim'
                 ]
             ],
             'foo' => [
-                'filters' => [
+                'filter' => [
                     function() {
                         throw new \Exception('Must not throw this');
                     }
@@ -125,24 +157,23 @@ class FilterTest extends PHPUnit_Framework_TestCase
             'foo' => 'bar',
         ];
 
-
         $filter->run($data, 'paddedstr');
     }
 
     public function testRunSelectiveContext()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'trim'
                 ]
             ],
             'bar' => [
-                'filters' => [
+                'filter' => [
                     'trim'
                 ]
             ]
-        ]);
+        ], true);
 
         $data = [
             'foo' => '   this is foo   ',
@@ -157,20 +188,20 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testRunFatal()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     function() {
                         throw new FatalException('fatal');
                     }
                 ]
             ],
             'bar' => [
-                'filters' => [
+                'filter' => [
                     'trim'
                 ]
             ]
-        ]);
+        ], true);
 
         $data = [
             'foo' => '   this is foo   ',
@@ -186,9 +217,9 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testRunSkip()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     function() {
                         throw new SkipException('fatal');
                     },
@@ -208,14 +239,14 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testRunCommonError()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'trim',
                 ]
             ],
             'bar' => [
-                'filters' => [
+                'filter' => [
                     function() {
                         throw new \Exception('common error');
                     }
@@ -237,9 +268,9 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testRunIneligibleError()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'oops',
                 ]
             ],
@@ -262,27 +293,22 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testFilterRequired()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
                 'label' => 'Foo',
-                'filters' => [
+                'filter' => [
                     'required'
                 ]
             ],
-        ]);
+        ], true);
 
-        try {
-            $x = $filter->run(['foo' => 'not raised']);
-        } catch (\Excception $e) {
-            $this->fail('Unexpected exception raised here. '. $e->getMessage());
-        }
+        $filter->run(['foo' => 'not raised']);
 
         try {
             $filter->run(null);
             $this->fail('Expected exception raised here.');
         } catch (FilterException $e) {
-            $this->assertEquals('Field Foo is required', $filter->getErrors()[0]->getMessage());
-        } catch(\Exception $e) {
+            $this->assertEquals('Field Foo is required', $e->getMessage());
         }
 
         try {
@@ -304,17 +330,17 @@ class FilterTest extends PHPUnit_Framework_TestCase
         }
 
         // required with
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
                 'label' => 'Foo',
-                'filters' => [
+                'filter' => [
                     'requiredWith:bar'
                 ]
             ],
         ]);
+        $filter->setImmediate(true);
 
-        $result = $filter->run([
-        ]);
+        $result = $filter->run([]);
         $result = $filter->run([
             'foo' => 'foo',
             'bar' => 'bar',
@@ -327,10 +353,10 @@ class FilterTest extends PHPUnit_Framework_TestCase
         } catch(FilterException $e) {}
 
         // required without
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
                 'label' => 'Foo',
-                'filters' => [
+                'filter' => [
                     'requiredWithout:bar'
                 ]
             ],
@@ -346,18 +372,17 @@ class FilterTest extends PHPUnit_Framework_TestCase
         ]);
 
         try {
-            $result = $filter->run([
-            ]);
+            $result = $filter->run([]);
             $this->fail('Must not here');
         } catch(FilterException $e) {}
     }
 
     public function testFilterConfirmed()
     {
-        $filter = new Filter(null, [
+        $filter = new Filter([
             'foo' => [
                 'label' => 'Foo',
-                'filters' => [
+                'filter' => [
                     'confirmed'
                 ]
             ],
@@ -389,101 +414,91 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testFilterUnique()
     {
-        $findOneHit = 0;
-        $collection = $this->getMock(Collection::class, [], [ null, 'Foo' ]);
-        $collection->method('factory')->will($this->returnValue($collection));
-        $collection->method('findOne')->will($this->returnCallback(function($criteria) use (&$findOneHit) {
-            $findOneHit++;
-            if (isset($criteria['notfound'])) {
-                return null;
-            } else {
-                return [
-                    'foo' => 'foo',
-                ];
-            }
+        $collection = $this->getMock(Collection::class, ['findOne'], [ $this->injector->resolve(Connection::class), 'Foo']);
+        $collection->method('findOne')->will($this->returnCallback(function($criteria) {
+            return null;
+        }));
+        $collection->addField($this->getMockForAbstractClass(\Norm\Schema\NField::class, [$collection, 'foo', 'unique']));
+        $filter = new Filter($collection, true);
+        $result = $filter->run([
+            'foo' => 'foo',
+        ]);
+        $this->assertEquals($result['foo'], 'foo');
+
+        $collection = $this->getMock(Collection::class, ['findOne'], [ $this->injector->resolve(Connection::class), 'Foo']);
+        $collection->method('findOne')->will($this->returnCallback(function($criteria) {
+            return ['foo' => 'foo'];
+        }));
+        $collection->addField($this->getMockForAbstractClass(\Norm\Schema\NField::class, [$collection, 'foo', 'unique']));
+        $filter = new Filter($collection, true);
+        try {
+            $result = $filter->run([
+                'foo' => 'foo',
+            ]);
+            $this->fail('Must not here');
+        } catch(FilterException $e) {
+        }
+
+        $collection = $this->getMock(Collection::class, ['findOne'], [ $this->injector->resolve(Connection::class), 'Foo']);
+        $collection->method('findOne')->will($this->returnCallback(function($criteria) {
+            return ['foo' => 'foo'];
+        }));
+        $collection->addField($this->getMockForAbstractClass(\Norm\Schema\NField::class, [$collection, 'foo', 'unique:foo']));
+        $filter = new Filter($collection);
+        try {
+            $result = $filter->run([
+                'foo' => 'foo',
+            ]);
+            $this->fail('Must not here');
+        } catch(FilterException $e) {
+        }
+
+        $result = $filter->run([]);
+        $this->assertEquals($result['foo'], '');
+
+        $filter = new Filter([
+            'foo' => [
+                'filter' => ['unique']
+            ]
+        ], true);
+        try {
+            $result = $filter->run([
+                'foo' => 'foo',
+            ]);
+            $this->fail('Must not here');
+        } catch(FilterException $e) {
+        }
+    }
+
+    public function testFilterUniqueCrossCollection()
+    {
+
+        $repository = $this->getMock(Repository::class);
+        $connection = $this->getMockForAbstractClass(Connection::class, [$repository]);
+
+        $repository->method('factory')->will($this->returnCallback(function($name) use ($connection) {
+            $collection = $this->getMock(Collection::class, [], [$connection, $name]);
+            $collection->method('findOne')->will($this->returnValue(['bar' => 'foo']));
+            return $collection;
         }));
 
-        $filter = new Filter($collection, [
-            'notfound' => [
-                'label' => 'Foo',
-                'filters' => [
-                    'unique'
-                ]
-            ],
-        ]);
+        $collection = new Collection($connection, 'Foo');
+        $collection->addField($this->getMockForAbstractClass(\Norm\Schema\NField::class, [$collection, 'foo', 'unique:Bar,bar']));
 
-        $result = $filter->run([
-            'notfound' => 'foo',
-        ]);
-        $this->assertEquals($findOneHit, 1);
-        $this->assertEquals($result['notfound'], 'foo');
-
-        $filter = new Filter($collection, [
-            'foo' => [
-                'label' => 'Foo',
-                'filters' => [
-                    'unique'
-                ]
-            ],
-        ]);
+        $filter = new Filter($collection, true);
         try {
-            $result = $filter->run([
+            $filter->run([
                 'foo' => 'foo',
             ]);
             $this->fail('Must not here');
-        } catch(FilterException $e) {
-        }
-        $this->assertEquals($findOneHit, 2);
-
-        $filter = new Filter($collection, [
-            'foo' => [
-                'label' => 'Foo',
-                'filters' => [
-                    'unique:foo',
-                ]
-            ],
-        ]);
-        try {
-            $result = $filter->run([
-                'foo' => 'foo',
-            ]);
-            $this->fail('Must not here');
-        } catch(FilterException $e) {
-        }
-        $this->assertEquals($findOneHit, 3);
-
-        $filter = new Filter($collection, [
-            'foo' => [
-                'label' => 'Foo',
-                'filters' => [
-                    'unique:Bar,foo',
-                ]
-            ],
-        ]);
-        try {
-            $result = $filter->run([
-                'foo' => 'foo',
-            ]);
-            $this->fail('Must not here');
-        } catch(FilterException $e) {
-        }
-        $this->assertEquals($findOneHit, 4);
-
-        $result = $filter->run([
-        ]);
-        $this->assertEquals($result['foo'], '');
+        } catch (FilterException $e) {}
     }
 
     public function testFilterSalt()
     {
-        $collection = $this->getMock(Collection::class, [], [ null, 'Foo' ]);
-        $filter = new Filter($collection, [
-            'salty' => [
-                'filters' => [
-                    'salt'
-                ]
-            ],
-        ]);
+        $collection = new Collection($this->injector->resolve(Connection::class), 'Foo');
+        $collection->addField($this->getMockForAbstractClass(\Norm\Schema\NField::class, [$collection, 'salty', 'salt']));
+        $filter = new Filter($collection);
 
         try {
             $result = $filter->run([
@@ -496,29 +511,15 @@ class FilterTest extends PHPUnit_Framework_TestCase
             }
         }
 
-        $collection = $this->getMock(Collection::class, [], [ null, 'Foo' ]);
-        $collection->method('getAttribute')->will($this->returnValue('random'));
-        $filter = new Filter($collection, [
-            'salty' => [
-                'filters' => [
-                    'salt'
-                ]
-            ],
-        ]);
+        $this->injector->resolve(Repository::class)->setAttribute('salt', 'random');
+        $filter = new Filter($collection);
         $result = $filter->run([
             'salty' => 'foo',
         ]);
         $this->assertNotEquals($result['salty'], 'foo');
 
-        $collection = $this->getMock(Collection::class, [], [ null, 'Foo' ]);
-        $collection->method('getAttribute')->will($this->returnValue(['sha1', 'random']));
-        $filter = new Filter($collection, [
-            'salty' => [
-                'filters' => [
-                    'salt'
-                ]
-            ],
-        ]);
+        $this->injector->resolve(Repository::class)->setAttribute('salt', ['sha1', 'random']);
+        $filter = new Filter($collection);
         $result = $filter->run([
             'salty' => 'foo',
         ]);
@@ -529,15 +530,8 @@ class FilterTest extends PHPUnit_Framework_TestCase
         ]);
         $this->assertEquals($result['salty'], '');
 
-        $collection = $this->getMock(Collection::class, [], [ null, 'Foo' ]);
-        $collection->method('getAttribute')->will($this->returnValue(['sha1']));
-        $filter = new Filter($collection, [
-            'salty' => [
-                'filters' => [
-                    'salt'
-                ]
-            ],
-        ]);
+        $this->injector->resolve(Repository::class)->setAttribute('salt', ['sha1']);
+        $filter = new Filter($collection);
         try {
             $result = $filter->run([
                 'salty' => 'foo',
@@ -552,10 +546,9 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testMinMaxBetween()
     {
-        $collection = $this->getMock(Collection::class, [], [ null, 'Foo' ]);
-        $filter = new Filter($collection, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'min:10'
                 ]
             ],
@@ -571,9 +564,9 @@ class FilterTest extends PHPUnit_Framework_TestCase
         } catch (FilterException $e) {
         }
 
-        $filter = new Filter($collection, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'max:10'
                 ]
             ],
@@ -589,9 +582,9 @@ class FilterTest extends PHPUnit_Framework_TestCase
         } catch (FilterException $e) {
         }
 
-        $filter = new Filter($collection, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'between:-1,10'
                 ]
             ],
@@ -617,10 +610,9 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testIpAndEmail()
     {
-        $collection = $this->getMock(Collection::class, [], [ null, 'Foo' ]);
-        $filter = new Filter($collection, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'email'
                 ]
             ],
@@ -640,9 +632,9 @@ class FilterTest extends PHPUnit_Framework_TestCase
         } catch (FilterException $e) {
         }
 
-        $filter = new Filter($collection, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'ip'
                 ]
             ],
@@ -665,10 +657,9 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testDefault()
     {
-        $collection = $this->getMock(Collection::class, [], [ null, 'Foo' ]);
-        $filter = new Filter($collection, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'default:bar'
                 ]
             ],
@@ -680,10 +671,9 @@ class FilterTest extends PHPUnit_Framework_TestCase
 
     public function testRemoveEmpty()
     {
-        $collection = $this->getMock(Collection::class, [], [ null, 'Foo' ]);
-        $filter = new Filter($collection, [
+        $filter = new Filter([
             'foo' => [
-                'filters' => [
+                'filter' => [
                     'removeEmpty'
                 ]
             ],

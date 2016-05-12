@@ -5,25 +5,30 @@ use PHPUnit_Framework_TestCase;
 use Norm\Repository;
 use Norm\Normable;
 use Norm\Collection;
+use Norm\Connection;
 use Norm\Schema\NField;
 use Norm\Schema;
 use Norm\Exception\NormException;
+use ROH\Util\Injector;
 
 class NFieldTest extends PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        $this->injector = new Injector();
+        $repository = $this->getMock(Repository::class, []);
+        $repository->method('render')->will($this->returnCallback(function($template) {
+            return $template;
+        }));
+        $this->injector->singleton(Repository::class, $repository);
+        $this->injector->singleton(Connection::class, $this->getMockForAbstractClass(Connection::class, [$repository]));
+        $this->injector->singleton(Collection::class, $this->getMock(Collection::class, null, [ $this->injector->resolve(Connection::class), 'Foo' ]));
+    }
+
     public function testConstruct()
     {
-        try {
-            $this->getMockForAbstractClass(NField::class);
-            $this->fail('must not here');
-        } catch (NormException $e) {
-            if ($e->getMessage() !== 'Name (2nd argument) must be string or array, and must not empty') {
-                throw $e;
-            }
-        }
-
         $customFilter = function() {};
-        $field = $this->getMockForAbstractClass(NField::class, [null, 'foo', ['trim', $customFilter], [
+        $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class), 'foo', ['trim', $customFilter], [], [
             'foo' => 'bar',
         ]]);
         $this->assertEquals($field->getFilter()[0], 'trim');
@@ -36,44 +41,54 @@ class NFieldTest extends PHPUnit_Framework_TestCase
         $this->assertFalse(isset($field['foo']));
 
         try {
-            $field = $this->getMockForAbstractClass(NField::class, [null, ['foo']]);
+            $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class),  [ 'foo' ] ]);
             $this->fail('must not here');
         } catch (NormException $e) {
-            if ($e->getMessage() !== 'Name (2nd argument) must be array consists of name and label') {
+            if ($e->getMessage() !== 'Name must be string or array {name, label}, and must not empty') {
                 throw $e;
             }
         }
 
-        $field = $this->getMockForAbstractClass(NField::class, [null, ['foo', 'Bar']]);
+        try {
+            $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class),  99 ]);
+            $this->fail('must not here');
+        } catch (NormException $e) {
+            if ($e->getMessage() !== 'Name must be string or array {name, label}, and must not empty') {
+                throw $e;
+            }
+        }
+
+        $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class),  [ 'foo', 'Bar' ] ]);
         $this->assertEquals($field['name'], 'foo');
         $this->assertEquals($field['label'], 'Bar');
     }
 
-    public function testFactory()
-    {
-        $field = $this->getMockForAbstractClass(NField::class, [null, 'foo']);
-        try {
-            $field->factory();
-            $this->fail('Must not here');
-        } catch (NormException $e) {
-            if ($e->getMessage() !== 'Field does not have schema yet!') {
-                throw $e;
-            }
-        }
+    // public function testFactory()
+    // {
+    //     $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class),  'foo' ]);
+    //     try {
+    //         $field->factory();
+    //         $this->fail('Must not here');
+    //     } catch (NormException $e) {
+    //         if ($e->getMessage() !== 'Field does not have schema yet!') {
+    //             throw $e;
+    //         }
+    //     }
 
-        $schema = $this->getMock(Schema::class);
-        $schema->method('factory')->will($this->returnValue('foo'));
-        $field = $this->getMockForAbstractClass(NField::class, [ $schema, 'Foo' ]);
-        $this->assertEquals($field->factory(), 'foo');
-    }
+    //     $schema = $this->getMock(Schema::class);
+    //     $schema->method('factory')->will($this->returnValue('foo'));
+    //     $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class),  $schema, 'Foo' ]);
+    //     $this->assertEquals($field->factory(), 'foo');
+    // }
 
     public function testFormat()
     {
-        $schema = $this->getMock(Schema::class);
-        $schema->method('render')->will($this->returnCallback(function($file) {
+        $repository = $this->getMock(Repository::class);
+        $repository->method('render')->will($this->returnCallback(function($file) {
             return $file;
         }));
-        $field = $this->getMockForAbstractClass(NField::class, [$schema, 'foo']);
+        $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class),  'foo' ]);
+
         $this->assertEquals($field->format('plain'), '');
         $this->assertEquals($field->format('plain', 'foo'), 'foo');
 
@@ -95,9 +110,16 @@ class NFieldTest extends PHPUnit_Framework_TestCase
         }
     }
 
+    public function testAddFilter()
+    {
+        $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class),  'foo' ]);
+        $field->addFilter('foo');
+        $this->assertEquals($field->getFilter()[0], 'foo');
+    }
+
     public function testDebugInfo()
     {
-        $field = $this->getMockForAbstractClass(NField::class, [null, 'foo']);
+        $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class),  'foo' ]);
         $this->assertEquals($field->__debugInfo()['name'], 'foo');
         $this->assertEquals($field->__debugInfo()['label'], 'Foo');
     }

@@ -8,11 +8,16 @@ use ROH\Util\File as UtilFile;
 use FilesystemIterator;
 use Norm\Exception\NormException;
 use PHPUnit_Framework_TestCase;
+use ROH\Util\Injector;
+use Norm\Repository;
 
 class FileTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
+        $this->injector = new Injector();
+        $this->injector->singleton(Repository::class, new Repository([], $this->injector));
+
         UtilFile::rm('tmp-db-files');
     }
 
@@ -24,16 +29,22 @@ class FileTest extends PHPUnit_Framework_TestCase
     public function testConstruct()
     {
         try {
-            $connection = new File(null, 'foo');
+            $connection = $this->injector->resolve(File::class);
             $this->fail('Must not here');
         } catch(NormException $e) {}
 
-        $connection = new File(null, 'foo', ['dataDir' => 'tmp-db-files']);
+        $connection = $this->injector->resolve(File::class, [
+            'id' => 'main',
+            'options' => ['dataDir' => 'tmp-db-files']
+        ]);
     }
 
     public function testPersist()
     {
-        $connection = new File(null, 'foo', ['dataDir' => 'tmp-db-files']);
+        $connection = $this->injector->resolve(File::class, [
+            'id' => 'main',
+            'options' => ['dataDir' => 'tmp-db-files']
+        ]);
         $collection = $this->getMock(Collection::class, null, [$connection, 'Foo']);
 
         $result = $connection->persist('foo', ['foo' => 1]);
@@ -47,7 +58,10 @@ class FileTest extends PHPUnit_Framework_TestCase
 
     public function testSize()
     {
-        $connection = new File(null, 'foo', ['dataDir' => 'tmp-db-files']);
+        $connection = $this->injector->resolve(File::class, [
+            'id' => 'main',
+            'options' => ['dataDir' => 'tmp-db-files']
+        ]);
         $collection = $this->getMock(Collection::class, null, [$connection, 'Foo']);
 
         $result = $connection->persist('foo', ['foo' => 1]);
@@ -59,7 +73,10 @@ class FileTest extends PHPUnit_Framework_TestCase
 
     public function testFetch()
     {
-        $connection = new File(null, 'foo', ['dataDir' => 'tmp-db-files']);
+        $connection = $this->injector->resolve(File::class, [
+            'id' => 'main',
+            'options' => ['dataDir' => 'tmp-db-files']
+        ]);
         $collection = $this->getMock(Collection::class, null, [$connection, 'Foo']);
 
         $connection->persist('foo', ['foo' => 1]);
@@ -91,7 +108,10 @@ class FileTest extends PHPUnit_Framework_TestCase
 
     public function testDistinct()
     {
-        $connection = new File(null, 'foo', ['dataDir' => 'tmp-db-files']);
+        $connection = $this->injector->resolve(File::class, [
+            'id' => 'main',
+            'options' => ['dataDir' => 'tmp-db-files']
+        ]);
         $collection = $this->getMock(Collection::class, null, [$connection, 'Foo']);
 
         $connection->persist('foo', ['foo' => 1]);

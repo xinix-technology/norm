@@ -4,13 +4,19 @@ namespace Norm\Schema;
 use Norm\Exception\NormException;
 use ROH\Util\Inflector;
 use Norm\Normable;
-use Norm\Repository;
+use Norm\Collection;
 use Norm\Model;
 use Norm\Schema;
 use ArrayAccess;
 
 abstract class NField extends Normable implements ArrayAccess
 {
+    /**
+     * [$collection description]
+     * @var [type]
+     */
+    protected $collection;
+
     /**
      * [$attributes description]
      * @var array
@@ -41,13 +47,11 @@ abstract class NField extends Normable implements ArrayAccess
      * @param string|array     $filter     [description]
      * @param array            $attributes [description]
      */
-    public function __construct(Schema $schema = null, $name = '', $filter = null, array $attributes = [])
+    public function __construct(Collection $collection, $name, $filter = null, array $format = [], array $attributes = [])
     {
-        if ((!is_string($name) && !is_array($name)) || empty($name)) {
-            throw new NormException('Name (2nd argument) must be string or array, and must not empty');
-        }
+        parent::__construct($collection->getRepository());
 
-        parent::__construct($schema);
+        $this->collection = $collection;
 
         $this->attributes = $attributes;
 
@@ -60,37 +64,25 @@ abstract class NField extends Normable implements ArrayAccess
         ];
 
         if (!empty($filter)) {
-            $this->addFilter($filter);
+            $this->filter = is_array($filter) ? $filter : [$filter];
         }
 
         if (is_array($name)) {
             if (count($name) !== 2) {
-                throw new NormException('Name (2nd argument) must be array consists of name and label');
+                throw new NormException('Name must be string or array {name, label}, and must not empty');
             }
             $this['name'] = $name[0];
             $this['label'] = $name[1];
-        } else {
+        } elseif (!empty($name) && is_string($name)) {
             $this['name'] = $name;
             $this['label'] = Inflector::humanize($name);
+        } else {
+            throw new NormException('Name must be string or array {name, label}, and must not empty');
         }
 
         if ('$' === $this['name'][0]) {
             $this['hidden'] = true;
         }
-    }
-
-    /**
-     * [factory description]
-     * @param  string $collectionId [description]
-     * @param  string $connectionId [description]
-     * @return Collection           [description]
-     */
-    public function factory($collectionId = '', $connectionId = '')
-    {
-        if (null === $this->parent) {
-            throw new NormException('Field does not have schema yet!');
-        }
-        return $this->parent->factory($collectionId, $connectionId);
     }
 
     /**
@@ -130,7 +122,7 @@ abstract class NField extends Normable implements ArrayAccess
      */
     public function hasReader()
     {
-        return isset($this->reader);
+        return null !== $this->reader;
     }
 
     /**
@@ -174,25 +166,22 @@ abstract class NField extends Normable implements ArrayAccess
     /**
      * [addFilter description]
      */
-    public function addFilter()
+    public function addFilter($filter)
     {
-        $filters = func_get_args();
-        foreach ($filters as $filter) {
-            if (is_string($filter)) {
-                $filter = explode('|', $filter);
-                foreach ($filter as $f) {
-                    $farr = explode(':', $f);
-                    $this['filter.' . $farr[0]] = array_slice($farr, 1);
-                    $this->filter[] = $f;
-                }
-            } elseif (is_array($filter)) {
-                foreach ($filter as $f) {
-                    $this->addFilter($f);
-                }
-            } else {
-                $this->filter[] = $filter;
-            }
-        }
+        $this->filter[] = $filter;
+        // $filters = func_get_args();
+        // foreach ($filters as $filter) {
+        //     if (is_string($filter)) {
+        //         $filter = explode('|', $filter);
+        //         foreach ($filter as $f) {
+        //             $farr = explode(':', $f);
+        //             // $this['filter.' . $farr[0]] = array_slice($farr, 1);
+        //             $this->filter[] = $f;
+        //         }
+        //     } else {
+        //         $this->filter[] = $filter;
+        //     }
+        // }
 
         return $this;
     }
@@ -204,7 +193,7 @@ abstract class NField extends Normable implements ArrayAccess
      */
     public function has($k)
     {
-        return array_key_exists($k, $this->attributes);
+        return isset($this->attributes[$k]) || array_key_exists($k, $this->attributes);
     }
 
     /**
@@ -275,7 +264,7 @@ abstract class NField extends Normable implements ArrayAccess
 
     protected function formatLabel($value, $model = null)
     {
-        return $this->render('__norm__/nfield/label', [
+        return $this->repository->render('__norm__/nfield/label', [
             'self' => $this,
         ]);
     }
@@ -296,7 +285,7 @@ abstract class NField extends Normable implements ArrayAccess
             $value = htmlentities($value);
         }
 
-        return $this->render('__norm__/nfield/readonly', [
+        return $this->repository->render('__norm__/nfield/readonly', [
             'self' => $this,
             'value' => $value,
             'model' => $model,
@@ -309,7 +298,7 @@ abstract class NField extends Normable implements ArrayAccess
             $value = htmlentities($value);
         }
 
-        return $this->render('__norm__/nfield/input', [
+        return $this->repository->render('__norm__/nfield/input', [
             'self' => $this,
             'value' => $value,
             'model' => $model,

@@ -4,20 +4,30 @@ namespace Norm\Test\Adapter;
 use DateTime;
 use Norm\Cursor;
 use Norm\Collection;
+use Norm\Connection;
 use Norm\Adapter\Memory;
 use Norm\Exception\NormException;
 use PHPUnit_Framework_TestCase;
+use ROH\Util\Injector;
+use Norm\Repository;
 
 class MemoryTest extends PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        $this->injector = new Injector();
+        $this->injector->singleton(Repository::class, new Repository([], $this->injector));
+    }
+
     public function testFetch()
     {
-        $connection = new Memory();
+        $connection = $this->injector->resolve(Memory::class);
         $connection->persist('foo', ['foo' => 1]);
         $connection->persist('foo', ['foo' => 2]);
         $connection->persist('foo', ['foo' => 3]);
+        $this->injector->singleton(Connection::class, $connection);
 
-        $collection = $this->getMock(Collection::class, null, [$connection, 'Foo']);
+        $collection = $this->injector->resolve(Collection::class, ['name' => 'Foo']);
         $this->assertEquals($connection->read(new Cursor($collection, ['foo!lt' => 2]))['foo'], 1);
         $this->assertEquals($connection->read(new Cursor($collection, ['foo!gt' => 2]))['foo'], 3);
         $this->assertEquals($connection->read(new Cursor($collection, ['foo' => 2]))['foo'], 2);
@@ -88,7 +98,7 @@ class MemoryTest extends PHPUnit_Framework_TestCase
 
     public function testGetContext()
     {
-        $connection = new Memory();
+        $connection = $this->injector->resolve(Memory::class);
         $connection->persist('foo', ['foo' => 1]);
         $connection->persist('foo', ['foo' => 2]);
         $connection->persist('foo', ['foo' => 3]);
@@ -98,7 +108,7 @@ class MemoryTest extends PHPUnit_Framework_TestCase
 
     public function testSize()
     {
-        $connection = new Memory();
+        $connection = $this->injector->resolve(Memory::class);
         $connection->persist('foo', ['foo' => 1]);
         $connection->persist('foo', ['foo' => 2]);
         $connection->persist('foo', ['foo' => 3]);
@@ -111,9 +121,9 @@ class MemoryTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($connection->size($cursor, true), 1);
     }
 
-    public function testRemove()
+    public function testRemoveAll()
     {
-        $connection = new Memory();
+        $connection = $this->injector->resolve(Memory::class);
         $connection->persist('foo', ['foo' => 1]);
         $connection->persist('foo', ['foo' => 2]);
         $connection->persist('foo', ['foo' => 3]);
@@ -124,9 +134,22 @@ class MemoryTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(count($connection->getContext()['foo']), 0);
     }
 
+    public function testRemovePartial()
+    {
+        $connection = $this->injector->resolve(Memory::class);
+        $connection->persist('foo', ['foo' => 1, 'bar' => 'bar']);
+        $connection->persist('foo', ['foo' => 2, 'bar' => 'bar']);
+        $connection->persist('foo', ['foo' => 3, 'bar' => 'baz']);
+
+        $collection = $this->getMock(Collection::class, null, [$connection, 'Foo']);
+        $connection->remove(new Cursor($collection, ['bar' => 'bar']));
+
+        $this->assertEquals(count($connection->getContext()['foo']), 1);
+    }
+
     public function testDistinct()
     {
-        $connection = new Memory();
+        $connection = $this->injector->resolve(Memory::class);
         $connection->persist('foo', ['foo' => 1]);
         $connection->persist('foo', ['foo' => 2]);
         $connection->persist('foo', ['foo' => 2]);

@@ -2,14 +2,15 @@
 namespace Norm;
 
 use Norm\Exception\NormException;
-use Norm\Model;
-use Norm\Cursor;
-use Norm\Schema;
-use Norm\Filter;
+use Norm\Schema\NUnknown;
+use Norm\Schema\NField;
 use ROH\Util\Options;
 use ROH\Util\Inflector;
 use ROH\Util\Collection as UtilCollection;
 use ROH\Util\Composition;
+use ROH\Util\Injector;
+use ROH\Util\StringFormatter;
+use Iterator;
 
 /**
  * The collection class that wraps models.
@@ -20,7 +21,7 @@ use ROH\Util\Composition;
  * @license     https://raw.github.com/xinix-technology/norm/master/LICENSE
  * @package     Norm
  */
-class Collection extends Normable
+class Collection extends Normable implements Iterator
 {
     /**
      * [$compositions description]
@@ -43,46 +44,71 @@ class Collection extends Normable
     protected $name;
 
     /**
-     * Schema
-     *
-     * @var ROH\Util\Collection
-     */
-    protected $schema;
-
-    /**
-     * Collection options
-     *
-     * @var array
-     */
-    // protected $options;
-
-    /**
-     * Collection data filters
-     *
-     * @var array
-     */
-    protected $filter;
-
-    /**
      * [$modelClass description]
      * @var string
      */
     protected $modelClass;
 
     /**
+     * [$connection description]
+     * @var Norm\Connection;
+     */
+    protected $connection;
+
+    /**
+     * [$firstField description]
+     * @var [type]
+     */
+    protected $firstField;
+
+    /**
+     * [$fields description]
+     * @var array
+     */
+    protected $fields = [];
+
+    /**
+     * [$formatters description]
+     * @var array
+     */
+    protected $formatters = [];
+
+    /**
+     * Schema options
+     *
+     * @var array
+     */
+    // protected $options;
+
+    /**
+     * Schema data filters
+     *
+     * @var array
+     */
+    protected $filter;
+
+    /**
      * Constructor
      *
      * @param array $options
      */
-    public function __construct(Connection $connection = null, $name = '', Schema $schema = null, $model = Model::class)
+    public function __construct(Connection $connection, $name, array $fields = [], array $format = [], $model = Model::class)
     {
-        parent::__construct($connection);
+        parent::__construct($connection->getRepository());
 
-        // $options = Options::create([
-        //     'schema' => [],
-        //     'model' => Model::class,
-        //     'observers' => [],
-        // ])->merge($options);
+        foreach ($fields as $field) {
+            $this->addField($field);
+        }
+
+        $this->formatters = array_merge([
+            'plain' => [$this, 'formatPlain'],
+            'tableFields' => [$this, 'formatTableFields'],
+            'inputFields' => [$this, 'formatInputFields'],
+        ], $format);
+
+        $this->filter = new Filter($this);
+
+        $this->connection = $connection;
 
         if (is_string($name) && '' !== $name) {
             $this->name = Inflector::classify($name);
@@ -94,25 +120,7 @@ class Collection extends Normable
             throw new NormException('Collection name must be string');
         }
 
-        $this->schema = $schema;
         $this->modelClass = $model;
-
-        // foreach ($options['observers'] as $meta) {
-        //     if (is_array($meta) && !isset($meta[0])) {
-        //         $this->observe($meta);
-        //     } else {
-        //         $this->observe($this->resolve($meta));
-        //     }
-        // }
-
-        // $this->schema = $this->resolve(Schema::class, [
-        //     'collection' => $this,
-        //     'fields' => $options['schema']
-        // ]); //new Schema($this, $options['schema']);
-
-        // if (isset($options['format'])) {
-        //     $this->schema->addFormatter($options['format']);
-        // }
     }
 
     /**
@@ -128,32 +136,6 @@ class Collection extends Normable
     public function getName()
     {
         return $this->name;
-    }
-
-    /**
-     * Getter and setter of collection schema. If there is no argument specified,
-     * the method will set and override schema. If argument specified, method will
-     * act as getter to specific field schema.
-     *
-     * @param string $schema
-     *
-     * @return mixed
-     */
-    public function getSchema()
-    {
-        if (null === $this->schema) {
-            $this->schema = new Schema($this);
-        }
-        return $this->schema;
-    }
-
-    public function getFilter()
-    {
-        if (is_null($this->filter)) {
-            $this->filter = new Filter($this, $this->getSchema()->getFilterRules());
-        }
-
-        return $this->filter;
     }
 
     /**
@@ -244,7 +226,7 @@ class Collection extends Normable
      *
      * @return bool True if success and false if fail
      */
-    public function filter(Model $model, $key = null)
+    public function filter($model, $key = null)
     {
         $context = new UtilCollection([
             'collection' => $this,
@@ -253,7 +235,8 @@ class Collection extends Normable
         ]);
 
         return $this->apply('filter', $context, function ($context) {
-            return $this->getFilter()->run($context['model'], $context['key']);
+            $filter = new Filter($this);
+            return $filter->run($context['model'], $context['key']);
         });
     }
 
@@ -276,21 +259,21 @@ class Collection extends Normable
             $this->filter($model);
         }
 
-        $save = function ($context) {
-            $context['modified'] = $this->parent->persist($this->getId(), $context['model']->dump());
-        };
-
         $context = new UtilCollection([
             'collection' => $this,
             'model' => $model,
         ]);
 
         if ($options['observer']) {
-            $this->apply('save', $context, $save);
+            $this->apply('save', $context, [$this, 'coreSave']);
         } else {
-            $save($context);
+            $this->coreSave($context);
         }
         $context['model']->sync($context['modified']);
+    }
+
+    public function coreSave($context) {
+        $context['modified'] = $this->connection->persist($this->getId(), $context['model']->dump());
     }
 
     /**
@@ -320,17 +303,18 @@ class Collection extends Normable
         }
         $context['cursor'] = $cursor;
 
-        $remove = function ($context) {
-            $this->parent->remove($context['cursor']);
-            if (null !== $context['model']) {
-                $context['model']->reset(true);
-            }
-        };
-
         if ($options['observer']) {
-            $this->apply('remove', $context, $remove);
+            $this->apply('remove', $context, [$this, 'coreRemove']);
         } else {
-            $remove($context);
+            $this->coreRemove($context);
+        }
+    }
+
+    public function coreRemove($context)
+    {
+        $this->connection->remove($context['cursor']);
+        if (null !== $context['model']) {
+            $context['model']->reset(true);
         }
     }
 
@@ -377,22 +361,17 @@ class Collection extends Normable
 
     public function distinct(Cursor $cursor, $key)
     {
-        return $this->parent->distinct($cursor, $key);
+        return $this->connection->distinct($cursor, $key);
     }
-
-    // public function fetch(Cursor $cursor)
-    // {
-    //     return $this->parent->fetch($cursor);
-    // }
 
     public function size(Cursor $cursor, $withLimitSkip = false)
     {
-        return $this->parent->size($cursor, $withLimitSkip);
+        return $this->connection->size($cursor, $withLimitSkip);
     }
 
     public function read(Cursor $cursor)
     {
-        $row = $this->parent->read($cursor);
+        $row = $this->connection->read($cursor);
         return null === $row ? $row : $this->attach($row);
     }
 
@@ -401,7 +380,8 @@ class Collection extends Normable
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'connectionClass' => $this->parent ? get_class($this->parent) : null,
+            'connectionClass' => null === $this->connection ? null : get_class($this->connection),
+            'fields' => array_keys($this->fields),
         ];
     }
 
@@ -431,5 +411,154 @@ class Collection extends Normable
         }
 
         return $composition->apply($context);
+    }
+
+    /**
+     * [addField description]
+     * @param array|NField $metaOrField [description]
+     */
+    public function addField($metaOrField)
+    {
+        if ($metaOrField instanceof NField) {
+            $field = $metaOrField;
+        } else {
+            $field = $this->getRepository()->resolve($metaOrField, [
+                'collection' => $this,
+            ]);
+        }
+
+
+        $this->fields[$field['name']] = $field;
+
+        if (null === $this->firstField) {
+            $this->firstField = $field['name'];
+        }
+
+        return $field;
+    }
+
+    /**
+     * [formatPlain description]
+     * @param  Model  $model [description]
+     * @return string        [description]
+     */
+    protected function formatPlain($model)
+    {
+        if (null === $this->firstField) {
+            throw new NormException('Cannot format undefined fields');
+        }
+        return $model[$this->firstField];
+    }
+
+    protected function formatTableFields()
+    {
+        return $this;
+    }
+
+    protected function formatInputFields()
+    {
+        return $this;
+    }
+
+    /**
+     * [addFormatter description]
+     * @param string          $format    [description]
+     * @param string|callable $formatter [description]
+     */
+    public function addFormatter($format, $formatter)
+    {
+        if (is_string($formatter)) {
+            $fmt = function ($model) use ($formatter) {
+                return StringFormatter::format($formatter, $model);
+            };
+        } elseif (is_callable($formatter)) {
+            $fmt = $formatter;
+        } else {
+            throw new NormException('Formatter should be callable or string format');
+        }
+        $this->formatters[$format] = $fmt;
+        return $fmt;
+    }
+
+    /**
+     * [getFormatter description]
+     * @param  string   $format [description]
+     * @return callable         [description]
+     */
+    public function getFormatter($format = 'plain')
+    {
+        if (!is_string($format)) {
+            throw new NormException('Format key must be string');
+        }
+        return isset($this->formatters[$format]) ? $this->formatters[$format] : null;
+    }
+
+    /**
+     * [format description]
+     * @param  string $format [description]
+     * @param  Model  $model  [description]
+     * @return string         [description]
+     */
+    public function format($format, $model = null)
+    {
+        $formatter = $this->getFormatter($format);
+
+        if (null === $formatter) {
+            throw new NormException('Formatter ' . $format . ' not found');
+        }
+
+        if (1 === func_num_args()) {
+            return $formatter($this);
+        } else {
+            return $formatter($model);
+        }
+    }
+
+    public function getFields()
+    {
+        return $this->fields;
+    }
+
+    public function getField($key)
+    {
+        if (!isset($this->fields[$key])) {
+            return new NUnknown($this, $key);
+        }
+        return $this->fields[$key];
+    }
+
+    public function current()
+    {
+        return current($this->fields);
+    }
+
+    public function next()
+    {
+        return next($this->fields);
+    }
+
+    public function key()
+    {
+        return key($this->fields);
+    }
+
+    public function valid()
+    {
+        return null !== key($this->fields);
+    }
+
+    public function rewind()
+    {
+        return reset($this->fields);
+    }
+
+    public function factory($collectionId, $connectionId = '')
+    {
+        return null === $this->repository
+            ? null
+            : $this->repository->factory(
+                $collectionId,
+                $connectionId ?: $this->connection->getId()
+            );
     }
 }

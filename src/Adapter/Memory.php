@@ -135,7 +135,8 @@ class Memory extends Connection
     public function read(Cursor $cursor)
     {
         $cursorContext = $this->fetch($cursor);
-        return isset($cursorContext[$cursor->key()]) ? $this->unmarshall($cursorContext[$cursor->key()]) : null;
+        $key = $cursor->key();
+        return isset($cursorContext[$key]) ? $this->unmarshall($cursorContext[$key]) : null;
     }
 
     protected function criteriaMatch($value, $criteria)

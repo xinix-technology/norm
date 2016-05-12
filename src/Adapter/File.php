@@ -1,6 +1,7 @@
 <?php
 namespace Norm\Adapter;
 
+use Norm\Repository;
 use Norm\Cursor;
 use Norm\Collection;
 use Norm\Exception\NormException;
@@ -10,7 +11,7 @@ class File extends Memory
 {
     protected $dataDir;
 
-    public function __construct(Repository $repository = null, $id = 'main', array $options = [])
+    public function __construct(Repository $repository, $id = 'main', array $options = [])
     {
         parent::__construct($repository, $id);
 
@@ -50,23 +51,9 @@ class File extends Memory
         }
     }
 
-    public function distinct(Cursor $cursor, $key)
-    {
-        $this->fetch($cursor);
-
-        $result = [];
-        foreach ($cursor->getContext() as $row) {
-            $v = $row[$key];
-            if (!in_array($v, $result)) {
-                $result[] = $v;
-            }
-        }
-        return $result;
-    }
-
     protected function fetch(Cursor $cursor)
     {
-        if (null === $cursor->getContext()) {
+        if (null === ($cursorContext = $cursor->getContext())) {
             $cursorContext = [];
 
             $query = [
@@ -128,26 +115,8 @@ class File extends Memory
             }
 
             $cursor->setContext($cursorContext);
-            return $cursorContext;
         }
-    }
 
-    public function size(Cursor $cursor, $withLimitSkip = false)
-    {
-        $this->fetch($cursor);
-        return count($cursor->getContext());
+        return $cursorContext;
     }
-
-    // public function marshallCriteria(array $criteria, $deep = false)
-    // {
-    //     var_dump(parent::marshallCriteria($criteria, $deep));
-    //     exit;
-    //     // $newCriteria = [];
-    //     // foreach ($criteria as $key => $value) {
-    //     //     var_dump($key);
-    //     //     exit;
-    //     //     // $newCriteria
-    //     // }
-    //     // return $newCriteria;
-    // }
 }

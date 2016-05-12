@@ -53,6 +53,12 @@ class SqlTest extends PHPUnit_Framework_TestCase
     {
         $dialect = $this->getMockForAbstractClass(Sql::class);
         $this->assertEquals(
+            $dialect->grammarWhere([]),
+            ''
+        );
+
+        $dialect = $this->getMockForAbstractClass(Sql::class);
+        $this->assertEquals(
             $dialect->grammarWhere(['id' => 10 ]),
             'WHERE id = :id'
         );
@@ -74,9 +80,23 @@ class SqlTest extends PHPUnit_Framework_TestCase
             $dialect->grammarOrder(['id' => 1 ]),
             'ORDER BY id ASC'
         );
+
+        $this->assertEquals(
+            $dialect->grammarOrder([]),
+            ''
+        );
     }
 
     public function testGrammarLimit()
+    {
+        $dialect = $this->getMockForAbstractClass(Sql::class);
+        $this->assertEquals(
+            $dialect->grammarCount('foo'),
+            'SELECT COUNT(*) AS count FROM foo'
+        );
+    }
+
+    public function testGrammarCount()
     {
         $dialect = $this->getMockForAbstractClass(Sql::class);
         $this->assertEquals(

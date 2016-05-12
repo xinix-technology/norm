@@ -22,6 +22,9 @@ class DateTimeTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($dt->format('H'), $dt->serverFormat('H'));
 
         $this->assertEquals($dt->__debugInfo()['server'], date('c'));
+
+        $dt = new DateTime('now');
+        $this->assertEquals($dt->format('H'), $dt->serverFormat('H'));
     }
 
     public function testJsonSerializeOrToString()

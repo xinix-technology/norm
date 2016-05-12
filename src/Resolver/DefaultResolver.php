@@ -10,9 +10,9 @@ class DefaultResolver
 
     public function __construct(array $options = [])
     {
-        $this->options = Options::create([
+        $this->options = (new Options([
                 'resolvePaths' => [ '../config/collections' ]
-            ])
+            ]))
             ->merge($options);
     }
 

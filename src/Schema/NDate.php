@@ -9,7 +9,7 @@ class NDate extends NDateTime
     protected function formatInput($value, $model = null)
     {
 
-        return $this->render('__norm__/ndate/input', [
+        return $this->repository->render('__norm__/ndate/input', [
             'value' => $value,
             'self' => $this,
         ]);
@@ -17,7 +17,7 @@ class NDate extends NDateTime
 
     protected function formatReadonly($value, $model = null)
     {
-        return $this->render('__norm__/ndate/readonly', [
+        return $this->repository->render('__norm__/ndate/readonly', [
             'value' => $value,
             'self' => $this,
         ]);

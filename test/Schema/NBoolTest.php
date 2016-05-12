@@ -3,13 +3,28 @@ namespace Norm\Test\Schema;
 
 use PHPUnit_Framework_TestCase;
 use Norm\Schema\NBool;
-use Norm\Schema;
+use ROH\Util\Injector;
+use Norm\Repository;
+use Norm\Connection;
+use Norm\Collection;
 
 class NBoolTest extends PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        $this->injector = new Injector();
+        $repository = $this->getMock(Repository::class, []);
+        $repository->method('render')->will($this->returnCallback(function($template) {
+            return $template;
+        }));
+        $this->injector->singleton(Repository::class, $repository);
+        $this->injector->singleton(Connection::class, $this->getMockForAbstractClass(Connection::class, [$repository]));
+        $this->injector->singleton(Collection::class, $this->getMock(Collection::class, null, [ $this->injector->resolve(Connection::class), 'Foo' ]));
+    }
+
     public function testPrepare()
     {
-        $field = new NBool(null, 'foo');
+        $field = $this->injector->resolve(NBool::class, ['name' => 'foo']);
 
         $this->assertEquals($field->prepare('1'), true);
         $this->assertEquals($field->prepare(1), true);
@@ -24,18 +39,14 @@ class NBoolTest extends PHPUnit_Framework_TestCase
 
     public function testFormatInput()
     {
-        $schema = $this->getMock(Schema::class);
-        $schema->method('render')->will($this->returnCallback(function($template) {
-            return $template;
-        }));
-        $field = new NBool($schema, 'foo');
+        $field = $this->injector->resolve(NBool::class, ['name' => 'foo']);
         $result = $field->format('input');
         $this->assertEquals($result, '__norm__/nbool/input');
     }
 
     public function testFormatPlain()
     {
-        $field = new NBool(null, 'foo');
+        $field = $this->injector->resolve(NBool::class, ['name' => 'foo']);
         $this->assertEquals($field->format('plain', true), 'True');
         $this->assertEquals($field->format('plain', 1), 'True');
         $this->assertEquals($field->format('plain', 100), 'True');

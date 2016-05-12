@@ -21,7 +21,7 @@ class NObject extends NField
 
     protected function formatReadonly($value, $model = null)
     {
-        return $this->render('__norm__/nobject/readonly', [
+        return $this->repository->render('__norm__/nobject/readonly', [
             'value' => $value,
             'self' => $this,
         ]);
@@ -29,7 +29,7 @@ class NObject extends NField
 
     protected function formatInput($value, $model = null)
     {
-        return $this->render('__norm__/nobject/input', [
+        return $this->repository->render('__norm__/nobject/input', [
             'value' => $value,
             'self' => $this,
         ]);

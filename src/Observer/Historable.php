@@ -10,7 +10,7 @@ class Historable
 {
     public function initialize($context)
     {
-        $context['collection']->getSchema()
+        $context['collection']
             ->addField([ NList::class, [
                 'name' => '$history',
                 'attributes' => [

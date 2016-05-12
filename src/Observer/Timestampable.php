@@ -11,19 +11,18 @@ class Timestampable
 
     public function __construct($options = [])
     {
-        $this->options = Options::create([
+        $this->options = (new Options([
             'createdKey' => '$created_time',
             'updatedKey' => '$updated_time',
-        ])->merge($options);
+        ]))->merge($options);
     }
 
     public function initialize($context)
     {
-        $schema = $context['collection']->getSchema();
-        $schema->addField([ NDateTime::class, [
+        $context['collection']->addField([ NDateTime::class, [
             'name' => $this->options['createdKey']
         ]]);
-        $schema->addField([ NDateTime::class, [
+        $context['collection']->addField([ NDateTime::class, [
             'name' => $this->options['updatedKey']
         ]]);
     }

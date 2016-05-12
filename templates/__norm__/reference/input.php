@@ -1,4 +1,4 @@
-<select name="<?php echo isset($name) ? $name : $self['name'] ?>" data-value="<?php echo @$value ?>">
+<select name="<?php echo null !== $name ? $name : $self['name'] ?>" data-value="<?php echo @$value ?>">
     <option value="">---</option>
     <?php foreach ($self['foreign']() as $foreignValue => $foreignLabel): ?>
         <option value="<?php echo $foreignValue ?>" <?php echo ($foreignValue == $value ? 'selected' : '') ?>>

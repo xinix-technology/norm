@@ -8,25 +8,21 @@ use Norm\Connection;
 use Norm\Repository;
 use Norm\Schema\NField;
 use PHPUnit_Framework_TestCase;
+use ROH\Util\Injector;
 
 class ModelTest extends PHPUnit_Framework_TestCase
 {
-    // protected $repository;
-
-    // public function setUp()
-    // {
-    //     $connection = $this->getMock(Connection::class);
-    //     $this->repository = new Repository();
-    //     $collection = new Collection($this->repository, $connection, ['name' => 'Foo']);
-    // }
+    public function setUp()
+    {
+        $this->injector = new Injector();
+        $this->injector->singleton(Repository::class, $this->getMock(Repository::class));
+        $this->injector->singleton(Connection::class, $this->getMockForAbstractClass(Connection::class, [$this->injector->resolve(Repository::class)]));
+        $this->injector->singleton(Collection::class, $this->getMock(Collection::class, null, [ $this->injector->resolve(Connection::class), 'Foo' ]));
+    }
 
     public function testSetUnsetHas()
     {
-        $collection = $this->getMock(Collection::class, null, [
-            $this->getMock(Connection::class),
-            'Foo'
-        ]);
-        $model = new Model($collection);
+        $model = $this->injector->resolve(Model::class);
         try {
             $model->set('$id', 10);
             $this->fail('Must not here');
@@ -36,7 +32,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
             }
         }
 
-        $model = new Model($collection, ['$id' => 1]);
+        $model = $this->injector->resolve(Model::class, [ 'attributes' => [ '$id' => 1 ] ]);
         $this->assertEquals($model['$id'], 1);
 
         $model->set([
@@ -59,34 +55,26 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
     public function testReader()
     {
-        $collection = $this->getMock(Collection::class, null, [
-            $this->getMock(Connection::class),
-            'Foo'
-        ]);
-        $model = new Model($collection, [
-            '$id' => 1,
-            'foo' => 'bar',
-            'bar' => 'baz',
-        ]);
-        $schema = $model->getSchema();
-        $fooField = $this->getMockForAbstractClass(NField::class, [$schema, 'foo']);
+        $fooField = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class), 'foo' ]);
         $fooField->setReader(function() {
             return 'hijacked!';
         });
-        $schema->addField($fooField);
+        $this->injector->resolve(Collection::class)->addField($fooField);
+
+        $model = $this->injector->resolve(Model::class, [ 'attributes' => [
+            '$id' => 1,
+            'foo' => 'bar',
+            'bar' => 'baz',
+        ]]);
         $this->assertEquals($model['foo'], 'hijacked!');
     }
 
     public function testClear()
     {
-        $collection = $this->getMock(Collection::class, null, [
-            $this->getMock(Connection::class),
-            'Foo'
-        ]);
-        $model = new Model($collection, [
+        $model = $this->injector->resolve(Model::class, [ 'attributes' => [
             'foo' => 'foo',
             'bar' => 'bar',
-        ]);
+        ]]);
         $this->assertNotNull($model->clear('bar')['foo']);
         $this->assertNull($model->clear()['foo']);
         try {
@@ -103,55 +91,42 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
     public function testFilter()
     {
-        $collection = $this->getMock(Collection::class, null, [
-            $this->getMock(Connection::class),
-            'Foo'
+        $collection = $this->getMock(Collection::class, ['filter'], [ $this->injector->resolve(Connection::class), 'Foo' ]);
+        $collection->expects($this->once())->method('filter');
+
+        $model = $this->injector->resolve(Model::class, [
+            'collection' => $collection,
+            'attributes' => ['foo' => 'bar']
         ]);
-        (new Model($collection))->filter();
+        $model->filter();
     }
 
     public function testPrevious()
     {
-        $collection = $this->getMock(Collection::class, null, [
-            $this->getMock(Connection::class),
-            'Foo'
-        ]);
-        $model = new Model($collection, ['foo' => 'bar']);
+        $model = $this->injector->resolve(Model::class, [ 'attributes' => ['foo' => 'bar']]);
         $this->assertEquals($model->previous(), ['foo' => 'bar']);
         $this->assertEquals($model->previous('foo'), 'bar');
     }
 
     public function testStatus()
     {
-        $collection = $this->getMock(Collection::class, null, [
-            $this->getMock(Connection::class),
-            'Foo'
-        ]);
-        $model = new Model($collection, ['foo' => 'bar']);
+        $model = $this->injector->resolve(Model::class, [ 'attributes' => ['foo' => 'bar']]);
         $this->assertEquals($model->isRemoved(), false);
     }
 
     public function testToArrayAndDebugInfo()
     {
-        $collection = $this->getMock(Collection::class, null, [
-            $this->getMock(Connection::class),
-            'Foo'
-        ]);
-        $model = new Model($collection, ['foo' => 'bar']);
+        $model = $this->injector->resolve(Model::class, [ 'attributes' => ['foo' => 'bar']]);
         $this->assertEquals($model->toArray(), $model->__debugInfo());
     }
 
     public function testToArray()
     {
-        $collection = $this->getMock(Collection::class, null, [
-            $this->getMock(Connection::class),
-            'Foo'
-        ]);
-        $model = new Model($collection, [
+        $model = $this->injector->resolve(Model::class, [ 'attributes' => [
             '$id' => 1,
             '$hidden' => 'yes',
             'foo' => 'bar'
-        ]);
+        ]]);
 
         $this->assertEquals($model->toArray(), ['$id' => 1, '$hidden' => 'yes', 'foo' => 'bar', '$type' => 'Foo']);
         $this->assertEquals($model->toArray(Model::FETCH_ALL), ['$id' => 1, '$hidden' => 'yes', 'foo' => 'bar', '$type' => 'Foo']);
@@ -162,24 +137,17 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
     public function testJsonSerialize()
     {
-        $collection = $this->getMock(Collection::class, null, [
-            $this->getMock(Connection::class),
-            'Foo'
-        ]);
-        $model = new Model($collection, [
+        $model = $this->injector->resolve(Model::class, [ 'attributes' => [
             '$id' => 1,
             'foo' => 'bar'
-        ]);
+        ]]);
 
         $this->assertEquals($model->jsonSerialize()['foo'], 'bar');
     }
 
     public function testSaveAndRemove()
     {
-        $collection = $this->getMock(Collection::class, ['save', 'remove'], [
-            $this->getMock(Connection::class),
-            'Foo'
-        ]);
+        $collection = $this->getMock(Collection::class, ['save', 'remove'], [ $this->injector->resolve(Connection::class), 'Foo' ]);
         $collection
             ->expects($this->once())
             ->method('save')
@@ -192,9 +160,13 @@ class ModelTest extends PHPUnit_Framework_TestCase
             ->will($this->returnCallback(function($model) {
                 $model->reset(true);
             }));
-        $model = new Model($collection, [
-            '$id' => 1,
-            'foo' => 'bar'
+
+        $model = $this->injector->resolve(Model::class, [
+            'collection' => $collection,
+            'attributes' => [
+                '$id' => 1,
+                'foo' => 'bar'
+            ]
         ]);
         $model->save();
         $this->assertFalse($model->isNew());
@@ -205,26 +177,25 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
     public function testFormat()
     {
-        $collection = $this->getMock(Collection::class, ['save', 'remove'], [
-            $this->getMock(Connection::class),
-            'Foo'
-        ]);
-        $model = new Model($collection, [
+        $model = $this->injector->resolve(Model::class, [ 'attributes' => [
             '$id' => 1,
             'foo' => 'bar',
             'bar' => 'baz',
-        ]);
+        ]]);
         try {
             $model->format();
             $this->fail('Must not here');
         } catch(NormException $e) {
-            if ($e->getMessage() !== 'Cannot format explicit schema fields') {
+            if ($e->getMessage() !== 'Cannot format undefined fields') {
                 throw $e;
             }
         }
 
-        $field = $this->getMock(NField::class, null, [$model->getSchema(), 'foo']);
-        $model->getSchema()->addField($field);
+        $this->injector->resolve(Collection::class)
+            ->addField($this->getMock(NField::class, null, [
+                $this->injector->resolve(Collection::class),
+                'foo'
+            ]));
         $this->assertEquals($model->format(), 'bar');
         $this->assertEquals($model->format('plain'), 'bar');
         $this->assertEquals($model->format('plain', 'bar'), 'baz');

@@ -8,11 +8,10 @@ class Nestable
 {
     public function initialize($context)
     {
-        $schema = $context['collection']->getSchema();
-        $schema->addField([ NInteger::class, [
+        $context['collection']->addField([ NInteger::class, [
             'name' => '$lft'
         ]]);
-        $schema->addField([ NInteger::class, [
+        $context['collection']->addField([ NInteger::class, [
             'name' => '$rgt'
         ]]);
     }
@@ -57,9 +56,9 @@ class Nestable
             $right = $this->rebuildTree($collection, $row['$id'], $right);
         }
 
-        // // we've got the left value, and now that we've processed
-        // // the children of this node we also know the right value
-        if (isset($parent)) {
+        // we've got the left value, and now that we've processed
+        // the children of this node we also know the right value
+        if (null !== $parent) {
             $model = $collection->findOne($parent);
             $model['$lft'] = $left;
             $model['$rgt'] = $right;

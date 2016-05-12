@@ -4,14 +4,15 @@ namespace Norm;
 use Norm\Exception\NormException;
 use ROH\Util\Options;
 use ROH\Util\Injector;
+use Norm\Resolver\DefaultResolver;
 
-class Repository extends Normable
+class Repository
 {
     const TEMPLATE_PATH = __DIR__ . '/../templates/';
 
     /**
      * [$injector description]
-     * @var Injector
+     * @var ROH\Util\Injector
      */
     protected $injector;
 
@@ -67,53 +68,39 @@ class Repository extends Normable
      * [__construct description]
      * @param array $attributes [description]
      */
-    public function __construct(array $connections = [], array $attributes = [])
+    public function __construct(array $attributes = [], Injector $injector = null)
     {
-        // $this->injector = new Injector();
-        // $this->injector->singleton(Repository::class, $this);
-
-        parent::__construct();
-
         $this->attributes = $attributes;
+        $this->injector = $injector ?: Injector::getInstance();
+    }
 
-        foreach ($connections as $meta) {
-            $this->addConnection($this->resolve($meta));
-        }
-
-        // if (isset($attributes['collections'])) {
-        //     if (isset($attributes['collections']['default'])) {
-        //         $this->setDefault($attributes['collections']['default']);
-        //     }
-
-        //     if (isset($attributes['collections']['resolvers'])) {
-        //         foreach ($attributes['collections']['resolvers'] as $resolver) {
-        //             $this->addResolver($this->resolve($resolver));
-        //         }
-        //     }
-        // }
-
-        // if (isset($options['renderer'])) {
-        //     $this->renderer = $options['renderer'];
-        // }
+    public function resolve($contract, array $args = [])
+    {
+        return $this->injector->resolve($contract, $args);
     }
 
     /**
-     * [add description]
+     * [set description]
      * @param Connection $connection [description]
      */
-    // TODO do we need this?
     public function addConnection(Connection $connection)
     {
-        $connection->setRepository($this);
-
         $id = $connection->getId();
-        if (is_null($this->useConnection)) {
+        $this->connections[$id] = $connection;
+
+        if (null === $this->useConnection) {
             $this->useConnection = $id;
         }
 
-        $this->connections[$id] = $connection;
-
         return $this;
+    }
+
+    public function useConnection($id)
+    {
+        if (!isset($this->connections[$id])) {
+            throw new NormException('Unknown connection to use, id: ' . $id);
+        }
+        $this->useConnection = $id;
     }
 
     /**
@@ -123,7 +110,7 @@ class Repository extends Normable
      */
     public function getConnection($id = '')
     {
-        if (!is_null($id) && !is_string($id)) {
+        if (null !== $id && !is_string($id)) {
             throw new NormException('Connection id must be string');
         }
 
@@ -131,27 +118,6 @@ class Repository extends Normable
             $this->connections[$id ?: $this->useConnection] :
             null;
     }
-
-    // /**
-    //  * [getAttribute description]
-    //  * @param  string $key [description]
-    //  * @return mixed       [description]
-    //  */
-    // public function getAttribute($key)
-    // {
-    //     return isset($this->attributes[$key]) ? $this->attributes[$key] : null;
-    // }
-
-    // /**
-    //  * [setAttribute description]
-    //  * @param string $key   [description]
-    //  * @param string $value [description]
-    //  */
-    // public function setAttribute($key, $value)
-    // {
-    //     $this->attributes[$key] = $value;
-    //     return $this;
-    // }
 
     /**
      * [addResolver description]
@@ -161,6 +127,14 @@ class Repository extends Normable
     {
         $this->resolvers[] = $resolver;
         return $this;
+    }
+
+    public function getResolvers()
+    {
+        if (empty($this->resolvers)) {
+            $this->resolvers[] = new DefaultResolver();
+        }
+        return $this->resolvers;
     }
 
     /**
@@ -185,31 +159,38 @@ class Repository extends Normable
             throw new NormException('Collection and Connection Id must be string');
         }
 
-        $connection = $this->getConnection($connectionId ?: $this->useConnection);
-        if (is_null($connection)) {
+        $connectionId = $connectionId ?: $this->useConnection;
+        $connection = $this->getConnection($connectionId);
+        if (null === $connection) {
             throw new NormException('Undefined connection to create collection');
         }
 
-        $collectionSignature = $collectionId . '.' . $connection->getId();
-        if (!isset($this->collections[$collectionSignature])) {
-            $options = Options::create($this->default);
+        $collectionSignature = "$connectionId:$collectionId";
 
-            $found = false;
-            foreach ($this->resolvers as $resolver) {
+        if (!isset($this->collections[$collectionSignature])) {
+            $options = (new Options([
+                'name' => $collectionId,
+                'fields' => [],
+                'format' => [],
+                'model' => Model::class,
+            ]))->merge($this->default);
+
+
+            foreach ($this->getResolvers() as $resolver) {
                 $resolved = $resolver($collectionId);
-                if (isset($resolved)) {
+                if (null !== $resolved) {
                     $options->merge($resolved);
-                    $found = true;
                     break;
                 }
             }
 
-            $options->merge([
-                'connection' => $connection,
-                'name' => $collectionId,
-            ]);
-
-            $this->collections[$collectionSignature] = $this->resolve(Collection::class, $options->toArray());
+            $this->collections[$collectionSignature] = new Collection(
+                $connection,
+                $options['name'],
+                $options['fields'],
+                $options['format'],
+                $options['model']
+            );
         }
 
         return $this->collections[$collectionSignature];
@@ -242,19 +223,24 @@ class Repository extends Normable
             throw new NormException('Template to render must be string');
         }
 
-        if (isset($this->renderer)) {
+        if (null !== $this->renderer) {
             $render = $this->renderer;
             return $render($template, $data);
         } else {
-            $templateFile = static::TEMPLATE_PATH . $template . '.php';
-            if (is_readable($templateFile)) {
-                ob_start();
-                extract($data);
-                include $templateFile;
-                return ob_get_clean();
-            } else {
-                throw new NormException('Template not found, ' . $template);
-            }
+            return $this->defaultRender($template, $data);
+        }
+    }
+
+    public function defaultRender($template, array $data = [])
+    {
+        $templateFile = static::TEMPLATE_PATH . $template . '.php';
+        if (is_readable($templateFile)) {
+            ob_start();
+            extract($data);
+            include $templateFile;
+            return ob_get_clean();
+        } else {
+            throw new NormException('Template not found, ' . $template);
         }
     }
 
@@ -296,29 +282,9 @@ class Repository extends Normable
     public function __debugInfo()
     {
         return [
-            'connections' => $this->connections,
+            'connections' => array_keys($this->connections),
             'use' => $this->useConnection,
         ];
-    }
-
-    public function getInjector()
-    {
-        if (null === $this->injector) {
-            $this->setInjector(new Injector());
-        }
-        return $this->injector;
-    }
-
-    public function setInjector(Injector $injector)
-    {
-        $this->injector = $injector;
-        $this->injector->singleton(Normable::class, $this);
-        return $this;
-    }
-
-    public function resolve($contract, array $args = [])
-    {
-        return $this->getInjector()->resolve($contract, $args);
     }
 
     public function getAttribute($key)
