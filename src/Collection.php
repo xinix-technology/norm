@@ -74,23 +74,19 @@ class Collection extends Normable implements Iterator
     protected $formatters = [];
 
     /**
-     * Schema options
-     *
-     * @var array
-     */
-    // protected $options;
-
-    /**
-     * Schema data filters
+     * Collection data filters
      *
      * @var array
      */
     protected $filter;
 
     /**
-     * Constructor
-     *
-     * @param array $options
+     * [__construct description]
+     * @param Connection $connection [description]
+     * @param [type]     $name       [description]
+     * @param array      $fields     [description]
+     * @param array      $format     [description]
+     * @param [type]     $model      [description]
      */
     public function __construct(Connection $connection, $name, array $fields = [], array $format = [], $model = Model::class)
     {
