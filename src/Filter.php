@@ -84,9 +84,13 @@ class Filter extends Normable
             $filterArr = explode('|', $filterChain);
             foreach ($filterArr as $singleFilter) {
                 $parsed = explode(':', $singleFilter);
-                $parsed[1] = isset($parsed[1]) ? explode(',', $parsed[1]) : [];
-                $parsed[] = 's';
-                $ruleFilters[] = $parsed;
+                if (!isset($parsed[1]) && is_callable($parsed[0])) {
+                    $ruleFilters[] = [$parsed[0], [], 'f'];
+                } else {
+                    $parsed[1] = isset($parsed[1]) ? explode(',', $parsed[1]) : [];
+                    $parsed[] = 's';
+                    $ruleFilters[] = $parsed;
+                }
             }
         } elseif (is_array($filterChain)) {
             foreach ($filterChain as $f) {
@@ -208,10 +212,6 @@ class Filter extends Normable
 
         if (is_array($rules)) {
             foreach ($rules as $k => $rule) {
-                // if (empty($rule['filter'])) {
-                //     continue;
-                // }
-
                 foreach ($rule['filter'] as $filter) {
                     try {
                         $data[$k] = $this->execFilter($filter, $data, $k, $rule);
@@ -266,7 +266,7 @@ class Filter extends Normable
      */
     protected function filterRequired($value, $opts)
     {
-        if (null === $value || $value === '') {
+        if (null === $value || '' === $value) {
             throw (new FilterException('Field %s is required'))
                 ->setContext($opts['key'])
                 ->setArgs($this->getLabel($opts['key']));
