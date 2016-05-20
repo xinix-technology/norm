@@ -1,29 +1,36 @@
 
-<?php $uniqueId = uniqid($this['name'].'_') ?>
+<!-- ntoken -->
+<?php $uniqueId = uniqid('ntoken-') ?>
 
-<!-- // FIXME should be overriden for UX -->
-
-<div style="display: flex"><input type="text"
-    name="<?php echo $this['name'] ?>"
-    value="<?php echo $value ?>"
-    placeholder="<?php echo $self->translate($this['label']) ?>"
-    autocomplete="off" /><a href="#"
-            style="display: block;padding-right: 15px;line-height: 30px;height: 30px;"
-            id="<?php echo $uniqueId ?>">Generate</a></div>
+<div id="<?php echo $uniqueId ?>" class="field-group">
+    <input type="text"
+        name="<?php echo $self['name'] ?>"
+        value="<?php echo $value ?>"
+        placeholder="<?php echo $self->translate($self['label']) ?>"
+        />
+    <a href="#" class="button">Generate</a>
+</div>
 
 <script type="text/javascript">
-$("#<?php echo $uniqueId ?>").on("click", function(evt) {
-    evt.preventDefault();
-    evt.stopImmediatePropagation();
-    $(this).siblings().val((function makeid(len) {
-        len = len || 5;
-        var text = "";
-        var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+(function() {
+    'use strict';
 
-        for( var i=0; i < len; i++ )
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
+    var containerEl = document.querySelector("#<?php echo $uniqueId ?>");
 
-        return text;
-    })(20));
-});
+    containerEl.querySelector('a').addEventListener("click", function(evt) {
+        evt.preventDefault();
+        evt.stopImmediatePropagation();
+
+        containerEl.querySelector('input').value = (function makeid(len) {
+            len = len || 5;
+            var text = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+            for( var i=0; i < len; i++ )
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+            return text;
+        })(20);
+    });
+})();
 </script>

@@ -1,2 +1,2 @@
 
-<span class="field"><?php echo $value['name'] ?: '-' ?></span>
+<span class="field"><?php echo $value ? $value->getPath() : '-' ?></span>

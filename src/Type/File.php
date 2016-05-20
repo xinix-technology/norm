@@ -2,12 +2,15 @@
 
 namespace Norm\Type;
 
+use JsonKit\JsonSerializer;
 use Norm\Exception\NormException;
+use Norm\Type\Marshallable;
 
-class File {
+class File implements JsonSerializer, Marshallable
+{
     protected $baseDirectory;
 
-    protected $type;
+    // protected $type;
 
     protected $path;
 
@@ -53,5 +56,20 @@ class File {
             $this->size = filesize($this->actualPath);
         }
         return $this->size;
+    }
+
+    public function __toString()
+    {
+        return $this->getPath();
+    }
+
+    public function jsonSerialize()
+    {
+        return $this->getPath();
+    }
+
+    public function marshall()
+    {
+        return $this->getPath();
     }
 }

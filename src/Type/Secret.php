@@ -11,7 +11,7 @@ use JsonKit\JsonSerializer;
  * @link      http://sagara.id/p/product Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
-class Secret implements JsonSerializer
+class Secret implements JsonSerializer, Marshallable
 {
     /**
      * Raw value

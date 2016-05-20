@@ -22,16 +22,15 @@ class NList extends NField
     protected function formatPlain($value, $model = null)
     {
         if (null !== $value) {
-            // TODO this checking should available on JsonKit
-            $value = substr(phpversion(), 0, 3) > '5.3' ? json_encode($value->toArray(), JSON_PRETTY_PRINT) : json_encode($value->toArray());
+            return implode(', ', $value->toArray());
         }
 
-        return $value;
     }
 
     protected function formatInput($value, $model = null)
     {
         return $this->repository->render('__norm__/nlist/input', array(
+            'self' => $this,
             'value' => $value,
             'entry' => $model,
         ));
@@ -40,6 +39,7 @@ class NList extends NField
     protected function formatReadonly($value, $model = null)
     {
         return $this->repository->render('__norm__/nlist/readonly', array(
+            'self' => $this,
             'value' => $value,
             'entry' => $model,
         ));

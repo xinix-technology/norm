@@ -19,6 +19,17 @@ class NObject extends NField
         return new TypeObject($value);
     }
 
+    public function formatPlain($value, $model = null)
+    {
+        if (null !== $value) {
+            $result = [];
+            foreach ($value as $k => $v) {
+                $result[] = $k.'='.$v;
+            }
+            return implode(', ', $result);
+        }
+    }
+
     protected function formatReadonly($value, $model = null)
     {
         return $this->repository->render('__norm__/nobject/readonly', [

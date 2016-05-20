@@ -5,6 +5,7 @@ use DateTimeZone;
 use DateTime as PhpDateTime;
 use JsonKit\JsonSerializer;
 use Norm\Normable;
+use Norm\Type\Marshallable;
 
 /**
  * Collection abstract class.
@@ -14,7 +15,7 @@ use Norm\Normable;
  * @link      http://sagara.id/p/product Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
-class DateTime extends PhpDateTime implements JsonSerializer
+class DateTime extends PhpDateTime implements JsonSerializer, Marshallable
 {
     protected $serverTz;
 
@@ -63,6 +64,11 @@ class DateTime extends PhpDateTime implements JsonSerializer
     public function __toString()
     {
         return $this->serverFormat('c');
+    }
+
+    public function marshall()
+    {
+        return $value->format('c');
     }
 
     public function __debugInfo()

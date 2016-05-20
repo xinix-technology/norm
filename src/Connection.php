@@ -3,8 +3,7 @@
 namespace Norm;
 
 use Norm\Exception\NormException;
-use Norm\Type\DateTime;
-use Norm\Type\ArrayList;
+use Norm\Type\Marshallable;
 
 /**
  * Base class for connection instance
@@ -109,11 +108,7 @@ abstract class Connection extends Normable
             $key = '_'.substr($key, 1);
         }
 
-        if ($value instanceof DateTime) {
-            $value = $value->format('c');
-        } elseif ($value instanceof ArrayList) {
-            $value = json_encode($value->toArray());
-        } elseif (method_exists($value, 'marshall')) {
+        if ($value instanceof Marshallable) {
             $value = $value->marshall();
         }
 

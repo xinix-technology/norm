@@ -2,6 +2,7 @@
 namespace Norm\Type;
 
 use ROH\Util\Collection;
+use JsonKit\JsonKit;
 
 /**
  * Collection abstract class.
@@ -11,7 +12,7 @@ use ROH\Util\Collection;
  * @link      http://sagara.id/p/product Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
-class Object extends Collection
+class Object extends Collection implements Marshallable
 {
     /**
      * {@inheritDoc}
@@ -21,5 +22,10 @@ class Object extends Collection
         $attrs = array_values($this->attributes);
 
         return in_array($o, $attrs);
+    }
+
+    public function marshall()
+    {
+        return JsonKit::encode($this->toArray());
     }
 }

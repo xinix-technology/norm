@@ -1,7 +1,5 @@
-<?php
-$uniqid = uniqid('array-');
-?>
-<div id="<?php echo $uniqid ?>">
+<?php $uniqid = uniqid('nlist-') ?>
+<div id="<?php echo $uniqid ?>" class="field-group nlist">
   <template class="tpl">
     <input type="text" name="<?php echo $self['name'] ?>[]" value="">
   </template>
@@ -18,11 +16,11 @@ $uniqid = uniqid('array-');
   <script type="text/javascript">
   (function() {
     var component = document.getElementById('<?php echo $uniqid ?>');
+    var container = component.querySelector('.container');
 
     component.querySelector('.button').addEventListener('click', function(evt) {
       evt.preventDefault();
       var tpl = component.querySelector('.tpl').cloneNode(true);
-      var container = component.querySelector('.container');
       container.appendChild(tpl.content);
     });
   })();

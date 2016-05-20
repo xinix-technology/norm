@@ -7,6 +7,7 @@ use Norm\Schema;
 use Norm\Collection;
 use Norm\Exception\NormException;
 use ROH\Util\StringFormatter;
+use JsonKit\JsonKit;
 
 class NReference extends NField
 {
@@ -75,6 +76,7 @@ class NReference extends NField
 
     protected function normFetcher($key = null, $offset = 0, $limit = 100)
     {
+        $col = $this->collection->factory($this['to$collection']);
         $cursor = $this->collection->factory($this['to$collection'])
             ->find($this['to$criteria'])
             ->skip($offset)
@@ -121,11 +123,9 @@ class NReference extends NField
 
     protected function formatPlain($value, $model = null)
     {
-        $row = $this->fetch($value);
-        if ($this['to$label']) {
-            return $row[$this['to$label']];
-        } else {
-            return $row;
+        if (null !== $value) {
+            $row = $this->fetch($value);
+            return $this['to$label'] ? $row[$this['to$label']] : $row->format();
         }
     }
 
@@ -133,6 +133,7 @@ class NReference extends NField
     {
         return $this->repository->render('__norm__/nreference/input', array(
             'self' => $this,
+            'name' => $this['name'],
             'value' => $value,
             'entry' => $model,
         ));

@@ -37,6 +37,7 @@ class NReferenceList extends NReference
     protected function formatReadonly($value, $model = null)
     {
         return $this->repository->render('__norm__/nreferencelist/readonly', array(
+            'self' => $this,
             'value' => $value,
             'entry' => $model,
         ));
@@ -45,6 +46,7 @@ class NReferenceList extends NReference
     protected function formatInput($value, $model = null)
     {
         return $this->repository->render('__norm__/nreferencelist/input', array(
+            'self' => $this,
             'value' => $value,
             'entry' => $model,
         ));
