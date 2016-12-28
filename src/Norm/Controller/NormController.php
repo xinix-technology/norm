@@ -88,7 +88,15 @@ class NormController extends RestController
      */
     public function getOr()
     {
-        $or = $this->request->get('!or') ? array("!or" => $this->request->get('!or')): array();
+        $or = array();
+
+        if($this->request->get('!or')){
+            foreach ($this->request->get('!or') as $key => $value) {
+                $or[] = array($key => $value);
+            }
+
+            $or = array("!or" => $or);
+        }
 
         return $or;
     }
