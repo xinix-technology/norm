@@ -115,7 +115,7 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
         return $this->limit;
     }
 
-    public function limit($limit)
+    public function setLimit($limit)
     {
         $this->limit = $limit;
 
@@ -134,7 +134,7 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
         return $this->skip;
     }
 
-    public function skip($skip)
+    public function setSkip($skip)
     {
         $this->skip = $skip;
 
@@ -153,7 +153,7 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
         return $this->sorts;
     }
 
-    public function sort(array $sorts)
+    public function setSort(array $sorts)
     {
         $this->sorts = $sorts;
 

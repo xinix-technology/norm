@@ -168,20 +168,14 @@ abstract class NField extends Normable implements ArrayAccess
      */
     public function addFilter($filter)
     {
-        $this->filter[] = $filter;
-        // $filters = func_get_args();
-        // foreach ($filters as $filter) {
-        //     if (is_string($filter)) {
-        //         $filter = explode('|', $filter);
-        //         foreach ($filter as $f) {
-        //             $farr = explode(':', $f);
-        //             // $this['filter.' . $farr[0]] = array_slice($farr, 1);
-        //             $this->filter[] = $f;
-        //         }
-        //     } else {
-        //         $this->filter[] = $filter;
-        //     }
-        // }
+        if (is_string($filter)) {
+            $filters = explode('|', $filter);
+            foreach ($filters as $filter) {
+                $this->filter[] = $filter;
+            }
+        } else {
+            $this->filter[] = $filter;
+        }
 
         return $this;
     }

@@ -175,7 +175,6 @@ class Repository
                 'model' => Model::class,
             ]))->merge($this->default);
 
-
             foreach ($this->getResolvers() as $resolver) {
                 $resolved = $resolver($collectionId);
                 if (null !== $resolved) {
@@ -183,6 +182,8 @@ class Repository
                     break;
                 }
             }
+
+            // FIXME kok ga pernah ada register observer?
 
             $this->collections[$collectionSignature] = new Collection(
                 $connection,

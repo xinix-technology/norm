@@ -31,11 +31,11 @@ class Filter extends Normable
     protected $collection;
 
     /**
-     * Available rules
+     * Available fields
      *
      * @var array
      */
-    protected $rules;
+    protected $fields;
 
     /**
      * Errors
@@ -78,6 +78,7 @@ class Filter extends Normable
      */
     protected static function parseFilterChain($filterChain, &$ruleFilters)
     {
+        // FIXME coba liat ini lagi, kayaknya ada yg ga bagus
         if (is_callable($filterChain)) {
             $ruleFilters[] = [$filterChain, [], 'f'];
         } elseif (is_string($filterChain)) {
@@ -101,14 +102,15 @@ class Filter extends Normable
 
     /**
      * [parseFilterRules description]
-     * @param  array $rules [description]
+     * @param  array $fields [description]
      * @return array        [description]
      */
-    public static function parseFilterRules($rules)
+    public static function parseFilterRules($fields)
     {
+        // FIXME coba liat ini lagi, kayaknya ada yg ga bagus
         $newRules = [];
 
-        foreach ($rules as $k => $rule) {
+        foreach ($fields as $k => $rule) {
             $ruleFilters = [];
             $filters = $rule instanceof NField ? $rule->getFilter() : (isset($rule['filter']) ? $rule['filter'] : []);
             static::parseFilterChain($filters, $ruleFilters);
@@ -122,17 +124,17 @@ class Filter extends Normable
     /**
      * [__construct description]
      * @param Collection $collection [description]
-     * @param array      $rules      [description]
+     * @param array      $fields      [description]
      */
-    public function __construct($rules = [], $immediate = false)
+    public function __construct($fields = [], $immediate = false)
     {
-        if ($rules instanceof Collection) {
-            $this->collection = $rules;
-            $this->repository = $rules->getRepository();
-        } else if (!is_array($rules)) {
+        if ($fields instanceof Collection) {
+            $this->collection = $fields;
+            $this->repository = $fields->getRepository();
+        } else if (!is_array($fields)) {
             throw new NormException('Rules must be array or instance of Schema');
         }
-        $this->rules = static::parseFilterRules($rules);
+        $this->fields = static::parseFilterRules($fields);
         $this->immediate = $immediate;
     }
 
@@ -149,7 +151,7 @@ class Filter extends Normable
      */
     public function getLabel($key)
     {
-        return isset($this->rules[$key]['label']) ? $this->rules[$key]['label'] : 'Unknown';
+        return isset($this->fields[$key]['label']) ? $this->fields[$key]['label'] : 'Unknown';
     }
 
     /**
@@ -200,18 +202,18 @@ class Filter extends Normable
     {
         $this->errors = [];
 
-        $rules = null;
+        $fields = null;
 
         if (null === $key) {
-            $rules = $this->rules;
-        } elseif (isset($this->rules[$key])) {
-            $rules = [
-                $key => $this->rules[$key]
+            $fields = $this->fields;
+        } elseif (isset($this->fields[$key])) {
+            $fields = [
+                $key => $this->fields[$key]
             ];
         }
 
-        if (is_array($rules)) {
-            foreach ($rules as $k => $rule) {
+        if (is_array($fields)) {
+            foreach ($fields as $k => $rule) {
                 foreach ($rule['filter'] as $filter) {
                     try {
                         $data[$k] = $this->execFilter($filter, $data, $k, $rule);
@@ -255,7 +257,7 @@ class Filter extends Normable
      */
     public function __debugInfo()
     {
-        return $this->rules;
+        return $this->fields;
     }
 
     /**

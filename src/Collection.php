@@ -102,7 +102,8 @@ class Collection extends Normable implements Iterator
             'inputFields' => [$this, 'formatInputFields'],
         ], $format);
 
-        $this->filter = new Filter($this);
+        // what is it for?
+        // $this->filter = new Filter($this);
 
         $this->connection = $connection;
 
@@ -251,13 +252,10 @@ class Collection extends Normable implements Iterator
             'observer' => true,
         ], $options);
 
-        if ($options['filter']) {
-            $this->filter($model);
-        }
-
         $context = new UtilCollection([
             'collection' => $this,
             'model' => $model,
+            'options' => $options,
         ]);
 
         if ($options['observer']) {
@@ -269,6 +267,9 @@ class Collection extends Normable implements Iterator
     }
 
     public function coreSave($context) {
+        if ($context['options']['filter']) {
+            $this->filter($context['model']);
+        }
         $context['modified'] = $this->connection->persist($this->getId(), $context['model']->dump());
     }
 
