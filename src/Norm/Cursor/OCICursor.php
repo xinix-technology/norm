@@ -7,8 +7,8 @@ use Norm\Cursor;
 /**
  * Oracle OCI Cursor.
  *
- * @author    Aprianto Pramana Putra <apriantopramanaputra@gmail.com>
- * @copyright 2013 PT Sagara Xinix Solusitama
+ * @author    Januar Siregar <januar.siregar@gmail.com>
+ * @copyright 2017 PT Sagara Xinix Solusitama
  * @link      http://xinix.co.id/products/norm Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
@@ -33,7 +33,7 @@ class OCICursor extends Cursor
      *
      * @var array
      */
-    protected $criteria;
+    
 
     /**
      * Raw query
@@ -87,15 +87,16 @@ class OCICursor extends Cursor
     /**
      * {@inheritDoc}
      */
-    public function __construct($collection)
+    public function __construct($collection, $criteria = array())
     {
+        parent::__construct($collection,$criteria);
+
         $this->collection = $collection;
 
-        $this->dialect = $collection->connection->getDialect();
-
-        $this->raw = $collection->connection->getRaw();
-
-        $this->criteria = $collection->getCriteria();
+        $this->dialect = $this->connection->getDialect();
+        
+        $this->raw = $this->connection->getRaw();
+        
     }
 
     /**
@@ -104,28 +105,19 @@ class OCICursor extends Cursor
     public function current()
     {
         if ($this->valid()) {
-            return $this->rows[$this->index];
+            // return $this->rows[$this->index];
+            return $this->collection->attach($this->rows[$this->index]);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function getNext()
-    {
-        $this->next();
-
-        return $this->current();
-    }
-
+    
     /**
      * {@inheritDoc}
      */
     public function next()
     {
-
         if (is_null($this->rows)) {
-            $this->execute();
+            $this->getStatement();
         }
 
         $this->index++;
@@ -165,13 +157,13 @@ class OCICursor extends Cursor
         $wheres   = array();
         $data     = array();
         $matchOrs = array();
-        $criteria = $this->prepareCriteria($this->criteria);
+        $criteria = $this->translateCriteria($this->criteria);
 
         if (is_null($this->match)) {
-            $criteria = $this->prepareCriteria($this->criteria);
+            $criteria = $this->translateCriteria($this->criteria);
             if ($criteria) {
                 foreach ($criteria as $key => $value) {
-                    $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
+                    $wheres[] = $this->dialect->grammarExpression($key, $value,$this->collection, $data);
                 }
             }
         } else {
@@ -194,18 +186,18 @@ class OCICursor extends Cursor
             $wheres[] = '('.implode(' OR ', $matchOrs).')';
         }
 
-        $query = "SELECT count(ROWNUM) r FROM " . $this->collection->name;
+        $query = "SELECT count(ROWNUM) r FROM " . $this->collection->getName();
 
-        if ($foundOnly) {
-            if (!empty($wheres)) {
-                $query .= ' WHERE '.implode(' AND ', $wheres);
-            }
+        
+        if (!empty($wheres)) {
+            $query .= ' WHERE '.implode(' AND ', $wheres);
         }
-
+        
+        
         $statement = oci_parse($this->raw, $query);
 
         foreach ($data as $key => $value) {
-            oci_bind_by_name($statement, ':'.$key, $data[$key]);
+                oci_bind_by_name($statement, ':'.$key, $data[$key]);
         }
 
         if ($foundOnly) {
@@ -247,6 +239,8 @@ class OCICursor extends Cursor
     /**
      * {@inheritDoc}
      */
+
+    // comment for other criteria 
     public function prepareCriteria($criteria)
     {
         if (is_null($criteria)) {
@@ -261,22 +255,40 @@ class OCICursor extends Cursor
         return $criteria ? : array();
     }
 
+
+    public function translateCriteria(array $criteria = array())
+    {
+        if (isset($criteria['$id'])) {
+            $criteria['id'] = $criteria['$id'];
+
+            unset($criteria['$id']);
+        }
+
+        return $criteria;
+    }
+
+
+    public function distinct($key){
+
+    }
+
     /**
      * Execute a query.
      *
      * @return int
      */
-    public function execute()
+    public function getStatement($type = null)
     {
         $data = array();
         $wheres = array();
         $matchOrs = array();
 
         if (is_null($this->match)) {
-            $criteria = $this->prepareCriteria($this->criteria);
+            $criteria = $this->translateCriteria($this->criteria);
+            
             if ($criteria) {
                 foreach ($criteria as $key => $value) {
-                    $wheres[] = $this->dialect->grammarExpression($key, $value, $data);
+                    $wheres[] = $this->dialect->grammarExpression($key, $value,$this->collection, $data);
                 }
             }
         } else {
@@ -305,8 +317,8 @@ class OCICursor extends Cursor
             $select .= 'rownum r, ';
         }
 
-        $select  .= $this->collection->name.'.*';
-        $query   = 'SELECT '.$select.' FROM '.$this->collection->name;
+        $select  .= $this->collection->getName().'.*';
+        $query   = 'SELECT '.$select.' FROM '.$this->collection->getName();
         $order   = '';
 
         if ($this->sortBy) {
@@ -337,7 +349,7 @@ class OCICursor extends Cursor
                 $limit = 'r > '.($this->skip).' AND ROWNUM <= ' . $this->limit;
             }
         } elseif ($this->limit > 0) {
-            $limit = 'ROWNUM <= ' . $this->limit;
+            $limit = 'r <= ' . $this->limit;
         }
 
         $query .= $order;
@@ -345,7 +357,7 @@ class OCICursor extends Cursor
         if ($limit !== '') {
             $query = 'SELECT * FROM ('.$query.') WHERE '.$limit;
         }
-
+        
         $statement = oci_parse($this->raw, $query);
 
         foreach ($data as $key => $value) {
@@ -353,13 +365,14 @@ class OCICursor extends Cursor
         }
 
         if ($matchOrs) {
+            
             $match = '%'.$this->match.'%';
 
             foreach ($matchOrs as $key => $value) {
                 oci_bind_by_name($statement, ':f'.$key, $match);
             }
         }
-
+        
         oci_execute($statement);
 
         $result = array();
@@ -368,19 +381,37 @@ class OCICursor extends Cursor
             $result[] = $row;
         }
 
+
         $this->rows = $result;
 
         oci_free_statement($statement);
 
         $this->index = -1;
+
     }
 
     /**
      * {@inheritDoc}
      */
-    public function sort(array $fields)
+    
+     public function sort(array $sorts = array())
     {
-        $this->sortBy = $fields;
+        if (func_num_args() === 0) {
+            return $this->sorts;
+        }
+
+        $this->sorts = array();
+        
+        foreach ($sorts as $key => $value) {
+            if ($key[0] === '$') {
+                
+                $key = 'h_' . substr($key, 1);
+            }
+
+            $this->sorts[$key] = $value;
+        }
+        
+        $this->sortBy = $this->sorts;
 
         return $this;
     }
@@ -388,7 +419,7 @@ class OCICursor extends Cursor
     /**
      * {@inheritDoc}
      */
-    public function limit($num)
+    public function limit($num =0)
     {
         $this->limit = $num;
 
@@ -398,7 +429,7 @@ class OCICursor extends Cursor
     /**
      * {@inheritDoc}
      */
-    public function skip($offset)
+    public function skip($offset = 0)
     {
         $this->skip = $offset;
 
