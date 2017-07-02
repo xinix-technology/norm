@@ -11,8 +11,8 @@ use Norm\Cursor\OCICursor as Cursor;
 /**
  * OCI Connection.
  *
- * @author    Aprianto Pramana Putra <apriantopramanaputra@gmail.com>
- * @copyright 2013 PT Sagara Xinix Solusitama
+ * @author    Januar Siregar <januar.siregar@gmail.com>
+ * @copyright 2017 PT Sagara Xinix Solusitama
  * @link      http://xinix.co.id/products/norm Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
@@ -27,7 +27,16 @@ class OCIConnection extends Connection
      *
      * @return void
      */
-    public function initialize(array $options = array())
+
+    public function __construct(array $options = array()){
+        
+        $this->initialize($options);
+    }
+
+    
+
+
+    public function initialize($options = array())
     {
         $defaultOptions = array(
             'username' => null,
@@ -38,6 +47,7 @@ class OCIConnection extends Connection
         );
 
         $this->options = array_merge($defaultOptions, $options);
+
 
         $this->raw = oci_connect(
             $this->options['username'],
@@ -75,9 +85,10 @@ class OCIConnection extends Connection
     /**
      * {@inheritDoc}
      */
-    public function query(Collection $collection)
-    {
-        return new Cursor($collection);
+    public function query($collection, array $criteria = array())
+    {   $collection = $this->factory($collection);
+        
+        return new Cursor($collection,$criteria);
     }
 
     /**
@@ -88,45 +99,65 @@ class OCIConnection extends Connection
      *
      * @return bool
      */
-    public function save(Collection $collection, Model $model)
+    public function persist($collection, array $document)
     {
-        $collectionName = $collection->name;
-        $data = $this->marshall($model->dump());
+        
+
+        if ($collection instanceof Collection) {
+            $collectionName = $collection->getName();
+        } else {
+            $collectionName = $collection;
+            $collection = static::factory($collection);
+        }
+        
+        $data = $this->marshall($document);
         $result = false;
 
-        if (is_null($model->getId())) {
+        
+        if (!isset($document['$id'])) {
             $id = $this->insert($collectionName, $data);
             if ($id) {
-                $model->setId($id);
-                $result = true;
+                $data['$id'] = $id;
+                $result = $data;
             }
         } else {
-            $data['id'] = $model->getId();
+            $data['id'] = $document['$id'];
+            unset($data['$id']);
             $result = $this->update($collectionName, $data);
 
             if ($result) {
-                $result = true;
+                $result = $data;
             }
         }
 
-        return $result;
+        return $this->unmarshall($result);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function remove(Collection $collection, $model)
+    public function remove($collection,$criteria = null)
     {
-        $collectionName = $collection->name;
-        $id = $model->getId();
+        if ($collection instanceof Collection) {
+            $collectionName = $collection->getName();
+        } else {
+            $collectionName = $collection;
+            $collection = static::factory($collection);
+        }
 
-        $sql = 'DELETE FROM '.$collectionName.' WHERE id = :id';
+        if($criteria instanceof Model){
+            $id = $criteria->getId();
 
-        $stid = oci_parse($this->raw, $sql);
-        oci_bind_by_name($stid, ":id", $id);
-        $result = oci_execute($stid);
-        oci_free_statement($stid);
+            $sql = 'DELETE FROM '.$collectionName.' WHERE id = :id';
 
+            $stid = oci_parse($this->raw, $sql);
+            oci_bind_by_name($stid, ":id", $id);
+            $result = oci_execute($stid);
+            oci_free_statement($stid);
+        }else{
+            throw new Exception('Unimplemented yet!');
+        }
+        
         return $result;
     }
 
@@ -190,25 +221,59 @@ class OCIConnection extends Connection
      */
     public function marshall($object)
     {
-        if ($object instanceof \Norm\Type\DateTime) {
-            return $object->format('Y-m-d H:i:s');
-        } elseif (is_array($object)) {
+       if (is_array($object)) {
             $result = array();
             foreach ($object as $key => $value) {
                 if ($key[0] === '$') {
                     if ($key === '$id' || $key === '$type') {
                         continue;
                     } else {
-                        $result[substr($key, 1)] = $this->marshall($value);
+                        $result['h_'.substr($key, 1)] = $this->marshall($value);
                     }
                 } else {
                     $result[$key] = $this->marshall($value);
                 }
             }
             return $result;
+        }else  if ($object instanceof \Norm\Type\DateTime) {
+            return $object->format('Y-m-d H:i:s');
+        }elseif ($object instanceof \Norm\Type\Collection) {
+            return json_encode($object->toArray());
+        }elseif (method_exists($object, 'marshall')) {
+            return $object->marshall();
         } else {
-            return parent::marshall($object);
+            return $object;
         }
+    }
+
+
+
+     public function unmarshall($object)
+    {
+
+        if($object instanceof \Norm\Model){
+            return $object;
+        }
+        $newobject = array();
+        if (isset($object['ID'])) {
+            $newobject['$id'] = $object['ID'];
+            
+        }
+
+        foreach ($object as $key => $value) {
+            if($key === 'R' || $key === 'ID'){
+                continue;
+            }
+            $key = strtolower($key);
+
+            if ($key[0].$key[1] === 'h_') {
+                $newobject['$'.substr($key,2)] = $value;
+            } else {
+                $newobject[$key] = $value;
+            }
+        }
+
+        return $newobject;
     }
 
     /**
