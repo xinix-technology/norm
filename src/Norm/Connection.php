@@ -199,7 +199,7 @@ abstract class Connection extends Hookable
      *
      * @return Norm\Cursor
      */
-    abstract public function query($collection, array $criteria = null);
+    abstract public function query($collection, array $criteria = array());
 
     /**
      * Persist specified document with current connection
