@@ -144,7 +144,7 @@ class Filter
                             } elseif (isset(static::$registries[$method]) &&
                                 is_callable(static::$registries[$method])) {
                                 $method = static::$registries[$method];
-                                $data[$k] = call_user_func($method, $data[$k], $data, $args);
+                                $data[$k] = call_user_func($method,$k , $data[$k], $data, $args);
                             } elseif (function_exists($method)) {
                                 $data[$k] = $method($data[$k]);
                             } else {
