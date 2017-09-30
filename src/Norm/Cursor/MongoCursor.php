@@ -206,6 +206,10 @@ class MongoCursor extends Cursor
             if ($multiValue) {
                 if (!empty($value)) {
                     $newValue = array();
+                    
+                    if(!is_array($value)){
+                        $value = array($value);
+                    }
 
                     foreach ($value as $k => $v) {
                         // TODO ini quickfix buat query norm array seperti mongo

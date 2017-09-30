@@ -190,8 +190,45 @@ abstract class Field implements \ArrayAccess, \Iterator, \JsonKit\JsonSerializer
         if (!empty($value)) {
             $value = htmlentities($value);
         }
-        return '<input type="text" name="'.$this['name'].'" value="'.$value.'" placeholder="'.l($this['label']).
-            '" autocomplete="off" />';
+
+        return $this->render('_schema/field/input', array(
+            'self' => $this,
+            'value' => $value,
+            'entry' => $entry
+        ));
+        
+    }
+
+    public function inputAttributes(){
+        $attributes = array();
+
+        if($this['input_attributes']){
+            $attributes = $this['input_attributes'];
+        }
+
+        return implode(" ",$attributes);
+
+
+    }
+
+    public function inputClass(){
+        $class = array();
+
+        $app = \Bono\App::getInstance();
+
+        if(!empty($app->config('bono.theme')['htmlclass'])){
+            $class = $app->config('bono.theme')['htmlclass'];
+        }
+
+        
+        
+        if(!empty($this['class'])){
+            $class = array_merge($class,$this['class']);
+        }
+
+        
+
+        return implode(" ",$class);
     }
 
     public function render($template, array $context = array())

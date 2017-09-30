@@ -176,7 +176,8 @@ class OCIConnection extends Connection
 
         $stid = oci_parse($this->raw, $sql);
 
-        oci_bind_by_name($stid, ":id", $id);
+        //Fixme : problem from other oracle dialect on method insert
+        oci_bind_by_name($stid, ":id", $id,-1,SQLT_INT);
 
         foreach ($data as $key => $value) {
             oci_bind_by_name($stid, ":".$key, $data[$key]);

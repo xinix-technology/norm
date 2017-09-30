@@ -1,0 +1,1 @@
+<input type="text" class="<?php echo $self->inputClass() ?>" <?php echo $self->inputAttributes() ?> name="<?php echo 	$self['name'] ?>" value="<?php echo $value ?>" placeholder="<?php echo $self['label'] ?>" autocomplete="off" />
