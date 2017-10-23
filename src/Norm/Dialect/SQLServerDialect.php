@@ -13,15 +13,15 @@ class SQLServerDialect extends SQLDialect
         'Norm\Schema\Integer' => 'INT',
         'Norm\Schema\Reference' => 'INT',
         'Norm\Schema\DateTime' => 'DATETIME',
-        'Norm\Schema\NormArray' => 'TEXT',
-        'Norm\Schema\Object' => 'TEXT',
-        'Norm\Schema\Text' => 'TEXT',
+        'Norm\Schema\NormArray' => 'VARCHAR(2000)',
+        'Norm\Schema\Object' => 'VARCHAR(2000)',
+        'Norm\Schema\Text' => 'VARCHAR(2000)',
         'Norm\Schema\String' => 'VARCHAR(255)',
     );
 
     public function grammarCount(Cursor $cursor, $foundOnly, array &$data = array())
     {
-        $sql = "FROM [{$cursor->getCollection()->getName()}]";
+        $sql = "FROM {$this->grammarEscape($cursor->getCollection()->getName())}";
 
         $wheres = array();
 
@@ -50,7 +50,7 @@ class SQLServerDialect extends SQLDialect
     }
 
     public function grammarDistinct(Cursor $cursor,$key){
-        $sql = "FROM {$cursor->getCollection()->getName()}";
+        $sql = "FROM {$this->grammarEscape($cursor->getCollection()->getName())}";
         $sql = 'SELECT DISTINCT('. $key .') '.$sql;
 
         return $sql;
@@ -64,6 +64,10 @@ class SQLServerDialect extends SQLDialect
         } else {
             throw new \Exception(__METHOD__.' unimplemented yet!');
         }
+    }
+
+    public function grammarEscape($value){
+        return '['.$value.']';
     }
 
     public function grammarCreate($name, $schema)
@@ -98,37 +102,7 @@ class SQLServerDialect extends SQLDialect
         return $sql;
     }
 
-    //fix by januar : handle for field using  word syntax, just give  charater ` for field
-    public function grammarInsert($collectionName, $data)
-    {
-        $fields = array();
-        $placeholders = array();
-
-        foreach ($data as $key => $value) {
-            if ($key === '$id') {
-                continue;
-            }
-
-            if ($key[0] === '$') {
-                $k = '_'.substr($key, 1);
-                $data[$k] = $value;
-                unset($data[$key]);
-            } else {
-                $k = $key;
-                $sets[] = $k.' = :'.$k;
-            }
-
-            $fields[] = $this->grammarEscape($k);
-            $placeholders[] = ':'.$k;
-        }
-
-        $sql = 'INSERT INTO ['.$this->grammarEscape($collectionName).'] ('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).');';
-        $sql .= 'SELECT SCOPE_IDENTITY();';
-        
-        return $sql;
-    }
-
-
+    
     public function grammarExpression($key, $value, $collection, &$data)
     {
         if ($key === '!or' || $key === '!and') {
@@ -207,7 +181,9 @@ class SQLServerDialect extends SQLDialect
         //fix me : change from grammar expresiion old to new grammar expresiion for operator in or nin
         if($operator == 'in' || $operator == 'nin') {
             $fgroup = array();
-
+            if(!is_array($value)){
+                $value = array($value);
+            }
             foreach ($value as $k => $v) {
                 $v1 = $v;
 
@@ -220,40 +196,17 @@ class SQLServerDialect extends SQLDialect
                 $fgroup[] = ':f'.$this->expressionCounter;
             }
 
-            return '['.$this->grammarEscape($field).'] '.$operator. ' ('.implode(', ', $fgroup).')';
+            return $this->grammarEscape($field).' '.$operator. ' ('.implode(', ', $fgroup).')';
         }
 
-        $fk = 'f'.$this->expressionCounter++;
+        $this->expressionCounter++
+        $fk = 'f'.$this->expressionCounter;
         $data[$fk] = $fValue;
 
-        return '['.$this->grammarEscape($field).'] '.$operator.' :'.$fk;
+        return $this->grammarEscape($field).' '.$operator.' :'.$fk;
 
     }
 
 
-    public function grammarUpdate($collectionName, $data)
-    {
-        $sets = array();
-        foreach ($data as $key => $value) {
-            if ($key === '$id') {
-                unset($data['$id']);
-                continue;
-            }
-
-            if ($key[0] === '$') {
-                $k = '_'.substr($key, 1);
-                $record[$k] = $value;
-                $sets[] = $k.' = :'.$k;
-
-                unset($record[$key]);
-            } else {
-                $k = $key;
-                $sets[] = $k.' = :'.$k;
-            }
-        }
-
-        $sql = 'UPDATE '.$this->grammarEscape($collectionName).' SET '.implode(', ', $sets) . ' WHERE id = :id';
-
-        return $sql;
-    }
+    
 }

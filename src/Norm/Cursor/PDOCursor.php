@@ -138,7 +138,7 @@ class PDOCursor extends Cursor
             $this->buffer = array();
             $this->next = false;
 
-            $sql = "SELECT * FROM {$this->collection->getName()}";
+            $sql = "SELECT * FROM {$this->connection->getDialect()->grammarEscape($this->collection->getName())}";
 
             $wheres = array();
             $data = array();
@@ -166,7 +166,7 @@ class PDOCursor extends Cursor
                         $op = ' DESC';
                     }
 
-                    $sorts[] = $key.$op;
+                    $sorts[] = $this->connection->getDialect()->grammarEscape($key).$op;
                 }
 
                 if (!empty($sorts)) {
@@ -178,6 +178,7 @@ class PDOCursor extends Cursor
                 $sql .= ' LIMIT '.($this->limit ?: -1).' OFFSET '.($this->skip ?: 0);
             }
 
+            
             $this->statement = $this->connection->getRaw()->prepare($sql);
 
             $this->statement->execute($data);

@@ -19,11 +19,11 @@ class OracleDialect extends SQLDialect
         $placeholders[] = 'SEQ_'.strtoupper($collectionName).'.NEXTVAL';
 
         foreach ($data as $key => $value) {
-            $fields[] = $key;
+            $fields[] = $this->grammarEscape($key);
             $placeholders[] = ':'.$key;
         }
         
-        $sql = 'INSERT INTO ' . $collectionName . '('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).') returning id into :id';
+        $sql = 'INSERT INTO ' . $this->grammarEscape($collectionName) . '('.implode(', ', $fields).') VALUES ('.implode(', ', $placeholders).') returning id into :id';
 
         return $sql;
     }
@@ -53,7 +53,7 @@ class OracleDialect extends SQLDialect
 
         foreach ($data as $key => $value) {
             $k = $key;
-            $sets[] = $k.' = :'.$k;
+            $sets[] = $this->grammarEscape($k).' = :'.$k;
         }
 
         $sql = 'UPDATE '.$collectionName.' SET '.implode(', ', $sets) . ' WHERE id = :id';
@@ -72,7 +72,7 @@ class OracleDialect extends SQLDialect
 
      public function grammarCount(Cursor $cursor, $foundOnly, array &$data = array())
     {
-        $sql = "FROM {$cursor->getCollection()->getName()}";
+        $sql = "FROM {$this->grammarEscape($cursor->getCollection()->getName())}";
 
         $wheres = array();
 
@@ -101,7 +101,7 @@ class OracleDialect extends SQLDialect
 
 
     public function grammarDistinct(Cursor $cursor,$key){
-        $sql = "FROM {$cursor->getCollection()->getName()}";
+        $sql = "FROM {$this->grammarEscape($cursor->getCollection()->getName())}";
         $sql = 'SELECT DISTINCT('. $key .') '.$sql;
 
         return $sql;
@@ -220,6 +220,14 @@ class OracleDialect extends SQLDialect
 
         return $this->grammarEscape($field).' '.$operator.' :'.$fk;
 
+
+    }
+
+    public function grammarDistinct(Cursor $cursor,$key){
+        $sql = "FROM {$cursor->getCollection()->getName()}";
+        $sql = 'SELECT DISTINCT('. $key .') '.$sql;
+
+        return $sql;
 
     }
     
