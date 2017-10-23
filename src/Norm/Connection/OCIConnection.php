@@ -7,6 +7,8 @@ use Norm\Collection;
 use Norm\Connection;
 use Norm\Dialect\OracleDialect;
 use Norm\Cursor\OCICursor as Cursor;
+use Norm\Type\DateTime as NDateTime;
+use Norm\Type\NDate; 
 
 /**
  * OCI Connection.
@@ -236,8 +238,10 @@ class OCIConnection extends Connection
                 }
             }
             return $result;
-        }else  if ($object instanceof \Norm\Type\DateTime) {
+        }else  if ($object instanceof NDateTime) {
             return $object->format('Y-m-d H:i:s');
+        }else  if ($object instanceof NDate) {
+            return $object->format('Y-m-d');
         }elseif ($object instanceof \Norm\Type\Collection) {
             return json_encode($object->toArray());
         }elseif (method_exists($object, 'marshall')) {
@@ -255,6 +259,7 @@ class OCIConnection extends Connection
         if($object instanceof \Norm\Model){
             return $object;
         }
+        
         $newobject = array();
         if (isset($object['ID'])) {
             $newobject['$id'] = $object['ID'];

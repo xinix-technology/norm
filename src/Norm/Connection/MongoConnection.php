@@ -9,7 +9,7 @@ use MongoClient;
 use Norm\Connection;
 use Norm\Collection;
 use Norm\Type\Object;
-use Norm\Type\DateTime as NormDateTime;
+use Norm\Type\DateTime as NDateTime;
 use Norm\Type\NormArray;
 use Norm\Cursor\MongoCursor;
 
@@ -186,7 +186,7 @@ class MongoConnection extends Connection
      */
     public function marshall($object)
     {
-        if ($object instanceof NormDateTime) {
+        if ($object instanceof NDateTime) {
             return new MongoDate($object->getTimestamp());
         } elseif ($object instanceof NormArray) {
             return $object->toArray();

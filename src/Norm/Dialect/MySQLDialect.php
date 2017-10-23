@@ -19,7 +19,7 @@ class MySQLDialect extends SQLDialect
 
     public function grammarCount(Cursor $cursor, $foundOnly, array &$data = array())
     {
-        $sql = "FROM {$cursor->getCollection()->getName()}";
+        $sql = "FROM {$this->grammarEscape($cursor->getCollection()->getName())}";
 
         $wheres = array();
 
@@ -47,7 +47,7 @@ class MySQLDialect extends SQLDialect
     }
 
     public function grammarDistinct(Cursor $cursor,$key){
-        $sql = "FROM {$cursor->getCollection()->getName()}";
+        $sql = "FROM {$this->grammarEscape($cursor->getCollection()->getName())}";
         $sql = 'SELECT DISTINCT('. $key .') '.$sql;
 
         return $sql;
@@ -57,7 +57,7 @@ class MySQLDialect extends SQLDialect
     public function grammarDelete(Collection $collection, array $criteria = array())
     {
         if (func_num_args() === 1) {
-            return "TRUNCATE {$collection->getName()}";
+            return "TRUNCATE {$this->grammarEscape($collection->getName())}";
         } else {
             throw new \Exception(__METHOD__.' unimplemented yet!');
         }
@@ -95,35 +95,7 @@ class MySQLDialect extends SQLDialect
         return $sql;
     }
 
-    //fix by januar : handle for field using  word syntax, just give  charater ` for field
-    public function grammarInsert($collectionName, $data)
-    {
-        $fields = array();
-        $placeholders = array();
-
-        foreach ($data as $key => $value) {
-            if ($key === '$id') {
-                continue;
-            }
-
-            if ($key[0] === '$') {
-                $k = '_'.substr($key, 1);
-                $data[$k] = $value;
-                unset($data[$key]);
-            } else {
-                $k = $key;
-                $sets[] = $k.' = :'.$k;
-            }
-
-            $fields[] = $this->grammarEscape($k);
-            $placeholders[] = ':'.$k;
-        }
-
-        $sql = 'INSERT INTO '.$this->grammarEscape($collectionName).' (`'.implode('`, `', $fields).'`) VALUES ('.implode(', ', $placeholders).')';
-        
-        return $sql;
-    }
-
+    
 
     public function grammarExpression($key, $value, $collection, &$data)
     {
@@ -192,6 +164,7 @@ class MySQLDialect extends SQLDialect
                     throw new Exception('Operator regex is not supported to query.');
                 case 'in':
                 case 'nin':
+                case 'isnull':
                     $operator = $splitted[1];
                 break;
 
@@ -203,6 +176,10 @@ class MySQLDialect extends SQLDialect
         //fix me : change from grammar expresiion old to new grammar expresiion for operator in or nin
         if($operator == 'in' || $operator == 'nin') {
             $fgroup = array();
+            
+            if(!is_array($value)){
+                $value = array($value);
+            }
 
             foreach ($value as $k => $v) {
                 $v1 = $v;
@@ -216,40 +193,47 @@ class MySQLDialect extends SQLDialect
                 $fgroup[] = ':f'.$this->expressionCounter;
             }
 
-            return '`'.$this->grammarEscape($field).'` '.$operator. ' ('.implode(', ', $fgroup).')';
+            return $this->grammarEscape($field).' '.$operator. ' ('.implode(', ', $fgroup).')';
+        }elseif($operator == 'isnull'){
+            return $this->grammarEscape($field).' is null';
         }
 
-        $fk = 'f'.$this->expressionCounter++;
+        $this->expressionCounter++;
+        $fk = 'f'.$this->expressionCounter;
         $data[$fk] = $fValue;
 
-        return '`'.$this->grammarEscape($field).'` '.$operator.' :'.$fk;
+        return $this->grammarEscape($field).' '.$operator.' :'.$fk;
 
 
     }
 
-    public function grammarUpdate($collectionName, $data)
-    {
-        $sets = array();
-        foreach ($data as $key => $value) {
-            if ($key === '$id') {
-                unset($data['$id']);
-                continue;
-            }
-
-            if ($key[0] === '$') {
-                $k = '_'.substr($key, 1);
-                $record[$k] = $value;
-                $sets[] = '`'.$k.'` = :'.$k;
-
-                unset($record[$key]);
-            } else {
-                $k = $key;
-                $sets[] = '`'.$k.'` = :'.$k;
-            }
-        }
-
-        $sql = 'UPDATE '.$this->grammarEscape($collectionName).' SET '.implode(', ', $sets) . ' WHERE id = :id';
-
-        return $sql;
+    public function grammarEscape($value){
+        return '`'. $value . '`';
     }
+
+    // public function grammarUpdate($collectionName, $data)
+    // {
+    //     $sets = array();
+    //     foreach ($data as $key => $value) {
+    //         if ($key === '$id') {
+    //             unset($data['$id']);
+    //             continue;
+    //         }
+
+    //         if ($key[0] === '$') {
+    //             $k = '_'.substr($key, 1);
+    //             $record[$k] = $value;
+    //             $sets[] = '`'.$k.'` = :'.$k;
+
+    //             unset($record[$key]);
+    //         } else {
+    //             $k = $key;
+    //             $sets[] = '`'.$k.'` = :'.$k;
+    //         }
+    //     }
+
+    //     $sql = 'UPDATE '.$this->grammarEscape($collectionName).' SET '.implode(', ', $sets) . ' WHERE id = :id';
+
+    //     return $sql;
+    // }
 }

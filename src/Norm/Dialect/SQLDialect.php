@@ -156,7 +156,9 @@ abstract class SQLDialect
         //fix me : change from grammar expresiion old to new grammar expresiion for operator in or nin
         if($operator == 'in' || $operator == 'nin') {
             $fgroup = array();
-
+            if(!is_array($value)){
+                $value = array($value);
+            }
             foreach ($value as $k => $v) {
                 $v1 = $v;
 
@@ -172,7 +174,8 @@ abstract class SQLDialect
             return $this->grammarEscape($field).' '.$operator. ' ('.implode(', ', $fgroup).')';
         }
 
-        $fk = 'f'.$this->expressionCounter++;
+        $this->expressionCounter++;
+        $fk = 'f'.$this->expressionCounter;
         $data[$fk] = $fValue;
 
         return $this->grammarEscape($field).' '.$operator.' :'.$fk;
@@ -219,17 +222,17 @@ abstract class SQLDialect
             if ($key[0] === '$') {
                 $k = '_'.substr($key, 1);
                 $record[$k] = $value;
-                $sets[] = $k.' = :'.$k;
+                $sets[] = $this->grammarEscape($k).' = :'.$k;
 
                 unset($record[$key]);
             } else {
                 $k = $key;
-                $sets[] = $k.' = :'.$k;
+                $sets[] = $this->grammarEscape($k).' = :'.$k;
             }
         }
 
         $sql = 'UPDATE '.$this->grammarEscape($collectionName).' SET '.implode(', ', $sets) . ' WHERE id = :id';
-
+        
         return $sql;
     }
 }
