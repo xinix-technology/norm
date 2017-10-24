@@ -11,6 +11,7 @@ class MySQLDialect extends SQLDialect
         'Norm\Schema\Integer' => 'INT',
         'Norm\Schema\Reference' => 'INT',
         'Norm\Schema\DateTime' => 'DATETIME',
+        'Norm\Schema\NDate' => 'DATE',
         'Norm\Schema\NormArray' => 'TEXT',
         'Norm\Schema\Object' => 'TEXT',
         'Norm\Schema\Text' => 'TEXT',
