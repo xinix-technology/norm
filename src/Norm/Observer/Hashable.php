@@ -12,7 +12,7 @@ class Hashable
 
     public function __construct($options = array())
     {
-        $this->options = array_merge_recursive($this->options, $options);
+        $this->options = array_merge($this->options, $options);
     }
 
     public function saving($model)

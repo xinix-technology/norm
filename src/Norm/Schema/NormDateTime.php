@@ -17,7 +17,7 @@ class NormDateTime extends Field
         } else {
             $t = date('c', (int) $value);
         }
-        return new \Norm\Type\DateTime($t);
+        return new \Norm\Type\NDateTime($t);
     }
 
     public function formatInput($value, $entry = null)
