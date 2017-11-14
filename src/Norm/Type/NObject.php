@@ -10,7 +10,7 @@ use stdClass;
  * @link      http://xinix.co.id/products/norm Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
-class NObject extends NCollection
+class NObject extends Collection
 {
     /**
      * Convert this class to a standard object.

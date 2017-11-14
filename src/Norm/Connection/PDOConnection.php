@@ -3,7 +3,8 @@
 use Norm\Collection;
 use Norm\Model;
 use Norm\Cursor\PDOCursor;
-use Norm\Type\DateTime as NDateTime;
+use Norm\Type\DateTime;
+use Norm\Type\NDateTime; 
 use Norm\Type\NDate;
 use Norm\Schema\Object;
 use Exception;
@@ -231,7 +232,7 @@ class PDOConnection extends \Norm\Connection
                 }
             }
             return $result;
-        } elseif ($object instanceof NDateTime) {
+        } elseif ($object instanceof NDateTime || $object instanceof DateTime) {
             return $object->format('Y-m-d H:i:s');
         } elseif ($object instanceof NDate) {
             return $object->format('Y-m-d');

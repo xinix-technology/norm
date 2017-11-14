@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-class NormText extends String
+class NormText extends NormString
 {
 
     public function formatReadonly($value, $entry = null)
