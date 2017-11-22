@@ -1,7 +1,7 @@
 <?php
 namespace Norm\Test;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Repository;
 use Norm\Collection;
 use Norm\Connection;
@@ -9,7 +9,7 @@ use Norm\Schema\NString;
 use Norm\Exception\NormException;
 use ROH\Util\Injector;
 
-class NormTest extends PHPUnit_Framework_TestCase
+class NormTest extends TestCase
 {
     public function setUp()
     {

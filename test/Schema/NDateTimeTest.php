@@ -1,7 +1,7 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Schema\NDateTime;
 use DateTime;
 use DateTimeZone;
@@ -11,7 +11,7 @@ use Norm\Repository;
 use Norm\Collection;
 use Norm\Connection;
 
-class NDateTimeTest extends PHPUnit_Framework_TestCase
+class NDateTimeTest extends TestCase
 {
     public function setUp()
     {

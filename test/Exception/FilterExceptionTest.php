@@ -1,10 +1,10 @@
 <?php
 namespace Norm\Test\Exception;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Exception\FilterException;
 
-class FilterExceptionTest extends PHPUnit_Framework_TestCase
+class FilterExceptionTest extends TestCase
 {
     public function testContext()
     {

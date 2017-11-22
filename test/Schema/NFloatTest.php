@@ -1,14 +1,14 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Schema\NFloat;
 use Norm\Repository;
 use Norm\Collection;
 use Norm\Connection;
 use ROH\Util\Injector;
 
-class NFloatTest extends PHPUnit_Framework_TestCase
+class NFloatTest extends TestCase
 {
     public function setUp()
     {

@@ -7,10 +7,10 @@ use Norm\Collection;
 use Norm\Connection;
 use Norm\Repository;
 use Norm\Schema\NField;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use ROH\Util\Injector;
 
-class ModelTest extends PHPUnit_Framework_TestCase
+class ModelTest extends TestCase
 {
     public function setUp()
     {

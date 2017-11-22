@@ -88,8 +88,13 @@ class Collection extends Normable implements Iterator
      * @param array      $format     [description]
      * @param [type]     $model      [description]
      */
-    public function __construct(Connection $connection, $name, array $fields = [], array $format = [], $model = Model::class)
-    {
+    public function __construct(
+        Connection $connection,
+        $name,
+        array $fields = [],
+        array $format = [],
+        $model = Model::class
+    ) {
         parent::__construct($connection->getRepository());
 
         foreach ($fields as $field) {
@@ -197,7 +202,7 @@ class Collection extends Normable implements Iterator
     public function findOne($criteria = [])
     {
         return $this->find($criteria)
-            ->limit(1)
+            ->setLimit(1)
             ->first();
     }
 
@@ -266,7 +271,8 @@ class Collection extends Normable implements Iterator
         $context['model']->sync($context['modified']);
     }
 
-    public function coreSave($context) {
+    public function coreSave($context)
+    {
         if ($context['options']['filter']) {
             $this->filter($context['model']);
         }

@@ -1,14 +1,14 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Schema\NToken;
 use Norm\Repository;
 use Norm\Collection;
 use Norm\Connection;
 use ROH\Util\Injector;
 
-class NTokenTest extends PHPUnit_Framework_TestCase
+class NTokenTest extends TestCase
 {
     public function setUp()
     {

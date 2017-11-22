@@ -13,12 +13,12 @@ use MongoDate;
 use MongoId;
 use MongoConnectionException;
 use Norm\Adapter\Mongo;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Exception\NormException;
 use ROH\Util\Collection as UtilCollection;
 use ROH\Util\Injector;
 
-class MongoTest extends PHPUnit_Framework_TestCase
+class MongoTest extends TestCase
 {
     public function setUp()
     {

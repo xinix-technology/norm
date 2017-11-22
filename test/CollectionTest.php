@@ -1,7 +1,7 @@
 <?php
 namespace Norm\Test;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Repository;
 use Norm\Connection;
 use Norm\Collection;
@@ -11,7 +11,7 @@ use Norm\Exception\NormException;
 use ROH\Util\Injector;
 use Norm\Schema\NField;
 
-class CollectionTest extends PHPUnit_Framework_TestCase
+class CollectionTest extends TestCase
 {
     public function setUp()
     {

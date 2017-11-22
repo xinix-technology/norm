@@ -1,10 +1,10 @@
 <?php
 namespace Norm\Test\Type;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Type\ArrayList;
 
-class ArrayListTest extends PHPUnit_Framework_TestCase
+class ArrayListTest extends TestCase
 {
     protected $al;
 

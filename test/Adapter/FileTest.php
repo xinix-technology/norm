@@ -7,11 +7,11 @@ use Norm\Adapter\File;
 use ROH\Util\File as UtilFile;
 use FilesystemIterator;
 use Norm\Exception\NormException;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use ROH\Util\Injector;
 use Norm\Repository;
 
-class FileTest extends PHPUnit_Framework_TestCase
+class FileTest extends TestCase
 {
     public function setUp()
     {

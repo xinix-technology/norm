@@ -2,10 +2,10 @@
 namespace Norm\Test\Dialect;
 
 use Norm\Dialect\Sql;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Exception\NormException;
 
-class SqlTest extends PHPUnit_Framework_TestCase
+class SqlTest extends TestCase
 {
     public function testEsc()
     {

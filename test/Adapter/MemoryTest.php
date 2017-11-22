@@ -7,11 +7,11 @@ use Norm\Collection;
 use Norm\Connection;
 use Norm\Adapter\Memory;
 use Norm\Exception\NormException;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use ROH\Util\Injector;
 use Norm\Repository;
 
-class MemoryTest extends PHPUnit_Framework_TestCase
+class MemoryTest extends TestCase
 {
     public function setUp()
     {

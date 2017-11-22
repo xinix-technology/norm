@@ -12,7 +12,7 @@ use JsonKit\JsonKit;
  * @link      http://sagara.id/p/product Norm
  * @license   https://raw.github.com/xinix-technology/norm/master/LICENSE
  */
-class Object extends Collection implements Marshallable
+class NormObject extends Collection implements Marshallable
 {
     /**
      * {@inheritDoc}

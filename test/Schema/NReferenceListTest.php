@@ -1,14 +1,14 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Schema\NReferenceList;
 use Norm\Repository;
 use Norm\Collection;
 use Norm\Cursor;
 use Norm\Connection;
 use ROH\Util\Injector;
-class NReferenceListTest extends PHPUnit_Framework_TestCase
+class NReferenceListTest extends TestCase
 {
     public function setUp()
     {

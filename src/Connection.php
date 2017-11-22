@@ -31,7 +31,7 @@ abstract class Connection extends Normable
     {
         parent::__construct($repository);
 
-        $this->id = null === $id ? static::generateId() : $id;
+        $this->id = null === $id ? Connection::generateId() : $id;
 
         $repository->addConnection($this);
     }

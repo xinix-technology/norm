@@ -1,7 +1,7 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Schema\NFile;
 use ROH\Util\File as UtilFile;
 use Norm\Type\File;
@@ -11,7 +11,7 @@ use Norm\Repository;
 use Norm\Connection;
 use Norm\Collection;
 
-class NFileTest extends PHPUnit_Framework_TestCase
+class NFileTest extends TestCase
 {
     public function setUp()
     {

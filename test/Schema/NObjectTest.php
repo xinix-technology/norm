@@ -1,14 +1,14 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Schema\NObject;
 use Norm\Repository;
 use Norm\Collection;
 use Norm\Connection;
 use ROH\Util\Injector;
 
-class NObjectTest extends PHPUnit_Framework_TestCase
+class NObjectTest extends TestCase
 {
     public function setUp()
     {

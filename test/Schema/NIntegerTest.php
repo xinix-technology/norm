@@ -1,14 +1,14 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Schema\NInteger;
 use Norm\Repository;
 use Norm\Collection;
 use Norm\Connection;
 use ROH\Util\Injector;
 
-class NIntegerTest extends PHPUnit_Framework_TestCase
+class NIntegerTest extends TestCase
 {
     public function setUp()
     {

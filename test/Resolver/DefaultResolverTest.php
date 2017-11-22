@@ -1,11 +1,11 @@
 <?php
 namespace Norm\Test\Resolver;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Resolver\DefaultResolver;
 use ROH\Util\File;
 
-class DefaultResolverTest extends PHPUnit_Framework_TestCase
+class DefaultResolverTest extends TestCase
 {
     public function setUp()
     {

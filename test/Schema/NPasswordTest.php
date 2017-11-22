@@ -1,7 +1,7 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Schema\NPassword;
 use Norm\Type\Secret;
 use Norm\Repository;
@@ -9,7 +9,7 @@ use Norm\Collection;
 use Norm\Connection;
 use ROH\Util\Injector;
 
-class NPasswordTest extends PHPUnit_Framework_TestCase
+class NPasswordTest extends TestCase
 {
     public function setUp()
     {

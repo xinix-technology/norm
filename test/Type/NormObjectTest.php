@@ -1,14 +1,14 @@
 <?php
 namespace Norm\Test\Type;
 
-use PHPUnit_Framework_TestCase;
-use Norm\Type\Object;
+use PHPUnit\Framework\TestCase;
+use Norm\Type\NormObject;
 
-class ObjectTest extends PHPUnit_Framework_TestCase
+class NormObjectTest extends TestCase
 {
     public function testHas()
     {
-        $o = new Object([
+        $o = new NormObject([
             'foo' => 'bar'
         ]);
 

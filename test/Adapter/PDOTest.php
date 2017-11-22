@@ -5,11 +5,11 @@ use Norm\Adapter\PDO;
 use Norm\Collection;
 use Norm\Cursor;
 use Norm\Exception\NormException;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use PDO as ThePDO;
 use ROH\Util\Injector;
 
-class PDOTest extends PHPUnit_Framework_TestCase
+class PDOTest extends TestCase
 {
     public function setUp()
     {

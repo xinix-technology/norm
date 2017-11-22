@@ -1,11 +1,11 @@
 <?php
 namespace Norm\Test\Type;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Type\File;
 use ROH\Util\File as UtilFile;
 
-class FileTest extends PHPUnit_Framework_TestCase
+class FileTest extends TestCase
 {
     public function tearDown()
     {

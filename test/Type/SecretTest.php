@@ -1,10 +1,10 @@
 <?php
 namespace Norm\Test\Type;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Type\Secret;
 
-class SecretTest extends PHPUnit_Framework_TestCase
+class SecretTest extends TestCase
 {
     public function testHas()
     {

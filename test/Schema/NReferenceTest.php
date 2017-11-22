@@ -1,7 +1,7 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Exception\NormException;
 use Norm\Schema\NReference;
 use Norm\Repository;
@@ -10,7 +10,7 @@ use Norm\Cursor;
 use Norm\Connection;
 use ROH\Util\Injector;
 
-class NReferenceTest extends PHPUnit_Framework_TestCase
+class NReferenceTest extends TestCase
 {
     public function setUp()
     {

@@ -1,7 +1,7 @@
 <?php
 namespace Norm\Test;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Repository;
 use Norm\Filter;
 use Norm\Exception\FilterException;
@@ -13,7 +13,7 @@ use Norm\Exception\SkipException;
 use ROH\Util\Collection as UtilCollection;
 use ROH\Util\Injector;
 
-class FilterTest extends PHPUnit_Framework_TestCase
+class FilterTest extends TestCase
 {
     public function setUp()
     {

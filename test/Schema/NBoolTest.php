@@ -1,14 +1,14 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Schema\NBool;
 use ROH\Util\Injector;
 use Norm\Repository;
 use Norm\Connection;
 use Norm\Collection;
 
-class NBoolTest extends PHPUnit_Framework_TestCase
+class NBoolTest extends TestCase
 {
     public function setUp()
     {

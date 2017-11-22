@@ -5,12 +5,12 @@ use stdClass;
 use Norm\Repository;
 use Norm\Connection;
 use Norm\Exception\NormException;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Type\ArrayList;
 use Norm\Type\Secret;
 use ROH\Util\Injector;
 
-class ConnectionTest extends PHPUnit_Framework_TestCase
+class ConnectionTest extends TestCase
 {
     public function setUp()
     {

@@ -4,9 +4,9 @@ namespace Norm\Test;
 use Norm\Normable;
 use Norm\Repository;
 use Norm\Exception\NormException;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class NormableTest extends PHPUnit_Framework_TestCase
+class NormableTest extends TestCase
 {
     public function testGetRepository()
     {

@@ -7,10 +7,10 @@ use Norm\Collection;
 use Norm\Schema;
 use Norm\Connection;
 use Norm\Model;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use ROH\Util\Injector;
 
-class CursorTest extends PHPUnit_Framework_TestCase
+class CursorTest extends TestCase
 {
     public function setUp()
     {

@@ -1,37 +1,42 @@
 {
-    "name": "xinix-technology/norm",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Ganesha",
-            "email": "reekoheek@gmail.com",
-            "homepage": "http://xinix.co.id",
-            "role": "Developer"
-        },
-        {
-            "name": "Krisan Alfa",
-            "email": "krisan47@gmail.com",
-            "homepage": "https://twitter.com/krisanalfa",
-            "role": "Developer"
-        },
-        {
-            "name": "Aprianto Pramana Putra",
-            "email": "apriantopramanaputra@gmail.com",
-            "role": "Developer"
-        }
-    ],
-    "require": {
-        "php": "^5.4",
-        "reekoheek/util": "~1.2.0",
-        "ramsey/uuid": "~2.8"
+  "name": "xinix-technology/norm",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ganesha",
+      "email": "reekoheek@gmail.com",
+      "homepage": "http://sagara.id",
+      "role": "Developer"
     },
-    "require-dev": {
-        "phpunit/phpunit": "*",
-        "guzzlehttp/guzzle": "~5.0"
+    {
+      "name": "Krisan Alfa",
+      "email": "krisan47@gmail.com",
+      "homepage": "https://twitter.com/krisanalfa",
+      "role": "Developer"
     },
-    "autoload": {
-        "psr-4": {
-            "Norm\\": "src/"
-        }
+    {
+      "name": "Aprianto Pramana Putra",
+      "email": "apriantopramanaputra@gmail.com",
+      "role": "Developer"
     }
+  ],
+  "scripts": {
+    "test": [
+      "phpunit test"
+    ]
+  },
+  "require": {
+    "php": "^5.4 | ^7.0",
+    "reekoheek/util": "~1.2.0",
+    "ramsey/uuid": "~2.8"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "*",
+    "guzzlehttp/guzzle": "~5.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Norm\\": "src/"
+    }
+  }
 }

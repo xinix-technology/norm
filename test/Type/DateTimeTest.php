@@ -1,12 +1,12 @@
 <?php
 namespace Norm\Test\Type;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Type\DateTime;
 use Norm\Repository;
 use DateTimeZone;
 
-class DateTimeTest extends PHPUnit_Framework_TestCase
+class DateTimeTest extends TestCase
 {
     public function testFormat()
     {

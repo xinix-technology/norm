@@ -1,7 +1,7 @@
 <?php
 namespace Norm\Test\Schema;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Schema\NList;
 use Norm\Type\ArrayList;
 use Norm\Repository;
@@ -9,7 +9,7 @@ use Norm\Collection;
 use Norm\Connection;
 use ROH\Util\Injector;
 
-class NListTest extends PHPUnit_Framework_TestCase
+class NListTest extends TestCase
 {
     public function setUp()
     {

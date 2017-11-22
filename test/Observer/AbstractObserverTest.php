@@ -1,13 +1,13 @@
 <?php
 namespace Norm\Test\Observer;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Norm\Collection;
 use Norm\Connection;
 use Norm\Repository;
 use Norm\Adapter\Memory;
 
-abstract class AbstractObserverTest extends PHPUnit_Framework_TestCase
+abstract class AbstractObserverTest extends TestCase
 {
     // public function __construct()
     // {
