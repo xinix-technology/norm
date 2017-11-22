@@ -59,7 +59,6 @@ class Historable
                             'new' => $value,
                         ];
                     }
-
                 }
             }
             foreach ($oldValues as $key => $value) {
@@ -80,7 +79,6 @@ class Historable
                             'new' => $new,
                         ];
                     }
-
                 }
             }
 

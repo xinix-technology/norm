@@ -24,7 +24,6 @@ class NList extends NField
         if (null !== $value) {
             return implode(', ', $value->toArray());
         }
-
     }
 
     protected function formatInput($value, $model = null)

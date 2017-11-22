@@ -51,7 +51,9 @@ class Secret implements JsonSerializer, Marshallable
     }
 
     /**
-     * Marshal single object from norm to the proper data accepted by data source. Sometimes data source expects object to be persisted to it in specific form, this method will transform associative array from Norm into this specific form.
+     * Marshal single object from norm to the proper data accepted by data source. Sometimes data source expects object
+     * to be persisted to it in specific form, this method will transform associative array from Norm into this specific
+     * form.
      *
      * @see Norm\Connection::unmarshall()
      *

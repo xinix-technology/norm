@@ -131,7 +131,7 @@ class Filter extends Normable
         if ($fields instanceof Collection) {
             $this->collection = $fields;
             $this->repository = $fields->getRepository();
-        } else if (!is_array($fields)) {
+        } elseif (!is_array($fields)) {
             throw new NormException('Rules must be array or instance of Schema');
         }
         $this->fields = static::parseFilterRules($fields);
@@ -361,8 +361,7 @@ class Filter extends Normable
 
         $model = $collection->findOne([$key => $value]);
 
-        if (
-            null !== $model &&
+        if (null !== $model &&
             (
                 (isset($model['$id']) && $model['$id'] != $opts['data']['$id']) ||
                 !isset($model['$id'])
@@ -395,7 +394,6 @@ class Filter extends Normable
         }
 
         return $value;
-
     }
 
     /**

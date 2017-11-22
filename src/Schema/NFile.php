@@ -10,8 +10,14 @@ class NFile extends NField
 {
     protected $dataDir;
 
-    public function __construct(Collection $collection, $name, $dataDir, $filter = null, array $format = [], array $attributes = [])
-    {
+    public function __construct(
+        Collection $collection,
+        $name,
+        $dataDir,
+        $filter = null,
+        array $format = [],
+        array $attributes = []
+    ) {
         parent::__construct($collection, $name, $filter, $format, $attributes);
 
         $this->dataDir = $dataDir ?: '';

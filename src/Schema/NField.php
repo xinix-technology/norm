@@ -47,8 +47,13 @@ abstract class NField extends Normable implements ArrayAccess
      * @param string|array     $filter     [description]
      * @param array            $attributes [description]
      */
-    public function __construct(Collection $collection, $name, $filter = null, array $format = [], array $attributes = [])
-    {
+    public function __construct(
+        Collection $collection,
+        $name,
+        $filter = null,
+        array $format = [],
+        array $attributes = []
+    ) {
         parent::__construct($collection->getRepository());
 
         $this->collection = $collection;

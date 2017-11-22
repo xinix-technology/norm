@@ -21,9 +21,11 @@
     }
   ],
   "scripts": {
-    "test": [
-      "phpunit test"
-    ]
+    "lint": [
+      "phpcs --standard=PSR2 ./src"
+    ],
+    "test": "phpunit test",
+    "cover": "phpunit --whitelist=./src/ --coverage-html=./coverage test"
   },
   "require": {
     "php": "^5.4 | ^7.0",

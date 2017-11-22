@@ -154,7 +154,6 @@ class Memory extends Connection
                     return false;
                 }
             } else {
-
                 $query = explode('!', $ck);
                 $op = isset($query[1]) ? $query[1] : 'eq';
                 $key = $query[0];

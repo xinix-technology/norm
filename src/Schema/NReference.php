@@ -15,8 +15,14 @@ class NReference extends NField
 
     protected $fetcher;
 
-    public function __construct(Collection $collection, $name, $to, $filter = null, array $format = [], array $attributes = [])
-    {
+    public function __construct(
+        Collection $collection,
+        $name,
+        $to,
+        $filter = null,
+        array $format = [],
+        array $attributes = []
+    ) {
         parent::__construct($collection, $name, $filter, $format, $attributes);
 
         $this['nocache'] = $this['nocache'] ?: false;
@@ -88,7 +94,7 @@ class NReference extends NField
 
         if (null === $key) {
             $result = [];
-            foreach($cursor->toArray() as $entry) {
+            foreach ($cursor->toArray() as $entry) {
                 $result[$entry[$this['to$key']]] = $entry;
             }
             return $result;

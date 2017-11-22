@@ -120,7 +120,8 @@ abstract class Connection extends Normable
      * @param  array  $criteria [description]
      * @return [type]           [description]
      */
-    public function marshallCriteria(array $criteria) {
+    public function marshallCriteria(array $criteria)
+    {
         $result = [];
         foreach ($criteria as $key => $value) {
             list($k, $v) = $this->marshallKV($key, $value);

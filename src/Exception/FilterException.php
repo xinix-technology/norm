@@ -86,8 +86,12 @@ class FilterException extends RuntimeException
      * @param integer    $code
      * @param Exception $previousException
      */
-    public function __construct($message = 'Caught filter error, you should not see this if you dont know what it is. Please report this to webmaster.', $code = 0, $previousException = null)
-    {
+    public function __construct(
+        $message = 'Caught filter error, you should not see this if you dont ' .
+        'know what it is. Please report this to webmaster.',
+        $code = 0,
+        $previousException = null
+    ) {
         $this->formatMessage = $message;
 
         // $this->setStatus(400);
