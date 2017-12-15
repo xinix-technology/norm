@@ -29,7 +29,7 @@ class NormDate extends Field
             $value->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
         }
 
-        return '<input type="date" name="'.$this['name'].'" value="'.($value ? $value->format('Y-m-d') : '').
+        return '<input type="date" class="'.$this->inputClass().'" '.$this->inputAttributes().' name="'.$this['name'].'" value="'.($value ? $value->format('Y-m-d') : '').
             '" placeholder="'.$this['label'].
             '" autocomplete="off" />';
     }
@@ -51,15 +51,7 @@ class NormDate extends Field
             $value->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
         }
 
-        return '<span class="field">'.($value ? $value->format('Y-m-d') : '&nbsp;').'</span>';
+        return '<span class="field '.$this->inputClass().'">'.($value ? $value->format('Y-m-d') : '&nbsp;').'</span>';
     }
-
-    // DEPRECATED replaced by Field::render
-    // public function cell($value, $entry = null)
-    // {
-    //     if ($this->has('cellFormat') && $format = $this['cellFormat']) {
-    //         return $format($value, $entry);
-    //     }
-    //     return $value->format('Y-m-d');
-    // }
+   
 }

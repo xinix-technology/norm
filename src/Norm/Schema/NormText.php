@@ -12,6 +12,6 @@ class NormText extends NormString
 
     public function formatInput($value, $entry = null)
     {
-        return '<textarea name="'.$this['name'].'" placeholder="'.$this['label'].'">'.$value.'</textarea>';
+        return '<textarea class="'.$this->inputClass().'" '. $this->inputAttributes() .' name="'.$this['name'].'" placeholder="'.$this['label'].'">'.$value.'</textarea>';
     }
 }

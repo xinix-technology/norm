@@ -27,14 +27,11 @@ class NormDateTime extends Field
             $value->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
         }
 
-        return '<input type="datetime-local" name="'.$this['name'].'" value="'.
+        return '<input type="datetime-local" class="'.$this->inputClass().'" '. $this->inputAttributes().' name="'.$this['name'].'" value="'.
             ($value ? $value->format("Y-m-d\TH:i") : '').'" placeholder="'.
             $this['label'].'" autocomplete="off" />';
     }
 
-    public function formatPlain($value, $entry = null){
-
-    }
     
 
     public function formatReadonly($value, $entry = null)
