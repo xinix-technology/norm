@@ -6,7 +6,7 @@ use Norm\Cursor\PDOCursor;
 use Norm\Type\DateTime;
 use Norm\Type\NDateTime; 
 use Norm\Type\NDate;
-use Norm\Schema\Object;
+use Norm\Schema\NormObject;
 use Exception;
 use PDO;
 
