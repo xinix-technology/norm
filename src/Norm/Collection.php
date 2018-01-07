@@ -2,7 +2,7 @@
 
 use Norm\Model;
 use Norm\Cursor;
-use Norm\Type\Object;
+use Norm\Type\NObject;
 use Norm\Filter\Filter;
 use ROH\Util\Inflector;
 use JsonKit\JsonSerializer;
@@ -42,7 +42,7 @@ class Collection extends Hookable implements JsonSerializer
     /**
      * Schema
      *
-     * @var Norm\Type\Object
+     * @var Norm\Type\NObject
      */
     protected $schema;
 
@@ -103,10 +103,10 @@ class Collection extends Hookable implements JsonSerializer
         }
 
         if (isset($options['schema'])) {
-            $this->schema = new Object($options['schema']);
+            $this->schema = new NObject($options['schema']);
             unset($options['schema']);
         } else {
-            $this->schema = new Object();
+            $this->schema = new NObject();
         }
 
         $this->options = $options;
@@ -176,7 +176,7 @@ class Collection extends Hookable implements JsonSerializer
             return $this->schema;
         } elseif (1 === $numArgs) {
             if (is_array($key)) {
-                $this->schema = new Object($key);
+                $this->schema = new NObject($key);
             } elseif ($this->schema->offsetExists($key)) {
                 return $this->schema[$key];
             }
@@ -219,8 +219,8 @@ class Collection extends Hookable implements JsonSerializer
             $document = $this->connection->unmarshall($document);
         }
 
-        // wrap document as object instance to make sure it can be override by hooks
-        $document = new Object($document);
+        // wrap document as NObject instance to make sure it can be override by hooks
+        $document = new NObject($document);
 
         $this->applyHook('attaching', $document);
 
@@ -255,8 +255,8 @@ class Collection extends Hookable implements JsonSerializer
             );
         }
 
-        // wrap criteria as object instance to make sure it can be override by hooks
-        $criteria = new Object($criteria);
+        // wrap criteria as NObject instance to make sure it can be override by hooks
+        $criteria = new NObject($criteria);
 
         $this->applyHook('searching', $criteria);
         $cursor = $this->connection->query($this, $criteria->toArray());
@@ -392,7 +392,7 @@ class Collection extends Hookable implements JsonSerializer
 
     /**
      * Override this to add new functionality of observer to the collection, otherwise you are not necessarilly to know about this.
-     * @param object $observer
+     * @param NObject $observer
      *
      * @return void
      */
@@ -477,7 +477,7 @@ class Collection extends Hookable implements JsonSerializer
      *
      * @method fetchCache
      *
-     * @param object $criteria
+     * @param NObject $criteria
      *
      * @return void|\Norm\Model
      */

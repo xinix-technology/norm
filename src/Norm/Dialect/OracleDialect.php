@@ -28,23 +28,23 @@ class OracleDialect extends SQLDialect
         return $sql;
     }
 
-     public function insert($collectionName, $data)
-    {
-        $id = 0;
-        $sql = $this->grammarInsert($collectionName, $data);
+    //  public function insert($collectionName, $data)
+    // {
+    //     $id = 0;
+    //     $sql = $this->grammarInsert($collectionName, $data);
 
-        $statement = $this->raw->prepare($sql);
+    //     $statement = $this->raw->prepare($sql);
 
-        foreach ($data as $key => &$value) {
-            $statement->bindParam(':'.$key, $value);
-        }
+    //     foreach ($data as $key => &$value) {
+    //         $statement->bindParam(':'.$key, $value);
+    //     }
 
-        // FIXME Length of params still added manually -> Bug #50906 ORA-03131: an invalid buffer was provided for the next piece(Same as Bug#39820)
-        $statement->bindParam(':id', $id, PDO::PARAM_INT,22);
-        $statement->execute();
+    //     // FIXME Length of params still added manually -> Bug #50906 ORA-03131: an invalid buffer was provided for the next piece(Same as Bug#39820)
+    //     $statement->bindParam(':id', $id, PDO::PARAM_INT,22);
+    //     $statement->execute();
 
-        return $id;
-    }
+    //     return $id;
+    // }
    
 
     public function grammarUpdate($collectionName, $data)
@@ -222,13 +222,6 @@ class OracleDialect extends SQLDialect
 
 
     }
-
-    public function grammarDistinct(Cursor $cursor,$key){
-        $sql = "FROM {$cursor->getCollection()->getName()}";
-        $sql = 'SELECT DISTINCT('. $key .') '.$sql;
-
-        return $sql;
-
-    }
+    
     
 }
