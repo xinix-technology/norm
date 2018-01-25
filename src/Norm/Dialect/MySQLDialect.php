@@ -8,12 +8,12 @@ class MySQLDialect extends SQLDialect
     protected $FIELD_MAP = array(
         'Norm\Schema\Boolean' => 'BOOLEAN',
         'Norm\Schema\Float' => 'DOUBLE',
-        'Norm\Schema\Integer' => 'INT',
+        'Norm\Schema\NormInteger' => 'INT',
         'Norm\Schema\Reference' => 'INT',
-        'Norm\Schema\DateTime' => 'DATETIME',
-        'Norm\Schema\NDate' => 'DATE',
+        'Norm\Schema\NormDateTime' => 'DATETIME',
+        'Norm\Schema\NormDate' => 'DATE',
         'Norm\Schema\NormArray' => 'TEXT',
-        'Norm\Schema\Object' => 'TEXT',
+        'Norm\Schema\NormObject' => 'TEXT',
         'Norm\Schema\Text' => 'TEXT',
         'Norm\Schema\String' => 'VARCHAR(255)',
     );

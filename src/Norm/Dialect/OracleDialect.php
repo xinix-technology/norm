@@ -220,7 +220,6 @@ class OracleDialect extends SQLDialect
 
         return $this->grammarEscape($field).' '.$operator.' :'.$fk;
 
-
     }
     
     

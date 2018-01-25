@@ -2,14 +2,14 @@
 
 namespace Norm\Observer;
 
-use Norm\Schema\DateTime;
+use Norm\Schema\NormDateTime;
 
 class Timestampable
 {
     public function initialized($collection)
     {
-        $collection->schema('$created_time', DateTime::create('$created_time'));
-        $collection->schema('$updated_time', DateTime::create('$updated_time'));
+        $collection->schema('$created_time', NormDateTime::create('$created_time'));
+        $collection->schema('$updated_time', NormDateTime::create('$updated_time'));
     }
 
     public function saving($model)
