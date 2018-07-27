@@ -158,7 +158,8 @@ class Collection extends Normable implements Iterator
         ]);
 
         $this->apply('attach', $context, function ($context) {
-            $context['model'] = new $this->modelClass($this, $context['document']);
+            $Model = $this->modelClass;
+            $context['model'] = new $Model($this, $context['document']);
         });
 
         return $context['model'];
@@ -215,7 +216,8 @@ class Collection extends Normable implements Iterator
      */
     public function newInstance(array $attributes = [])
     {
-        return new $this->modelClass($this, $attributes);
+        $Model = $this->modelClass;
+        return new $Model($this, $attributes);
     }
 
     /**

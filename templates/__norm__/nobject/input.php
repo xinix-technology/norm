@@ -20,13 +20,13 @@
     <a href="#" class="button">Add Property</a>
 
     <script type="text/javascript">
-        (function() {
+        (function () {
             'use strict';
 
             var component = document.getElementById('<?php echo $uniqid ?>');
             var container = component.querySelector('.container');
 
-            component.addEventListener('change', function(evt) {
+            component.addEventListener('change', function (evt) {
                 var target = evt.target;
                 if (target.classList.contains('property-name')) {
                     var value = target.value.trim();
@@ -40,7 +40,7 @@
                 }
             });
 
-            component.querySelector('.button').addEventListener('click', function(evt) {
+            component.querySelector('.button').addEventListener('click', function (evt) {
                 evt.preventDefault();
                 var tpl = component.querySelector('.tpl').cloneNode(true);
                 container.appendChild(tpl.content);
@@ -49,4 +49,4 @@
     </script>
 </div>
 
-<!-- <textarea name="<?php echo $self['name'] ?>"><?php echo $value ? json_encode($value->toArray()) : '' ?></textarea> -->
+<!-- <textarea name="<?php echo $self['name'] ?>"><?php echo $value ? json_encode($value->toArray()): '' ?></textarea> -->

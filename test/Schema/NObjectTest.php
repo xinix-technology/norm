@@ -8,26 +8,14 @@ use Norm\Collection;
 use Norm\Connection;
 use ROH\Util\Injector;
 
-class NObjectTest extends TestCase
+class NObjectTest extends AbstractTest
 {
-    public function setUp()
-    {
-        $this->injector = new Injector();
-        $repository = $this->getMock(Repository::class, []);
-        $repository->method('render')->will($this->returnCallback(function($template) {
-            return $template;
-        }));
-        $this->injector->singleton(Repository::class, $repository);
-        $this->injector->singleton(Connection::class, $this->getMockForAbstractClass(Connection::class, [$repository]));
-        $this->injector->singleton(Collection::class, $this->getMock(Collection::class, null, [ $this->injector->resolve(Connection::class), 'Foo' ]));
-    }
-
     public function testPrepare()
     {
         $field = $this->injector->resolve(NObject::class, ['name' => 'foo']);
         $this->assertEquals($field->prepare('{"foo":"bar"}')['foo'], 'bar');
         $this->assertEquals($field->prepare(''), null);
-        $obj = new \Norm\Type\Object();
+        $obj = new \Norm\Type\NormObject();
         $this->assertEquals($field->prepare($obj), $obj);
     }
 

@@ -70,7 +70,7 @@ abstract class Connection extends Normable
         if ($this->primaryKey === $key) {
             return [ '$id', $value ];
         } elseif ('_' === substr($key, 0, 1)) {
-            $key = '$'.substr($key, 1);
+            $key = '$' . substr($key, 1);
         }
 
         return [ $key, $value ];
@@ -105,7 +105,7 @@ abstract class Connection extends Normable
         if ('$id' === $key) {
             return [ $this->primaryKey, $value ];
         } elseif ('$' === substr($key, 0, 1)) {
-            $key = '_'.substr($key, 1);
+            $key = '_' . substr($key, 1);
         }
 
         if ($value instanceof Marshallable) {

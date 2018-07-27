@@ -27,7 +27,7 @@ class Mongo extends Connection
     {
         $prefix = '';
         if (isset($options['username'])) {
-            $prefix = $options['username'].':'.$options['password'].'@';
+            $prefix = $options['username'] . ':' . $options['password'] . '@';
         }
         $hostname = isset($options['hostname']) ? $options['hostname'] : MongoClient::DEFAULT_HOST;
         $port = isset($options['port']) ? $options['port'] : MongoClient::DEFAULT_PORT;
@@ -165,7 +165,7 @@ class Mongo extends Connection
         }
 
         if ($value instanceof MongoDate) {
-            $value = new DateTime('@'.$value->sec);
+            $value = new DateTime('@' . $value->sec);
         } elseif ($value instanceof MongoId) {
             $value = (string) $value;
         }

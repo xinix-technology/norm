@@ -27,7 +27,7 @@ class MongoTest extends TestCase
         }
 
         try {
-            new MongoClient('mongodb://'.MongoClient::DEFAULT_HOST.':'.MongoClient::DEFAULT_PORT);
+            new MongoClient('mongodb://' . MongoClient::DEFAULT_HOST . ':' . MongoClient::DEFAULT_PORT);
         } catch (MongoConnectionException $e) {
             $this->markTestSkipped('Mongo server is not available.');
         }
@@ -40,8 +40,8 @@ class MongoTest extends TestCase
         $this->injector->singleton(Connection::class, $this->connection);
         $context = $this->connection->getContext();
         $context->foo->remove();
-        for($i = 0; $i < 3; $i++) {
-            $context->foo->insert(['foo' => 100 + $i, 'bar' => 'bar-'.$i]);
+        for ($i = 0; $i < 3; $i++) {
+            $context->foo->insert(['foo' => 100 + $i, 'bar' => 'bar-' . $i]);
         }
     }
 
@@ -150,6 +150,6 @@ class MongoTest extends TestCase
             'i' => $id,
         ]);
         $this->assertEquals($result['t']->getTimestamp(), $t);
-        $this->assertEquals($result['i'], $id.'');
+        $this->assertEquals($result['i'], $id . '');
     }
 }

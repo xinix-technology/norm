@@ -10,7 +10,7 @@ class NormableTest extends TestCase
 {
     public function testGetRepository()
     {
-        $repository = $this->getMock(Repository::class);
+        $repository = $this->createMock(Repository::class);
         $normable = $this->getMockForAbstractClass(Normable::class, [$repository]);
         $this->assertEquals($normable->getRepository(), $repository);
     }
@@ -43,7 +43,7 @@ class NormableTest extends TestCase
 
     public function testFactory()
     {
-        $repository = $this->getMock(Repository::class);
+        $repository = $this->createMock(Repository::class);
         $repository->expects($this->once())->method('factory');
 
         $normable = $this->getMockForAbstractClass(Normable::class, [$repository]);

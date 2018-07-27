@@ -19,7 +19,7 @@ class DefaultResolver
     public function __invoke($name)
     {
         foreach ($this->options['resolvePaths'] as $path) {
-            $configPath = $path. '/' . $name . '.php';
+            $configPath = $path . '/' . $name . '.php';
             if (is_readable($configPath)) {
                 return include($configPath);
             }

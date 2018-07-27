@@ -26,6 +26,5 @@ class FileTest extends TestCase
         $this->assertEquals($file->getBaseDirectory(), './tmp');
         $this->assertEquals($file->getName(), 'bar');
         $this->assertEquals($file->getSize(), 3);
-
     }
 }

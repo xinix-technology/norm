@@ -31,6 +31,5 @@ class HistorableTest extends AbstractObserverTest
         $model->remove();
 
         $this->assertEquals(3, count($model['$history']));
-
     }
 }

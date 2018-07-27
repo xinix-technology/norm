@@ -14,11 +14,11 @@
   <a href="#" class="button">Add</a>
 
   <script type="text/javascript">
-  (function() {
+  (function () {
     var component = document.getElementById('<?php echo $uniqid ?>');
     var container = component.querySelector('.container');
 
-    component.querySelector('.button').addEventListener('click', function(evt) {
+    component.querySelector('.button').addEventListener('click', function (evt) {
       evt.preventDefault();
       var tpl = component.querySelector('.tpl').cloneNode(true);
       container.appendChild(tpl.content);

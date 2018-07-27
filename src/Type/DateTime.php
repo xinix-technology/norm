@@ -68,7 +68,7 @@ class DateTime extends PhpDateTime implements JsonSerializer, Marshallable
 
     public function marshall()
     {
-        return $value->format('c');
+        return $this->format('c');
     }
 
     public function __debugInfo()

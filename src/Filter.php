@@ -10,7 +10,7 @@ use Norm\Exception\FatalException;
 use Norm\Normable;
 use Norm\Collection;
 use Norm\Schema\NField;
-use Norm\Type\Object as TypeObject;
+use Norm\Type\NormObject as TypeObject;
 
 /**
  * Filter (validation) for database field
@@ -181,11 +181,11 @@ class Filter extends Normable
             $filterFn = static::get($filter[0]);
             if (null !== $filterFn) {
                 return $filterFn($val, $opts);
-            } elseif (is_callable([$this, 'filter'.$filter[0]])) {
-                $fn = 'filter'.$filter[0];
+            } elseif (is_callable([$this, 'filter' . $filter[0]])) {
+                $fn = 'filter' . $filter[0];
                 return $this->$fn($val, $opts);
             } else {
-                throw new FatalException('Ineligible filter '.$filter[0].' for '.$k);
+                throw new FatalException('Ineligible filter ' . $filter[0] . ' for ' . $k);
             }
         } else {
             return $filter[0]($val);
@@ -287,17 +287,17 @@ class Filter extends Normable
     {
         if (null === $value || $value === '') {
             unset($opts['data'][$opts['key']]);
-            unset($opts['data'][$opts['key'].'_confirmation']);
+            unset($opts['data'][$opts['key'] . '_confirmation']);
             return '';
         }
 
-        if ($value.'' !== $opts['data'][$opts['key'].'_confirmation']) {
+        if ($value . '' !== $opts['data'][$opts['key'] . '_confirmation']) {
             throw (new FilterException('Field %s must be confirmed'))
                 ->setContext($opts['key'])
                 ->setArgs($this->getLabel($opts['key']));
         }
 
-        unset($opts['data'][$opts['key'].'_confirmation']);
+        unset($opts['data'][$opts['key'] . '_confirmation']);
 
         return $value;
     }
@@ -321,7 +321,7 @@ class Filter extends Normable
                 }
 
                 if (!empty($key)) {
-                    return $method($value.$key);
+                    return $method($value . $key);
                 }
             }
 
@@ -427,7 +427,7 @@ class Filter extends Normable
     {
         if (null !== $value && '' !== $value) {
             if ($value < $opts['arguments'][0]) {
-                throw (new FilterException('Field %s less than '.$opts['arguments'][0]))
+                throw (new FilterException('Field %s less than ' . $opts['arguments'][0]))
                     ->setContext($opts['key'])
                     ->setArgs($this->getLabel($opts['key']));
             }
@@ -440,7 +440,7 @@ class Filter extends Normable
     {
         if (null !== $value && '' !== $value) {
             if ($value > $opts['arguments'][0]) {
-                throw (new FilterException('Field %s more than '.$opts['arguments'][0]))
+                throw (new FilterException('Field %s more than ' . $opts['arguments'][0]))
                     ->setContext($opts['key'])
                     ->setArgs($this->getLabel($opts['key']));
             }

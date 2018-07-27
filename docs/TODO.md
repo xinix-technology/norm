@@ -2,7 +2,7 @@
 
 - [ ] confirmation should use transient field ~xxx
 - [ ] ~xxx as transient
-- [ ] 
+- [ ]
 
 ```php
 $scope = $R();
@@ -25,7 +25,7 @@ $query['foo'] = 'bar';
 $query->save();
 
 $query
-    ->map(function($each) {
+    ->map(function ($each) {
         if ($each['foo'] === 'bar') {
             $each['foo'] = 'baz';
         }
@@ -51,7 +51,7 @@ single.set({
 scope('TableFoo')
     .new({ 'foo': 'bar' })
     .duplicate(10)
-    .forEach(function(single) {
+    .forEach(function (single) {
         single.set()
     });
 

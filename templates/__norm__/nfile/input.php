@@ -9,7 +9,7 @@
 </div>
 
 <script>
-(function() {
+(function () {
     'use strict';
 
     var uploadUrl = "<?php echo $self->getAttribute('nfile.uploadUrl') ?>";
@@ -19,12 +19,12 @@
     var buttonEl = containerEl.querySelector('.button');
     var viewerEl = containerEl.querySelector('.viewer');
 
-    buttonEl.addEventListener('click', function(evt) {
+    buttonEl.addEventListener('click', function (evt) {
         evt.preventDefault();
         fileEl.click();
     });
 
-    fileEl.addEventListener('change', function() {
+    fileEl.addEventListener('change', function () {
         var files = this.files;
 
         function undo() {
@@ -33,7 +33,7 @@
             }
         }
 
-        new Promise(function(resolve, reject) {
+        new Promise(function (resolve, reject) {
             var form = new FormData();
             for (var i = 0; i < files.length; i++) {
                 var file = files[i];
@@ -57,7 +57,7 @@
             }
 
             var request = new XMLHttpRequest();
-            request.onprogress = function(evt) {
+            request.onprogress = function (evt) {
                 if ((evt.totalSize || evt.total) > 0) {
                     var percentComplete = ((evt.position || evt.loaded) / (evt.totalSize || evt.total))*100;
                     for (var i = 0; i < files.length; i++) {
@@ -68,7 +68,7 @@
 
             request.onerror = undo;
 
-            request.onload = function(evt) {
+            request.onload = function (evt) {
                 if (request.status >= 200 && request.status < 400) {
                     var data = JSON.parse(request.responseText);
                     if (data.files.length !== files.length) {

@@ -12,12 +12,12 @@
 </div>
 
 <script type="text/javascript">
-(function() {
+(function () {
     'use strict';
 
     var containerEl = document.querySelector("#<?php echo $uniqueId ?>");
 
-    containerEl.querySelector('a').addEventListener("click", function(evt) {
+    containerEl.querySelector('a').addEventListener("click", function (evt) {
         evt.preventDefault();
         evt.stopImmediatePropagation();
 
@@ -26,7 +26,7 @@
             var text = "";
             var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-            for( var i=0; i < len; i++ )
+            for ( var i=0; i < len; i++ )
                 text += possible.charAt(Math.floor(Math.random() * possible.length));
 
             return text;

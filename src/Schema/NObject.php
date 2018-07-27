@@ -2,7 +2,7 @@
 
 namespace Norm\Schema;
 
-use Norm\Type\Object as TypeObject;
+use Norm\Type\NormObject as TypeObject;
 
 class NObject extends NField
 {
@@ -24,7 +24,7 @@ class NObject extends NField
         if (null !== $value) {
             $result = [];
             foreach ($value as $k => $v) {
-                $result[] = $k.'='.$v;
+                $result[] = $k . '=' . $v;
             }
             return implode(', ', $result);
         }

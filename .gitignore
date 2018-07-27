@@ -1,9 +1,2 @@
-/node_modules
 /vendor
-/*.sublime-*
-/docs/api
-/sqlnet.log
-/old
-/db-files
 /coverage
-/composer-*.json

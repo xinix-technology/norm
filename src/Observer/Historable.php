@@ -18,7 +18,7 @@ class Historable
                 ],
             ]])
             ->setReader(function ($model) use ($context) {
-                return $context['collection']->factory($context['collection']->getName().'History')
+                return $context['collection']->factory($context['collection']->getName() . 'History')
                     ->find(array('model_id' => $model['$id']))
                     ->sort(array('$created_time' => -1))
                     ->toArray(true);
@@ -29,7 +29,7 @@ class Historable
     {
         $next($context);
 
-        $histCollection = $context['collection']->factory($context['collection']->getName().'History');
+        $histCollection = $context['collection']->factory($context['collection']->getName() . 'History');
         $newValues = $context['model']->dump();
         $oldValues = $context['model']->previous();
 
@@ -84,7 +84,7 @@ class Historable
 
 
             foreach ($delta as $key => $value) {
-                $histCollection = $context['collection']->factory($context['collection']->getName().'History');
+                $histCollection = $context['collection']->factory($context['collection']->getName() . 'History');
                 $history = $histCollection->newInstance();
                 $history['model_id'] = $context['model']['$id'];
                 $history['type'] = 'update';
@@ -100,7 +100,7 @@ class Historable
     {
         $next($context);
 
-        $histCollection = $context['collection']->factory($context['collection']->getName().'History');
+        $histCollection = $context['collection']->factory($context['collection']->getName() . 'History');
 
         $history = $histCollection->newInstance();
         $history['model_id'] = $context['model']['$id'];

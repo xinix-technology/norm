@@ -8,7 +8,7 @@ class NBool extends NField
     {
         // support empty string or null as null value
         if (null !== $value && '' !== $value) {
-            return (boolean) $value;
+            return (bool) $value;
         }
     }
 

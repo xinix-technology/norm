@@ -11,23 +11,12 @@ use Norm\Schema;
 use Norm\Exception\NormException;
 use ROH\Util\Injector;
 
-class NFieldTest extends TestCase
+class NFieldTest extends AbstractTest
 {
-    public function setUp()
-    {
-        $this->injector = new Injector();
-        $repository = $this->getMock(Repository::class, []);
-        $repository->method('render')->will($this->returnCallback(function($template) {
-            return $template;
-        }));
-        $this->injector->singleton(Repository::class, $repository);
-        $this->injector->singleton(Connection::class, $this->getMockForAbstractClass(Connection::class, [$repository]));
-        $this->injector->singleton(Collection::class, $this->getMock(Collection::class, null, [ $this->injector->resolve(Connection::class), 'Foo' ]));
-    }
-
     public function testConstruct()
     {
-        $customFilter = function() {};
+        $customFilter = function () {
+        };
         $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class), 'foo', ['trim', $customFilter], [], [
             'foo' => 'bar',
         ]]);
@@ -83,8 +72,8 @@ class NFieldTest extends TestCase
 
     public function testFormat()
     {
-        $repository = $this->getMock(Repository::class);
-        $repository->method('render')->will($this->returnCallback(function($file) {
+        $repository = $this->injector->resolve(Repository::class);
+        $repository->method('render')->will($this->returnCallback(function ($file) {
             return $file;
         }));
         $field = $this->getMockForAbstractClass(NField::class, [ $this->injector->resolve(Collection::class),  'foo' ]);
@@ -100,7 +89,6 @@ class NFieldTest extends TestCase
         $this->assertEquals($field->set('readonly', true)->format('input', 'foo'), '__norm__/nfield/readonly');
 
         try {
-
             $field->format('unknown', 'foo');
             $this->fail('Must not here');
         } catch (NormException $e) {

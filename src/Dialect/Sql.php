@@ -29,7 +29,7 @@ abstract class Sql
 
         foreach ($data as $key => $value) {
             $fields[] = $this->esc($key);
-            $placeholders[] = ':'.$key;
+            $placeholders[] = ':' . $key;
         }
 
         return sprintf(
@@ -53,7 +53,7 @@ abstract class Sql
     {
         $sets = [];
         foreach ($data as $key => $value) {
-            $sets[] = $key.' = :'.$key;
+            $sets[] = $key . ' = :' . $key;
         }
 
         return sprintf(
@@ -72,11 +72,11 @@ abstract class Sql
         foreach ($criteria as $key => $value) {
             @list($field, $op) = explode('!', $key);
             if (!isset(static::$OPERATORS[$op])) {
-                throw new NormException('Operator '.$op.' not defined yet');
+                throw new NormException('Operator ' . $op . ' not defined yet');
             }
-            $wheres[] = $field.' '.static::$OPERATORS[$op].' :'.$field;
+            $wheres[] = $field . ' ' . static::$OPERATORS[$op] . ' :' . $field;
         }
-        return 'WHERE '.implode(' AND ', $wheres);
+        return 'WHERE ' . implode(' AND ', $wheres);
     }
 
     public function grammarDelete($collectionId, array $criteria = [])

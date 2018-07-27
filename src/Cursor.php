@@ -160,6 +160,11 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
         return $this;
     }
 
+    public function sort(array $sorts)
+    {
+        return $this->setSort($sorts);
+    }
+
     public function distinct($key)
     {
         return $this->collection->distinct($this, $key);

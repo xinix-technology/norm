@@ -3,7 +3,7 @@
     <template class="tpl">
         <?php echo $self->render('__norm__/nreference/input', [
             'self' => $self,
-            'name' => $self['name'].'[]',
+            'name' => $self['name'] . '[]',
             'value' => '',
             // 'entry' => '',
         ]); ?>
@@ -14,7 +14,7 @@
         <?php foreach ($value as $k => $v): ?>
             <?php echo $self->render('__norm__/nreference/input', [
                 'self' => $self,
-                'name' => $self['name'].'[]',
+                'name' => $self['name'] . '[]',
                 'value' => $v,
                 // 'entry' => '',
             ]); ?>
@@ -23,7 +23,7 @@
 
         <?php echo $self->render('__norm__/nreference/input', [
             'self' => $self,
-            'name' => $self['name'].'[]',
+            'name' => $self['name'] . '[]',
             'value' => '',
             // 'entry' => '',
         ]); ?>
@@ -31,11 +31,11 @@
   <a href="#" class="button">Add</a>
 
   <script type="text/javascript">
-  (function() {
+  (function () {
     var component = document.getElementById('<?php echo $uniqid ?>');
     var container = component.querySelector('.container');
 
-    component.querySelector('.button').addEventListener('click', function(evt) {
+    component.querySelector('.button').addEventListener('click', function (evt) {
       evt.preventDefault();
       var tpl = component.querySelector('.tpl').cloneNode(true);
       container.appendChild(tpl.content);
@@ -43,4 +43,3 @@
   })();
   </script>
 </div>
-

@@ -12,7 +12,7 @@ class DateTimeTest extends TestCase
     {
         $dt = new DateTime('now', new DateTimeZone('Asia/Jakarta'));
 
-        $this->assertEquals((date('H')+7)%24, $dt->format('H'));
+        $this->assertEquals((date('H') + 7) % 24, $dt->format('H'));
         $this->assertEquals(date('H'), $dt->serverFormat('H'));
     }
 

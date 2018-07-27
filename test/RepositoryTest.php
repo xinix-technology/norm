@@ -99,7 +99,8 @@ class NormTest extends TestCase
         try {
             $repository->useConnection('con3');
             $this->fail('Must throw error');
-        } catch (NormException $e) {}
+        } catch (NormException $e) {
+        }
     }
 
     public function testTranslate()
@@ -110,16 +111,20 @@ class NormTest extends TestCase
         try {
             $repository->translate(99);
             $this->fail('Must not here');
-        } catch(NormException $e) {
+        } catch (NormException $e) {
             if ($e->getMessage() !== 'Message to translate must be string') {
                 throw $e;
             }
         }
 
-        $repository = (new Repository())->setTranslator(function() { return 'Bar'; });
+        $repository = (new Repository())->setTranslator(function () {
+            return 'Bar';
+        });
         $this->assertEquals($repository->translate('Foo'), 'Bar');
 
-        $repository->setTranslator(function () { return 'Baz'; });
+        $repository->setTranslator(function () {
+            return 'Baz';
+        });
         $this->assertEquals($repository->translate('Foo'), 'Baz');
     }
 
@@ -130,8 +135,13 @@ class NormTest extends TestCase
 
         $hit1 = false;
         $hit2 = false;
-        $repository->addResolver(function() use (&$hit1) { $hit1 = true; return []; });
-        $repository->addResolver(function() use (&$hit2) { $hit2 = true; });
+        $repository->addResolver(function () use (&$hit1) {
+            $hit1 = true;
+            return [];
+        });
+        $repository->addResolver(function () use (&$hit2) {
+            $hit2 = true;
+        });
         $this->assertEquals(count($repository->getResolvers()), 2);
 
         $repository->factory('Foo');
@@ -173,7 +183,9 @@ class NormTest extends TestCase
             }
         }
 
-        $repository->setRenderer(function() { return 'foo'; });
+        $repository->setRenderer(function () {
+            return 'foo';
+        });
         $this->assertEquals($repository->render('unmatter'), 'foo');
     }
 
