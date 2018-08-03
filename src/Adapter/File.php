@@ -3,7 +3,6 @@ namespace Norm\Adapter;
 
 use Norm\Repository;
 use Norm\Cursor;
-use Norm\Collection;
 use Norm\Exception\NormException;
 use Rhumsaa\Uuid\Uuid;
 

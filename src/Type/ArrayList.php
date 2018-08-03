@@ -3,7 +3,6 @@ namespace Norm\Type;
 
 use ROH\Util\Collection;
 use JsonKit\JsonKit;
-use Norm\Type\Marshallable;
 
 /**
  * Collection abstract class.

@@ -17,3 +17,19 @@ npm i
 gulp update
 gulp doc
 ```
+
+## insert
+
+count, rows
+
+## update
+
+count
+
+## select
+
+count, rows
+
+## delete
+
+count

@@ -174,30 +174,4 @@
 //         $model->remove();
 //         $this->assertTrue($model->isRemoved());
 //     }
-
-//     public function testFormat()
-//     {
-//         $model = $this->injector->resolve(Model::class, [ 'attributes' => [
-//             '$id' => 1,
-//             'foo' => 'bar',
-//             'bar' => 'baz',
-//         ]]);
-//         try {
-//             $model->format();
-//             $this->fail('Must not here');
-//         } catch (NormException $e) {
-//             if ($e->getMessage() !== 'Cannot format undefined fields') {
-//                 throw $e;
-//             }
-//         }
-
-//         $this->injector->resolve(Collection::class)
-//             ->addField($this->getMock(NField::class, null, [
-//                 $this->injector->resolve(Collection::class),
-//                 'foo'
-//             ]));
-//         $this->assertEquals($model->format(), 'bar');
-//         $this->assertEquals($model->format('plain'), 'bar');
-//         $this->assertEquals($model->format('plain', 'bar'), 'baz');
-//     }
 // }

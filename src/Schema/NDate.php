@@ -2,13 +2,10 @@
 
 namespace Norm\Schema;
 
-use DateTimeZone;
-
 class NDate extends NDateTime
 {
     protected function formatInput($value, $model = null)
     {
-
         return $this->repository->render('__norm__/ndate/input', [
             'value' => $value,
             'self' => $this,

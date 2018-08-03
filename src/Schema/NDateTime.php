@@ -13,9 +13,8 @@ class NDateTime extends NField
         return $this->repository->getAttribute('timezone') ?: date_default_timezone_get();
     }
 
-    public function prepare($value)
+    public function execPrepare($value)
     {
-
         if (empty($value)) {
             return null;
         } elseif ($value instanceof TypeDateTime) {
@@ -36,30 +35,4 @@ class NDateTime extends NField
         $t->setTimeZone(new DateTimeZone($this->getTimeZone()));
         return $t;
     }
-
-    protected function formatInput($value, $model = null)
-    {
-
-        return $this->repository->render('__norm__/ndatetime/input', [
-            'value' => $value,
-            'self' => $this,
-        ]);
-    }
-
-    protected function formatReadonly($value, $model = null)
-    {
-        return $this->repository->render('__norm__/ndatetime/readonly', [
-            'value' => $value,
-            'self' => $this,
-        ]);
-    }
-
-    // DEPRECATED replaced by Field::render
-    // public function cell($value, $model = null)
-    // {
-    //     if ($this->has('cellFormat') && $format = $this['cellFormat']) {
-    //         return $format($value, $model);
-    //     }
-    //     return $value->format('Y-m-d H:i:s a');
-    // }
 }

@@ -6,7 +6,7 @@ use Norm\Type\Secret as Secret;
 
 class NPassword extends NField
 {
-    public function prepare($value)
+    public function execPrepare($value)
     {
         if ($value instanceof Secret) {
             return $value;
@@ -15,29 +15,5 @@ class NPassword extends NField
         } else {
             return new Secret($value);
         }
-    }
-
-    protected function formatJson($value, $model = null)
-    {
-        return null;
-    }
-
-    protected function formatPlain($value, $model = null)
-    {
-        return '';
-    }
-
-    protected function formatInput($value, $model = null)
-    {
-        return $this->repository->render('__norm__/npassword/input', [
-            'self' => $this,
-        ]);
-    }
-
-    protected function formatReadonly($value, $model = null)
-    {
-        return $this->repository->render('__norm__/npassword/readonly', [
-            'self' => $this,
-        ]);
     }
 }

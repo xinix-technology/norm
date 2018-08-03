@@ -28,7 +28,7 @@ class NFile extends NField
         return $this->dataDir;
     }
 
-    public function prepare($value)
+    public function execPrepare($value)
     {
         // support empty string or null as null value
         if (null === $value || '' === $value) {
@@ -43,23 +43,5 @@ class NFile extends NField
         } elseif (is_string($value)) {
             return new File($this->dataDir, $value);
         }
-    }
-
-    protected function formatReadonly($value, $model = null)
-    {
-        return $this->repository->render('__norm__/nfile/readonly', [
-            'self' => $this,
-            'value' => $value,
-            'model' => $model,
-        ]);
-    }
-
-    protected function formatInput($value, $model = null)
-    {
-        return $this->repository->render('__norm__/nfile/input', [
-            'self' => $this,
-            'value' => $value,
-            'model' => $model,
-        ]);
     }
 }

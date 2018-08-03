@@ -4,8 +4,6 @@ namespace Norm\Type;
 use DateTimeZone;
 use DateTime as PhpDateTime;
 use JsonKit\JsonSerializer;
-use Norm\Normable;
-use Norm\Type\Marshallable;
 
 /**
  * Collection abstract class.

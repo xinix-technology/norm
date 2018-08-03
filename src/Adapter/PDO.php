@@ -1,12 +1,10 @@
 <?php
 namespace Norm\Adapter;
 
-use Exception;
 use Norm\Exception\NormException;
 use PDO as ThePDO;
 use Norm\Cursor;
 use Norm\Repository;
-use Norm\Collection;
 use Norm\Connection;
 use Norm\Dialect\MySql;
 use Norm\Dialect\Sqlite;

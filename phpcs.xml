@@ -10,6 +10,7 @@
     <arg name="colors" />
     <arg name="parallel" value="75" />
     <arg value="np"/>
+    <arg name="extensions" value="php"/>
 
     <rule ref="PSR12"></rule>
 </ruleset>

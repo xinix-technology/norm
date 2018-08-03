@@ -9,9 +9,9 @@ class FilterExceptionTest extends TestCase
     public function testContext()
     {
         $e = new FilterException();
-        $context = 'foo';
-        $e->setContext($context);
-        $this->assertEquals($e->getContext(), $context);
+        $field = 'foo';
+        $e->setField($field);
+        $this->assertEquals($e->getField(), $field);
     }
 
     public function testChildren()

@@ -45,33 +45,18 @@ use RuntimeException;
  * Filter (validation) will raise FilterException instead of return succeed or
  * failing condition.
  *
- * The FilterException contains information of field context where the exception
- * raise and children exceptions as array of exceptions raise on the same field context.
+ * The FilterException contains information of field where the exception
+ * raise and children exceptions as array of exceptions raise on the same field.
  *
  */
 class FilterException extends RuntimeException
-// extends BonoException implements INotifiedException
 {
     /**
-     * Database field context where exception raise.
+     * Database field where exception raise.
      *
      * @var string
      */
-    protected $context;
-
-    /**
-     * Arguments of the implementation.
-     *
-     * @var array
-     */
-    protected $args;
-
-    /**
-     * Format of message thrown by exception.
-     *
-     * @var string
-     */
-    protected $formatMessage;
+    protected $field;
 
     /**
      * FilterException is nested exception
@@ -80,7 +65,7 @@ class FilterException extends RuntimeException
     protected $children = [];
 
     /**
-     * Class constructor
+     * FilterException constructor
      *
      * @param string     $message
      * @param integer    $code
@@ -92,50 +77,31 @@ class FilterException extends RuntimeException
         $code = 0,
         $previousException = null
     ) {
-        $this->formatMessage = $message;
-
-        // $this->setStatus(400);
-
         parent::__construct($message, $code, $previousException);
     }
 
     /**
-     * Get context
+     * Get field
      * @return [type] [description]
      */
-    public function getContext()
+    public function getField()
     {
-        return $this->context;
+        return $this->field;
     }
 
     /**
-     * Set context
-     * @param [type] $context [description]
+     * Set field
+     * @param [type] $field [description]
      */
-    public function setContext($context)
+    public function setField($field)
     {
-        $this->context = $context;
+        $this->field = $field;
         return $this;
     }
 
-    /**
-     * Get the arrguments passed and build message by them.
-     *
-     * @return Norm\Exception\FilterException
-     */
-    public function setArgs()
+    public function addChild($child)
     {
-        $this->args = func_get_args();
-
-        $params = array_merge(array($this->formatMessage), $this->args);
-        $this->message = call_user_func_array('sprintf', $params);
-
-        return $this;
-    }
-
-    public function setChildren($children)
-    {
-        $this->children = $children;
+        $this->children[] = $child;
 
         return $this;
     }

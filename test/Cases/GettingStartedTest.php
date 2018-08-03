@@ -2,14 +2,12 @@
 namespace Norm\Test;
 
 use PHPUnit\Framework\TestCase;
-use Norm\Repository;
+use Norm\Manager;
+use Norm\Session;
 use Norm\Connection;
-use Norm\Collection;
-use Norm\Cursor;
-use Norm\Model;
-use Norm\Exception\NormException;
 use ROH\Util\Injector;
-use Norm\Schema\NField;
+use ROH\Util\Collection;
+use Norm\Schema\NString;
 use Norm\Adapter\Memory;
 
 class GettingStartedTest extends TestCase
@@ -26,39 +24,61 @@ class GettingStartedTest extends TestCase
 
     public function testGettingStarted()
     {
-        $repository = new Repository();
-        $repository->addConnection(new Memory($repository));
-
-        $userCollection = $repository->factory('user');
-
-        $this->assertEquals($userCollection->find()->count(), 0);
-
-        $user = $userCollection->newInstance();
-        $user->set([
-            'username' => 'foo',
-            'password' => 'bar',
+        $injector = new Injector();
+        $data = new Collection();
+        $manager = new Manager($injector, [
+            [
+                'handler' => [ Memory::class, [
+                    'data' => $data,
+                ]],
+                'schemas' => [
+                    [
+                        'name' => 'user',
+                        'fields' => [
+                            [ NString::class, [
+                                'name' => 'username',
+                            ]],
+                            [ NString::class, [
+                                'name' => 'password',
+                            ]],
+                        ],
+                    ],
+                ],
+            ],
         ]);
-        $user->save();
 
-        $user = $userCollection->newInstance();
-        $user->set([
-            'username' => 'bar',
-            'password' => 'baz',
-        ]);
-        $user->save();
+        $manager->runSession(function (Session $session) use (&$data) {
+            $this->assertEquals($session->factory('user')->count(), 0);
 
-        $this->assertEquals($userCollection->find()->count(), 2);
+            $query = $session->factory('user')
+                ->insert([
+                    'username' => 'foo',
+                    'password' => 'bar',
+                ])
+                ->insert([
+                    'username' => 'bar',
+                    'password' => 'baz',
+                ])
+                ->save();
 
-        $user = $userCollection->findOne([ 'username' => 'bar' ]);
+            $this->assertEquals($query->getAffected(), 2);
+            $this->assertEquals(count($query->getRows()), 2);
 
-        $user->set('password', 'password');
-        $user->save();
+            $this->assertEquals($session->factory('user')->count(), 2);
 
-        $user = $userCollection->findOne([ 'username' => 'bar' ]);
-        $this->assertEquals($user['password'], 'password');
+            $session->factory('user', [ 'username' => 'bar' ])
+                ->set([ 'password' => 'password' ])
+                ->save();
 
-        $user->remove();
+            $user = $session->factory('user', [ 'username' => 'bar' ])
+                ->single();
 
-        $this->assertEquals($userCollection->find()->count(), 1);
+            $this->assertEquals($user['password'], 'password');
+
+            $session->factory('user', [ 'username' => 'bar' ])
+                ->delete();
+
+            $this->assertEquals($session->factory('user')->count(), 1);
+        });
     }
 }

@@ -6,7 +6,7 @@ use Norm\Type\ArrayList;
 
 class NList extends NField
 {
-    public function prepare($value)
+    public function execPrepare($value)
     {
         if (empty($value)) {
             return new ArrayList();
@@ -17,30 +17,5 @@ class NList extends NField
         }
 
         return new ArrayList($value);
-    }
-
-    protected function formatPlain($value, $model = null)
-    {
-        if (null !== $value) {
-            return implode(', ', $value->toArray());
-        }
-    }
-
-    protected function formatInput($value, $model = null)
-    {
-        return $this->repository->render('__norm__/nlist/input', array(
-            'self' => $this,
-            'value' => $value,
-            'entry' => $model,
-        ));
-    }
-
-    protected function formatReadonly($value, $model = null)
-    {
-        return $this->repository->render('__norm__/nlist/readonly', array(
-            'self' => $this,
-            'value' => $value,
-            'entry' => $model,
-        ));
     }
 }

@@ -3,8 +3,6 @@
 namespace Norm\Type;
 
 use JsonKit\JsonSerializer;
-use Norm\Exception\NormException;
-use Norm\Type\Marshallable;
 
 class File implements JsonSerializer, Marshallable
 {

@@ -1,13 +1,11 @@
 <?php
 namespace Norm\Dialect;
 
-use Norm\Cursor;
-use Norm\Collection;
 use Norm\Exception\NormException;
 
 abstract class Sql
 {
-    static protected $OPERATORS = [
+    protected static $OPERATORS = [
         '' => '=',
         'eq' => '=',
         'ne' => '!=',

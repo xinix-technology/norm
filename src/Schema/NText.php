@@ -4,7 +4,6 @@ namespace Norm\Schema;
 
 class NText extends NString
 {
-
     protected function formatReadonly($value, $model = null)
     {
         return parent::formatReadonly(nl2br($value), $model);

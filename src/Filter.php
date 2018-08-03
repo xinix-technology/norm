@@ -1,14 +1,11 @@
 <?php
 namespace Norm;
 
-use Traversable;
 use Exception;
 use Norm\Exception\NormException;
 use Norm\Exception\SkipException;
 use Norm\Exception\FilterException;
 use Norm\Exception\FatalException;
-use Norm\Normable;
-use Norm\Collection;
 use Norm\Schema\NField;
 use Norm\Type\NormObject as TypeObject;
 
@@ -46,7 +43,7 @@ class Filter extends Normable
 
     /**
      * [$immediate description]
-     * @var boolean
+     * @var bool
      */
     protected $immediate = false;
 

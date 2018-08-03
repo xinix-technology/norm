@@ -1,12 +1,9 @@
 <?php
 namespace Norm;
 
-use Exception;
-use InvalidArgumentException;
 use Iterator;
 use Countable;
 use JsonKit\JsonSerializer;
-use Norm\Normable;
 
 /**
  * Cursor abstract class.
@@ -204,7 +201,7 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
     /**
      * Extract data into array of models.
      *
-     * @param boolean $plain When true will return array of associative array.
+     * @param bool    $plain When true will return array of associative array.
      *
      * @return array
      */
@@ -315,7 +312,7 @@ class Cursor extends Normable implements Iterator, Countable, JsonSerializer
 
     /**
      * [size description]
-     * @param  boolean $respectLimitSkip [description]
+     * @param  bool    $respectLimitSkip [description]
      * @return int                       [description]
      */
     public function size($respectLimitSkip = false)

@@ -2,7 +2,6 @@
 
 namespace Norm\Observer;
 
-use Norm\Repository;
 use Norm\Schema\NList;
 use ROH\Util\Collection as UtilCollection;
 

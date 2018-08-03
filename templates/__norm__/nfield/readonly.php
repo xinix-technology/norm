@@ -1,2 +1,2 @@
 
-<span class="field"><?php echo ($self->format('plain', $value, $model) ?: '&nbsp;') ?></span>
+<span class="field"><?php echo($self->format('plain', $value, $model) ?: '&nbsp;') ?></span>

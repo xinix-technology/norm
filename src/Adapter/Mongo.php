@@ -7,10 +7,8 @@ use MongoClient;
 use Norm\Repository;
 use Norm\Connection;
 use Norm\Cursor;
-use ROH\Util\Options;
 use ROH\Util\Collection as UtilCollection;
 use Norm\Exception\NormException;
-// use Norm\Type\DateTime as NormDateTime;
 use DateTime;
 
 class Mongo extends Connection
@@ -149,7 +147,7 @@ class Mongo extends Connection
                 for ($i = 0; $i < $offset; $i++) {
                     $context->next();
                 }
-            // } elseif ($position < $ctxInfo['at']) {
+                // } elseif ($position < $ctxInfo['at']) {
             //     throw new NormException('Unimplemented backward');
             }
         }
