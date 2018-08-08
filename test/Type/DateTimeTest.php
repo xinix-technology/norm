@@ -3,7 +3,6 @@ namespace Norm\Test\Type;
 
 use PHPUnit\Framework\TestCase;
 use Norm\Type\DateTime;
-use DateTimeZone;
 
 class DateTimeTest extends TestCase
 {

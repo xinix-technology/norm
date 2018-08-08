@@ -4,6 +4,7 @@ namespace Norm\Schema;
 use Norm\Model;
 use Norm\Session;
 use Norm\FilterContext;
+use Norm\Filter;
 
 abstract class NField
 {
@@ -20,6 +21,12 @@ abstract class NField
     public function __construct(string $name)
     {
         $this->name = $name;
+    }
+
+    public function filter($filter)
+    {
+        $this->filters[] = Filter::get($filter);
+        return $this;
     }
 
     public function execFilter(Model $row, Session $session, bool $partial = false)
@@ -46,6 +53,11 @@ abstract class NField
         }
 
         return $this->execPrepare($value);
+    }
+
+    public function getName()
+    {
+        return $this->name;
     }
 
     abstract protected function execPrepare($value);

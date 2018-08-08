@@ -4,7 +4,6 @@ namespace Norm\Test;
 use PHPUnit\Framework\TestCase;
 use Norm\Manager;
 use Norm\Session;
-use Norm\Connection;
 use ROH\Util\Injector;
 use ROH\Util\Collection;
 use Norm\Schema\NString;
@@ -12,16 +11,6 @@ use Norm\Adapter\Memory;
 
 class GettingStartedTest extends TestCase
 {
-    // public function setUp()
-    // {
-    //     $this->injector = new Injector();
-    //     // $this->repository = new Repository([], $this->injector);
-    //     // $this->injector->singleton(
-    //     //     Connection::class,
-    //     //     $this->getMockForAbstractClass(Connection::class, [ $this->repository ])
-    //     // );
-    // }
-
     public function testGettingStarted()
     {
         $injector = new Injector();

@@ -28,13 +28,4 @@ class NDate extends NDateTime
 
         return '';
     }
-
-    // DEPRECATED replaced by Field::render
-    // public function cell($value, $model = null)
-    // {
-    //     if ($this->has('cellFormat') && $format = $this['cellFormat']) {
-    //         return $format($value, $model);
-    //     }
-    //     return $value->format('Y-m-d');
-    // }
 }

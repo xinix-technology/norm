@@ -27,4 +27,19 @@ class FilterContext
         $this->row = $row;
         $this->field = $field;
     }
+
+    public function getRow()
+    {
+        return $this->row;
+    }
+
+    public function getSession()
+    {
+        return $this->session;
+    }
+
+    public function getField()
+    {
+        return $this->field;
+    }
 }
