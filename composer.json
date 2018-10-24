@@ -22,7 +22,7 @@
     ],
     "require": {
         "reekoheek/jsonkit": "~0.0.1",
-        "reekoheek/util": "~0.1.2",
+        "reekoheek/util": "~0.1.2"
     },
     "require-dev": {
         "phpunit/phpunit": "*",
