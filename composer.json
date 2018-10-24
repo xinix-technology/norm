@@ -23,7 +23,6 @@
     "require": {
         "reekoheek/jsonkit": "~0.0.1",
         "reekoheek/util": "~0.1.2",
-        "ramsey/uuid": "~2.8"
     },
     "require-dev": {
         "phpunit/phpunit": "*",
