@@ -82,20 +82,38 @@ class PDOCursor extends Cursor
     public function next()
     {
         // Try to get the next element in our data buffer.
-        $this->next = each($this->buffer);
+        // $this->next = each($this->buffer); // DEPRECATED ON PHP 7
+
+        $key = key($this->buffer);
+        $val = current($this->buffer);
+        if ($key === NULL) {
+            $this->next = false;
+        } else {
+            $this->next = [ 0 => $key, 'key' => $key, 1 => $val, 'value' => $val ];
+        }
+        next($this->buffer);
 
         // Past the end of the data buffer
         if (false === $this->next) {
             // Fetch the next row of data
             $row = $this->getStatement()->fetch(PDO::FETCH_ASSOC);
-
+            
             // Fetch successful
             if ($row) {
                 // Add row to data buffer
                 $this->buffer[] = $row;
             }
-
-            $this->next = each($this->buffer);
+            
+            // $this->next = each($this->buffer); // DEPRECATED ON PHP 7
+            $key = key($this->buffer);
+            $val = current($this->buffer);
+            if ($key === NULL) {
+                $this->next = false;
+            } else {
+                $this->next = [ 0 => $key, 'key' => $key, 1 => $val, 'value' => $val ];
+            }
+            next($this->buffer);
+            
         }
     }
 
