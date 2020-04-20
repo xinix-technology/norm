@@ -161,6 +161,14 @@ class MySQLDialect extends SQLDialect
                 case 'gt':
                     $operator = '>';
                     break;
+                case 'startwith':
+                    $operator = 'LIKE';
+                    $fValue = "$value%";
+                    break;
+                case 'endwith':
+                    $operator = 'LIKE';
+                    $fValue = "%$value";
+                    break;
                 case 'regex':
                     throw new Exception('Operator regex is not supported to query.');
                 case 'in':
@@ -194,6 +202,9 @@ class MySQLDialect extends SQLDialect
                 $fgroup[] = ':f'.$this->expressionCounter;
             }
 
+            if($operator == 'nin'){
+                return $this->grammarEscape($field).' not in ('.implode(', ', $fgroup).')';
+            }
             return $this->grammarEscape($field).' '.$operator. ' ('.implode(', ', $fgroup).')';
         }elseif($operator == 'isnull'){
             return $this->grammarEscape($field).' is null';

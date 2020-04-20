@@ -199,8 +199,8 @@ class SQLServerDialect extends SQLDialect
             return $this->grammarEscape($field).' '.$operator. ' ('.implode(', ', $fgroup).')';
         }
 
-        $this->expressionCounter++
-        $fk = 'f'.$this->expressionCounter;
+        $this->expressionCounter++;
+        $fk =  'f' . $this->expressionCounter;
         $data[$fk] = $fValue;
 
         return $this->grammarEscape($field).' '.$operator.' :'.$fk;
